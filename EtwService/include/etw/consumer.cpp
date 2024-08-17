@@ -106,13 +106,6 @@ namespace etw
         int type = event.GetType();
         if (type == FileIoOperation::Create)
         {
-            if (cnt < 100)
-            {
-                cnt++;
-            }
-            else {
-                return;
-            }
 			FileCreateEvent file_create_event(event);
         }
 
