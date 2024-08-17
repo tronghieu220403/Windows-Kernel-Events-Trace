@@ -28,7 +28,7 @@ namespace etw
 
     FILETIME Event::GetFileTime() const
     {
-        return (FILETIME)p_event_->Header.TimeStamp.QuadPart;
+        return *(FILETIME *)&p_event_->Header.TimeStamp.QuadPart;
     }
     
     ULONGLONG Event::GetTimeInMs() const

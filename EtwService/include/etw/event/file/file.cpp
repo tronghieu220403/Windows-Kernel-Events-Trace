@@ -13,33 +13,43 @@ namespace etw
 
 			std::pair<int, int> p;
 			
-			p = wec.GetPropertyInfo(L"IrpPtr");
+			p = wec.GetPropertyInfo(L"IrpPtr", event);
 			irp_ptr_offs = p.first;
 			irp_ptr_size = p.second;
 
-			p = wec.GetPropertyInfo(L"TTID");
+			p = wec.GetPropertyInfo(L"TTID", event);
 			ttid_offs = p.first;
 			ttid_size = p.second;
 
-			p = wec.GetPropertyInfo(L"FileObject");
+			p = wec.GetPropertyInfo(L"FileObject", event);
 			file_object_offs = p.first;
 			file_object_size = p.second;
 
-			p = wec.GetPropertyInfo(L"CreateOptions");
+			p = wec.GetPropertyInfo(L"CreateOptions", event);
 			create_options_offs = p.first;
 			create_options_size = p.second;
 
-			p = wec.GetPropertyInfo(L"FileAttributes");
+			p = wec.GetPropertyInfo(L"FileAttributes", event);
 			file_attributes_offs = p.first;
 			file_attributes_size = p.second;
 
-			p = wec.GetPropertyInfo(L"ShareAccess");
+			p = wec.GetPropertyInfo(L"ShareAccess", event);
 			share_access_offs = p.first;
 			share_access_size = p.second;
 
-			p = wec.GetPropertyInfo(L"OpenPath");
+			p = wec.GetPropertyInfo(L"OpenPath", event);
 			open_path_offs = p.first;
 
+			if (0 == irp_ptr_size ||
+				0 == ttid_size ||
+				0 == file_object_size ||
+				0 == create_options_size ||
+				0 == file_attributes_size ||
+				0 == share_access_size)
+			{
+				ulti::WriteDebugA("Error in GetPropertyInfo in FileCreateEvent");
+				return;
+			}
 			if (open_path_offs > irp_ptr_offs &&
 				open_path_offs > ttid_offs &&
 				open_path_offs > file_object_offs &&
@@ -47,7 +57,12 @@ namespace etw
 				open_path_offs > file_attributes_offs &&
 				open_path_offs > share_access_offs)
 			{
+				ulti::WriteDebugA("The position for FileCreateEvent is  as expected.");
 				is_positioned_ = true;
+			}
+			else
+			{
+				ulti::WriteDebugA("The position for FileCreateEvent is not as expected.");
 			}
 		}
 
@@ -61,7 +76,7 @@ namespace etw
 		OpenPath = (wchar_t*)(p_data + open_path_offs);
 		
 		std::wstring s(OpenPath);
-		WriteDebugW(s);
+		ulti::WriteDebugW(s);
 
     }
 };
