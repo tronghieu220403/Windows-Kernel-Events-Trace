@@ -36,8 +36,10 @@ void SetUpProvider()
         return;
     }
     provider_oke = true;
+    
+    std::cout << "Provider run oke" << std::endl;
 
-	Sleep(10000);
+	Sleep(5000);
 	kp->CloseTrace();
 	return;
 }
@@ -59,9 +61,13 @@ void SetUpComsumer()
 
     if (kc.StartProcessing() != ERROR_SUCCESS)
     {
-
+        std::cout << "Consummer run not oke" << std::endl;
     }
-    
+    else
+    {
+        std::cout << "Consummer run oke" << std::endl;
+    }
+
     return;
 }
 

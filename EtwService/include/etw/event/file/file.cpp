@@ -31,7 +31,7 @@ namespace etw
 		offset += sizeof(DWORD);
 		memcpy(&ShareAccess, p_data + offset, sizeof(DWORD));
 		offset += sizeof(DWORD);
-		OpenPath = (wchar_t*)(p_data + offset);
+		OpenPath = (wchar_t*)(p_data + offset - 4);
 		
 		std::wstring s(OpenPath);
 		WriteDebugW(s);
