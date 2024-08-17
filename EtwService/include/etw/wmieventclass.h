@@ -6,6 +6,7 @@
 #define ETWSERVICE_ETW_WMIEVENTCLASS_H_
 
 #include "ulti/support.h"
+#include "event.h"
 
 namespace etw
 {
@@ -35,10 +36,7 @@ namespace etw
             void FreePropertyList(PropertyList* p_properties, DWORD count, LONG* p_index);
             std::wstring GetPropertyName(PropertyList* p_property);
             
-            //PropertyValue 
-            void GetEventPropertyValue(PropertyList* p_property, 
-                //PBYTE p_event_data, 
-                int& data_size);
+            void GetEventPropertyValue(PropertyList* p_property, const Event& event, int& data_size, int& offset);
 
         public:
 
@@ -55,7 +53,7 @@ namespace etw
 
             long long ConnectToETWNamespace();
             
-            std::pair<int, int> GetPropertyInfo(std::wstring property_name);
+            std::pair<int, int> GetPropertyInfo(std::wstring property_name, const Event& event);
 
             ~WmiEventClass();
     };

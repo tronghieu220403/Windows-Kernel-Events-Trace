@@ -207,8 +207,8 @@ namespace etw
         IWbemClassObject* p_class = NULL;
         IWbemQualifierSet* p_qualifiers = NULL;
         ULONG cnt = 0;
-        VARIANT var_class_name;
-        VARIANT var_event_type;
+        VARIANT var_class_name = { 0 };
+        VARIANT var_event_type = { 0 };
         BOOL found_event_class = FALSE;
 
         // Get the name of the event category class so you can enumerate its children classes.
@@ -335,7 +335,7 @@ namespace etw
         HRESULT hr = S_OK;
         SAFEARRAY* p_names = NULL;
         LONG j = 0;
-        VARIANT var;
+        VARIANT var = { 0 };
 
         // Retrieve the property names.
 
@@ -481,8 +481,7 @@ namespace etw
     }
 
     // Get datasize of a property, can not get datasize of a string or an array
-    void WmiEventClass::GetEventPropertyValue(PropertyList* p_property, 
-    int &data_size)
+    void WmiEventClass::GetEventPropertyValue(PropertyList* p_property, const Event& event, int &data_size, int& offset)
     {
         HRESULT hr;
         VARIANT var_qualifier = { 0 };
@@ -562,12 +561,10 @@ namespace etw
                     }
                     else if (_wcsicmp(L"IPAddrV6", var_qualifier.bstrVal) == 0)
                     {
-                        if (GetProcAddress(
-                            GetModuleHandle(L"ntdll"), "RtlIpv6AddressToStringW")
-                            == NULL)
-                            {
-                                return;
-                            }
+                        if (GetProcAddress(GetModuleHandle(L"ntdll"), "RtlIpv6AddressToStringW") == NULL)
+                        {
+                            return;
+                        }
 
                         element_size = sizeof(IN6_ADDR);
                     }
@@ -621,6 +618,7 @@ namespace etw
 
             case CIM_STRING:
             {
+                PBYTE p_event_data = event.GetPEventData();
 				data_size = -1;
 				bool is_wide_string = false;
 				bool is_null_terminated = false;
@@ -635,7 +633,27 @@ namespace etw
                 if (FAILED(hr) || (_wcsicmp(var_qualifier.bstrVal, L"NullTerminated") == 0))
                 {
                     is_null_terminated = TRUE;
+                }
+                else
+                {
                     data_size = 0;
+                }
+
+                VariantClear(&var_qualifier);
+
+                for (ULONG i = 0; i < array_size; i++)
+                {
+                    if (is_null_terminated)
+                    {
+                        if (is_wide_string)
+                        {
+                            data_size = sizeof(WCHAR) * ((USHORT)wcslen((WCHAR*)(p_event_data + offset)) + 1);
+                        }
+                        else
+                        {
+                            data_size = sizeof(CHAR) * ((USHORT)strlen((CHAR*)(p_event_data + offset)) + 1);
+                        }
+                    }
                 }
 
                 return;
@@ -660,7 +678,7 @@ namespace etw
         CoUninitialize();
     }
 
-    std::pair<int, int> WmiEventClass::GetPropertyInfo(std::wstring property_name)
+    std::pair<int, int> WmiEventClass::GetPropertyInfo(std::wstring property_name, const Event& event)
     {
         int offset = -1;
         int temp_offset = 0;
@@ -689,10 +707,10 @@ namespace etw
                     {
                         std::wstring name = GetPropertyName(p_properties + p_property_index[i]);
 
-                        GetEventPropertyValue(p_properties + p_property_index[i], data_size);
+                        GetEventPropertyValue(p_properties + p_property_index[i], event, data_size, temp_offset);
                         if (data_size == 0)
                         {
-                            exit(0);
+                            break;
                         }
                         if (name == property_name)
                         {

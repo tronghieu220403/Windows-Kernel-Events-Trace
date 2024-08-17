@@ -88,7 +88,7 @@ namespace etw
         else
         {
             Event event(p_event);
-                        
+            
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
                 ProcessFileIoEvent(event);
@@ -99,11 +99,20 @@ namespace etw
         return;
     }
 
+    int cnt = 0;
+
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
         int type = event.GetType();
         if (type == FileIoOperation::Create)
         {
+            if (cnt < 100)
+            {
+                cnt++;
+            }
+            else {
+                return;
+            }
 			FileCreateEvent file_create_event(event);
         }
 

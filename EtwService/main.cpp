@@ -22,13 +22,15 @@ void SetUpProvider()
     ULONG status;
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
-        | EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
+        //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
         | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO
+        /*
         | EVENT_TRACE_FLAG_IMAGE_LOAD
         | EVENT_TRACE_FLAG_NETWORK_TCPIP
         | EVENT_TRACE_FLAG_PROCESS
 		| EVENT_TRACE_FLAG_REGISTRY
         | EVENT_TRACE_FLAG_THREAD
+        */
         );
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
@@ -37,9 +39,12 @@ void SetUpProvider()
     }
     provider_oke = true;
     
-    std::cout << "Provider run oke" << std::endl;
+    ulti::WriteDebugA("Provider run oke");
 
-	Sleep(5000);
+	Sleep(100);
+
+    ulti::WriteDebugA("Provider close");
+
 	kp->CloseTrace();
 	return;
 }
@@ -50,23 +55,28 @@ void SetUpComsumer()
     {
         Sleep(50);
     }
-    etw::KernelConsumer kc;
+    etw::KernelConsumer* kc = new etw::KernelConsumer();
     
-    if (kc.Open() != ERROR_SUCCESS)
+    if (kc->Open() != ERROR_SUCCESS)
     {
+        ulti::WriteDebugA("Consummer can not be opened");
         return;
     }
 
+    ulti::WriteDebugA("Consummer is opened");
+
     comsumer_oke = true;
 
-    if (kc.StartProcessing() != ERROR_SUCCESS)
+    if (kc->StartProcessing() != ERROR_SUCCESS)
     {
-        std::cout << "Consummer run not oke" << std::endl;
+        ulti::WriteDebugA("Consummer run not oke");
     }
     else
     {
-        std::cout << "Consummer run oke" << std::endl;
+        ulti::WriteDebugA("Consummer run oke");
     }
+
+    kc->Close();
 
     return;
 }

@@ -60,7 +60,7 @@ typedef unsigned int uint32;
 
 #define GetCurrentDir _getcwd
 
-namespace etw
+namespace ulti
 {
     inline std::mutex mt;
     inline void WriteDebugA(std::string s)
@@ -82,12 +82,6 @@ namespace etw
         outfile.close();
         mt.unlock();
     #endif // DEBUG
-    }
-
-
-    inline std::string WStrToStr(const std::wstring& w_str)
-    {
-        return std::string(w_str.begin(), w_str.end());
     }
 
     inline std::wstring StrToWStr(const std::string& str)
