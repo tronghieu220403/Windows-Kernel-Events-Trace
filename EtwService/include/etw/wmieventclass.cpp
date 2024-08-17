@@ -109,8 +109,8 @@ namespace etw
         IWbemClassObject* p_class = NULL;
         IWbemQualifierSet* p_qualifiers = NULL;
         ULONG cnt = 0;
-        VARIANT var_guid;
-        VARIANT var_version;
+        VARIANT var_guid = { 0 };
+        VARIANT var_version = { 0 };
 
         hr = p_services_->CreateClassEnum(_bstr_t(L"EventTrace"),
             WBEM_FLAG_DEEP | WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_USE_AMENDED_QUALIFIERS,
@@ -460,7 +460,7 @@ namespace etw
     std::wstring WmiEventClass::GetPropertyName(PropertyList* p_property)
     {
         HRESULT hr;
-        VARIANT var_display_name;
+        VARIANT var_display_name = { 0 };
         std::wstring name;
         BSTR name_ptr;
         long long size = 0;
@@ -485,7 +485,7 @@ namespace etw
     int &data_size)
     {
         HRESULT hr;
-        VARIANT var_qualifier;
+        VARIANT var_qualifier = { 0 };
         ULONG array_size = 1;
         int element_size = 0;
 
@@ -524,24 +524,14 @@ namespace etw
             switch (p_property->data_type & (~CIM_FLAG_ARRAY))
             {
             case CIM_SINT32:
-            {
-                data_size = sizeof(LONG) * array_size;
-                return;
-            }
-
             case CIM_UINT32:
             {
                 data_size = sizeof(ULONG) * array_size;
                 return;
             }
 
-            case CIM_SINT64:
-            {
-                data_size = sizeof(LONGLONG) * array_size;
-                return;
-            }
-
             case CIM_UINT64:
+            case CIM_SINT64:
             {
                 data_size = sizeof(ULONGLONG) * array_size;
                 return;
@@ -558,11 +548,7 @@ namespace etw
 
                         // You do not need to know the data type of the property, you just 
                         // retrieve either 4 bytes or 8 bytes depending on the pointer's size.
-
-                        for (ULONG i = 0; i < array_size; i++)
-                        {
-                            data_size += pointer_size_;
-                        }
+						data_size = pointer_size_ * array_size;
                         return;
                     }
                     if (_wcsicmp(L"Port", var_qualifier.bstrVal) == 0)
@@ -601,10 +587,7 @@ namespace etw
                 }
 
                 VariantClear(&var_qualifier);
-                for (ULONG i = 0; i < array_size; i++)
-                {
-                    data_size += element_size;
-                }
+                data_size = element_size * array_size;
 
                 return;
             }
@@ -629,34 +612,32 @@ namespace etw
             }
 
             case CIM_CHAR16:
-            {
-                for (ULONG i = 0; i < array_size; i++)
-                {
-                    data_size += sizeof(WCHAR);
-                }
-                return;
-            }
-
             case CIM_SINT16:
-            {
-                for (ULONG i = 0; i < array_size; i++)
-                {
-                    data_size += sizeof(SHORT);
-                }
-                return;
-            }
-
             case CIM_UINT16:
             {
-                for (ULONG i = 0; i < array_size; i++)
-                {
-                    data_size += sizeof(USHORT);
-                }
+				data_size = sizeof(WCHAR) * array_size;
                 return;
             }
 
             case CIM_STRING:
             {
+				data_size = -1;
+				bool is_wide_string = false;
+				bool is_null_terminated = false;
+                USHORT temp = 0;
+				hr = p_property->p_qualifiers->Get(L"Format", 0, NULL, NULL);
+                if (SUCCEEDED(hr))
+                {
+					is_wide_string = true;
+                }
+
+                hr = p_property->p_qualifiers->Get(L"StringTermination", 0, &var_qualifier, NULL);
+                if (FAILED(hr) || (_wcsicmp(var_qualifier.bstrVal, L"NullTerminated") == 0))
+                {
+                    is_null_terminated = TRUE;
+                    data_size = 0;
+                }
+
                 return;
             }
 
