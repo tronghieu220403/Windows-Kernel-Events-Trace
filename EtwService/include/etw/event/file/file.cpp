@@ -76,7 +76,7 @@ namespace etw
 		OpenPath = (wchar_t*)(p_data + open_path_offs);
 		
 		std::wstring s(OpenPath);
-		ulti::WriteDebugW(s);
+		//ulti::WriteDebugW(s);
 
     }
 };

@@ -22,15 +22,13 @@ void SetUpProvider()
     ULONG status;
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
-        //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
+        | EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
         | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO
-        /*
         | EVENT_TRACE_FLAG_IMAGE_LOAD
         | EVENT_TRACE_FLAG_NETWORK_TCPIP
         | EVENT_TRACE_FLAG_PROCESS
 		| EVENT_TRACE_FLAG_REGISTRY
         | EVENT_TRACE_FLAG_THREAD
-        */
         );
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
@@ -41,7 +39,7 @@ void SetUpProvider()
     
     ulti::WriteDebugA("Provider run oke");
 
-	Sleep(100);
+	Sleep(50000);
 
     ulti::WriteDebugA("Provider close");
 
