@@ -7,21 +7,19 @@
 #define ETWSERVICE_ETW_FILEIOEVENT_H_
 
 #include "etw/event.h"
+#include "etw/wmieventclass.h"
+
 namespace etw
 {
-	class FileEvent: public Event
-	{
-	private:
-
-	public:
-		FileEvent() = default;
-		FileEvent(const PEVENT_TRACE& p_event);
-		FileEvent(const Event& event);
-	};
 	
-	class FileCreateEvent : public FileEvent
+	struct FileCreateEvent
 	{
+
 	private:
+		static inline bool is_positioned_ = false;
+		static inline bool positioning_ability = true;
+		static inline DWORD irp_ptr_offs = 0;
+
 	public:
 		PVOID IrpPtr = NULL;
 		PVOID TTID = NULL;

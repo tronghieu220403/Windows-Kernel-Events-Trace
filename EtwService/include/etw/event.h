@@ -40,6 +40,16 @@ enum FileIoOperation
 	Flush = 73
 };
 
+class EventType
+{
+public:
+	inline static const std::wstring kFileIo = L"{90CBDC39-4A3E-11D1-84F4-0000F80464E3}";
+	inline static const std::wstring kThread = L"{3D6FA8D1-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kProcess = L"{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kDiskIo = L"{3D6FA8D4-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kTcpip = L"{9A280AC0-C8E0-11D1-84E2-00C04FB998A2}";
+	inline static const std::wstring kUdpip = L"{BF3A50C5-A9C9-4988-A005-2DF0B7C80F80}";
+};
 
 
 namespace etw
