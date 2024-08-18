@@ -9,7 +9,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -90,7 +90,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -173,7 +173,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -254,7 +254,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -310,7 +310,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -353,7 +353,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
@@ -425,7 +425,7 @@ namespace etw
 	{
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			WmiEventClass wec(EventGuid().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
 
