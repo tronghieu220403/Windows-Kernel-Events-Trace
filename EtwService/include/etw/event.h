@@ -18,27 +18,6 @@ DEFINE_GUID( /* 9a280ac0-c8e0-11d1-84e2-00c04fb998a2 */    TcpIpGuid, 0x9a280ac0
 DEFINE_GUID( /* 3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c */    ThreadGuid, 0x3d6fa8d1, 0xfe05, 0x11d0, 0x9d, 0xda, 0x00, 0xc0, 0x4f, 0xd7, 0xba, 0x7c);
 DEFINE_GUID( /* bf3a50c5-a9c9-4988-a005-2df0b7c80f80 */    UdpIpGuid, 0xbf3a50c5, 0xa9c9, 0x4988, 0xa0, 0x05, 0x2d, 0xf0, 0xb7, 0xc8, 0x0f, 0x80);
 
-enum FileIoOperation
-{
-	Create = 64,
-	DirEnum = 72,
-	DirNotify = 77,
-	SetInfo = 69,
-	Delete = 70,
-	Rename = 71,
-	QueryInfo = 74,
-	FSControl = 75,
-	Name = 0,
-	FileCreate = 32,
-	FileDelete = 35,
-	FileRundown = 36,
-	OpEnd = 76,
-	Read = 67,
-	Write = 68,
-	Cleanup = 65,
-	Close = 66,
-	Flush = 73
-};
 
 class EventType
 {

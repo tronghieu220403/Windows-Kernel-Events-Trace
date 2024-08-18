@@ -3,13 +3,36 @@
 
 #pragma once
 
-#ifndef ETWSERVICE_ETW_DISKIOEVENT_H_
-#define ETWSERVICE_ETW_DISKIOEVENT_H_
+#ifndef ETWSERVICE_ETW_ETW_EVENT_PROCESS_PROCESS_H_
+#define ETWSERVICE_ETW_ETW_EVENT_PROCESS_PROCESS_H_
 
 #include "etw/event.h"
 
 namespace etw
 {
+
+	enum ProcessEventType
+	{
+		// Image
+		kImageLoad = 10,
+		kImageUnload = 2,
+		kImageDCStart = 3,
+		kImageDCEnd = 4,
+
+		// Process
+		kProcessStart = 1,
+		kProcessEnd = 2,
+		kProcessDCStart = 3,
+		kProcessDCEnd = 4,
+		kProcessDefunct = 39,
+
+		// Thread
+		kThreadStart = 1,
+		kThreadEnd = 2,
+		kThreadDCStart = 3,
+		kThreadDCEnd = 4
+	};
+
 	/*-------------IMAGE-------------*/
 
 	/*
@@ -32,20 +55,34 @@ namespace etw
 	*/
 	struct ImageLoadEventOffset
 	{
-		bool is_positioned_ = false;
+		bool is_positioned = false;
+		bool is_successful = false;
 
-		DWORD image_base_offs_ = 0;
-		DWORD image_size_offs_ = 0;
-		DWORD process_id_offs_ = 0;
-		DWORD image_checksum_offs_ = 0;
-		DWORD time_date_stamp_offs_ = 0;
-		DWORD reserved0_offs_ = 0;
-		DWORD default_base_offs_ = 0;
-		DWORD reserved1_offs_ = 0;
-		DWORD reserved2_offs_ = 0;
-		DWORD reserved3_offs_ = 0;
-		DWORD reserved4_offs_ = 0;
-		DWORD file_name_offs_ = 0;
+		DWORD image_base_offs = 0;
+		DWORD image_size_offs = 0;
+		DWORD process_id_offs = 0;
+		DWORD image_checksum_offs = 0;
+		DWORD time_date_stamp_offs = 0;
+		DWORD reserved0_offs = 0;
+		DWORD default_base_offs = 0;
+		DWORD reserved1_offs = 0;
+		DWORD reserved2_offs = 0;
+		DWORD reserved3_offs = 0;
+		DWORD reserved4_offs = 0;
+		DWORD file_name_offs = 0;
+
+		DWORD image_base_size = 0;
+		DWORD image_size_size = 0;
+		DWORD process_id_size = 0;
+		DWORD image_checksum_size = 0;
+		DWORD time_date_stamp_size = 0;
+		DWORD reserved0_size = 0;
+		DWORD default_base_size = 0;
+		DWORD reserved1_size = 0;
+		DWORD reserved2_size = 0;
+		DWORD reserved3_size = 0;
+		DWORD reserved4_size = 0;
+		DWORD file_name_size = 0;
 	};
 
 	struct ImageLoadEventMember
@@ -62,7 +99,7 @@ namespace etw
 		uint32_t Reserved2 = 0;
 		uint32_t Reserved3 = 0;
 		uint32_t Reserved4 = 0;
-		wchar_t* FileName = nullptr;
+		wchar_t* file_name = nullptr;
 
 		ImageLoadEventMember() = default;
 		ImageLoadEventMember(const Event& event, ImageLoadEventOffset* offset);
@@ -71,7 +108,7 @@ namespace etw
 	struct ImageLoadEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset_;
+		static inline ImageLoadEventOffset offset;
 	public:
 		ImageLoadEvent(const Event& event);
 	};
@@ -79,7 +116,7 @@ namespace etw
 	struct ImageUnloadEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset_;
+		static inline ImageLoadEventOffset offset;
 	public:
 		ImageUnloadEvent(const Event& event);
 	};
@@ -87,7 +124,7 @@ namespace etw
 	struct ImageDCStartEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset_;
+		static inline ImageLoadEventOffset offset;
 	public:
 		ImageDCStartEvent(const Event& event);
 	};
@@ -95,7 +132,7 @@ namespace etw
 	struct ImageDCEndEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset_;
+		static inline ImageLoadEventOffset offset;
 	public:
 		ImageDCEndEvent(const Event& event);
 	};
@@ -123,17 +160,28 @@ namespace etw
 	*/
 	struct ProcessTypeGroup1EventOffset
 	{
-		bool is_positioned_ = false;
+		bool is_positioned = false;
+		bool is_successful = false;
 
-		DWORD unique_process_key_offs_ = 0;
-		DWORD process_id_offs_ = 0;
-		DWORD parent_id_offs_ = 0;
-		DWORD session_id_offs_ = 0;
-		DWORD exit_status_offs_ = 0;
-		DWORD directory_table_base_offs_ = 0;
-		DWORD user_sid_offs_ = 0;
-		DWORD image_file_name_offs_ = 0;
-		DWORD command_line_offs_ = 0;
+		DWORD unique_process_key_offs = 0;
+		DWORD process_id_offs = 0;
+		DWORD parent_id_offs = 0;
+		DWORD session_id_offs = 0;
+		DWORD exit_status_offs = 0;
+		DWORD directory_table_base_offs = 0;
+		DWORD user_sid_offs = 0;
+		DWORD image_file_name_offs = 0;
+		DWORD command_line_offs = 0;
+
+		DWORD unique_process_key_size = 0;
+		DWORD process_id_size = 0;
+		DWORD parent_id_size = 0;
+		DWORD session_id_size = 0;
+		DWORD exit_status_size = 0;
+		DWORD directory_table_base_size = 0;
+		DWORD user_sid_size = 0;
+		DWORD image_file_name_size = 0;
+		DWORD command_line_size = 0;
 	};
 
 	struct ProcessTypeGroup1EventMember
@@ -156,7 +204,7 @@ namespace etw
 	struct ProcessStartEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset_;
+		static inline ProcessTypeGroup1EventOffset offset;
 	public:
 		ProcessStartEvent(const Event& event);
 	};
@@ -164,7 +212,7 @@ namespace etw
 	struct ProcessEndEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset_;
+		static inline ProcessTypeGroup1EventOffset offset;
 	public:
 		ProcessEndEvent(const Event& event);
 	};
@@ -172,7 +220,7 @@ namespace etw
 	struct ProcessDCStartEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset_;
+		static inline ProcessTypeGroup1EventOffset offset;
 	public:
 		ProcessDCStartEvent(const Event& event);
 	};
@@ -180,7 +228,7 @@ namespace etw
 	struct ProcessDCEndEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset_;
+		static inline ProcessTypeGroup1EventOffset offset;
 	public:
 		ProcessDCEndEvent(const Event& event);
 	};
@@ -188,7 +236,7 @@ namespace etw
 	struct ProcessDefunctEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset_;
+		static inline ProcessTypeGroup1EventOffset offset;
 	public:
 		ProcessDefunctEvent(const Event& event);
 	};
@@ -221,22 +269,38 @@ namespace etw
 	*/
 	struct ThreadTypeGroup1EventOffset
 	{
-		bool is_positioned_ = false;
+		bool is_positioned = false;
+		bool is_successful = false;
 
-		DWORD process_id_offs_ = 0;
-		DWORD tthread_id_offs_ = 0;
-		DWORD stack_base_offs_ = 0;
-		DWORD stack_limit_offs_ = 0;
-		DWORD user_stack_base_offs_ = 0;
-		DWORD user_stack_limit_offs_ = 0;
-		DWORD affinity_offs_ = 0;
-		DWORD win32_start_addr_offs_ = 0;
-		DWORD teb_base_offs_ = 0;
-		DWORD subprocess_tag_offs_ = 0;
-		DWORD base_priority_offs_ = 0;
-		DWORD page_priority_offs_ = 0;
-		DWORD io_priority_offs_ = 0;
-		DWORD thread_flags_offs_ = 0;
+		DWORD process_id_offs = 0;
+		DWORD tthread_id_offs = 0;
+		DWORD stack_base_offs = 0;
+		DWORD stack_limit_offs = 0;
+		DWORD user_stack_base_offs = 0;
+		DWORD user_stack_limit_offs = 0;
+		DWORD affinity_offs = 0;
+		DWORD win32_start_addr_offs = 0;
+		DWORD teb_base_offs = 0;
+		DWORD subprocess_tag_offs = 0;
+		DWORD base_priority_offs = 0;
+		DWORD page_priority_offs = 0;
+		DWORD io_priority_offs = 0;
+		DWORD thread_flags_offs = 0;
+
+		DWORD process_id_size = 0;
+		DWORD tthread_id_size = 0;
+		DWORD stack_base_size = 0;
+		DWORD stack_limit_size = 0;
+		DWORD user_stack_base_size = 0;
+		DWORD user_stack_limit_size = 0;
+		DWORD affinity_size = 0;
+		DWORD win32_start_addr_size = 0;
+		DWORD teb_base_size = 0;
+		DWORD subprocess_tag_size = 0;
+		DWORD base_priority_size = 0;
+		DWORD page_priority_size = 0;
+		DWORD io_priority_size = 0;
+		DWORD thread_flags_size = 0;
 	};
 
 	struct ThreadTypeGroup1EventMember
@@ -264,7 +328,7 @@ namespace etw
 	struct ThreadStartEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset_;
+		static inline ThreadTypeGroup1EventOffset offset;
 	public:
 		ThreadStartEvent(const Event& event);
 	};
@@ -272,7 +336,7 @@ namespace etw
 	struct ThreadEndEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset_;
+		static inline ThreadTypeGroup1EventOffset offset;
 	public:
 		ThreadEndEvent(const Event& event);
 	};
@@ -280,7 +344,7 @@ namespace etw
 	struct ThreadDCStartEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset_;
+		static inline ThreadTypeGroup1EventOffset offset;
 	public:
 		ThreadDCStartEvent(const Event& event);
 	};
@@ -288,7 +352,7 @@ namespace etw
 	struct ThreadDCEndEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset_;
+		static inline ThreadTypeGroup1EventOffset offset;
 	public:
 		ThreadDCEndEvent(const Event& event);
 	};
