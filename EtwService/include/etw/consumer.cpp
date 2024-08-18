@@ -108,10 +108,12 @@ namespace etw
         if (type == FileIoOperation::kCreate)
         {
             FileIoCreateEvent file_create_event(event);
+            /*
             ulti::WriteDebugA("[+] Create event");
 			ulti::WriteDebugW(L"    - Open Path: " + std::wstring(file_create_event.open_path));
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)file_create_event.file_object));
             ulti::WriteDebugA("\n");
+            */
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
         else if (type == FileIoOperation::kDirEnum)
@@ -125,69 +127,90 @@ namespace etw
         // EventTypeName{ "SetInfo", "Delete", "Rename", "QueryInfo", "FSControl" }
         else if (type == FileIoOperation::kSetInfo)
         {
-            // FileIoSetInfoEvent set_info_event(event);
+            FileIoSetInfoEvent set_info_event(event);
+            /*
+            ulti::WriteDebugA("[+] Set info event");
+            ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)set_info_event.file_object));
+            ulti::WriteDebugA("\n");
+            */
         }
         else if (type == FileIoOperation::kDelete)
         {
 			FileIoDeleteEvent delete_event(event);
+            /*
 			ulti::WriteDebugA("[+] Delete event");
             ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)delete_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kRename)
 		{
 			FileIoRenameEvent rename_event(event);
+            /*
 			ulti::WriteDebugA("[+] Rename event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)rename_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kQueryInfo)
 		{
+            /*
 			FileIoQueryInfoEvent query_info_event(event);
 			ulti::WriteDebugA("[+] Query info event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)query_info_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kFSControl)
 		{
+            /*
 			FileIoFSControlEvent fs_control_event(event);
 			ulti::WriteDebugA("[+] FS control event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)fs_control_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		// EventTypeName{"Name", "FileCreate", "FileDelete", "FileRundown"}
 		else if (type == FileIoOperation::kName)
 		{
+            /*
 			FileIoNameEvent name_event(event);
 			ulti::WriteDebugA("[+] File name event");
             ulti::WriteDebugW(L"    - File Name: " + std::wstring(name_event.file_name));
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)name_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 
 		}
 		else if (type == FileIoOperation::kFileCreate)
 		{
+            /*
 			FileIoFileCreateEvent file_create_event(event);
 			ulti::WriteDebugA("[+] File create event");
 			ulti::WriteDebugW(L"    - File Name: " + std::wstring(file_create_event.file_name));
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)file_create_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kFileDelete)
 		{
+            /*
 			FileIoFileDeleteEvent file_delete_event(event);
 			ulti::WriteDebugA("[+] File delete event");
 			ulti::WriteDebugW(L"    - File Name: " + std::wstring(file_delete_event.file_name));
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)file_delete_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kFileRundown)
 		{
+            /*
 			FileIoFileRundownEvent file_rundown_event(event);
 			ulti::WriteDebugA("[+] File rundown event");
 			ulti::WriteDebugW(L"    - File Name: " + std::wstring(file_rundown_event.file_name));
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)file_rundown_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
         // EventTypeName{ "OperationEnd" }
 		else if (type == FileIoOperation::kOperationEnd)
@@ -197,33 +220,39 @@ namespace etw
         // EventTypeName{"Read", "Write"}
 		else if (type == FileIoOperation::kRead)
 		{
-			// FileIoReadEvent read_event(event);
+			FileIoReadEvent read_event(event);
 		}
 		else if (type == FileIoOperation::kWrite)
 		{
-			// FileIoWriteEvent write_event(event);
+			FileIoWriteEvent write_event(event);
 		}
         // EventTypeName{ "Cleanup", "Close", "Flush" }
         else if (type == FileIoOperation::kCleanup)
         {
+            /*
             FileIoSimpleOpCleanupEvent cleanup_event(event);
 			ulti::WriteDebugA("[+] Cleanup event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)cleanup_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kClose)
 		{
             FileIoSimpleOpCloseEvent close_event(event);
+            /*
 			ulti::WriteDebugA("[+] Close event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)close_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 		else if (type == FileIoOperation::kFlush)
 		{
+            /*
             FileIoSimpleOpFlushEvent flush_event(event);
 			ulti::WriteDebugA("[+] Flush event");
 			ulti::WriteDebugW(L"    - File Object: " + std::to_wstring((size_t)flush_event.file_object));
             ulti::WriteDebugA("\n");
+            */
 		}
 
         return VOID();
