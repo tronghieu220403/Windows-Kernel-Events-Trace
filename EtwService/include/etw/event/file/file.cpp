@@ -52,7 +52,7 @@ namespace etw
 				return;
 			}
 
-			offset->is_positioned = true;
+			offset->is_successful = true;
 			if (offset->open_path_offs > offset->irp_ptr_offs &&
 				offset->open_path_offs > offset->ttid_offs &&
 				offset->open_path_offs > offset->file_object_offs &&
@@ -66,6 +66,7 @@ namespace etw
 			else
 			{
 				ulti::WriteDebugA("The position for FileCreateEvent is not as expected.");
+				offset->is_positioned = false;
 			}
 		}
 
@@ -132,12 +133,12 @@ namespace etw
 				0 == offset->info_class_size ||
 				0 == offset->file_index_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoDirEnumEvent");
+				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoDirEnumEventMember");
 				offset->is_successful = false;
 				return;
 			}
-
-			offset->is_positioned = true;
+			offset->is_successful = true;
+			offset->is_positioned = false;
 			if (offset->file_name_offs > offset->irp_ptr_offs &&
 				offset->file_name_offs > offset->ttid_offs &&
 				offset->file_name_offs > offset->file_object_offs &&
@@ -146,12 +147,7 @@ namespace etw
 				offset->file_name_offs > offset->info_class_offs&&
 				offset->file_name_offs > offset->file_index_offs)
 			{
-				ulti::WriteDebugA("The position for FileIoDirEnumEvent is as expected.");
 				offset->is_positioned = true;
-			}
-			else
-			{
-				ulti::WriteDebugA("The position for FileIoDirEnumEvent is not as expected.");
 			}
 		}
 
@@ -166,11 +162,23 @@ namespace etw
 	FileIoDirEnumEvent::FileIoDirEnumEvent(const Event& event)
 	{
 		this->FileIoDirEnumEventMember::FileIoDirEnumEventMember(event, &offset);
+		if (offset.is_successful == true)
+		{
+			std::wstring s(file_name);
+			if (s.size() > 0)
+				ulti::WriteDebugW(std::wstring(L"Dir enum: ") + file_name);
+		}
 	}
 
 	FileIoDirNotifyEvent::FileIoDirNotifyEvent(const Event& event)
 	{
 		this->FileIoDirEnumEventMember::FileIoDirEnumEventMember(event, &offset);
+		if (offset.is_successful == true)
+		{
+			std::wstring s(file_name);
+			if (s.size() > 0)
+				ulti::WriteDebugW(std::wstring(L"Dir noti: ") + file_name);
+		}
 	}
 
 	FileIoInfoEventMember::FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* offset)

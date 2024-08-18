@@ -104,13 +104,19 @@ namespace etw
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
         int type = event.GetType();
-        switch (type)
+        if (type == FileIoOperation::kCreate)
         {
-		case FileIoOperation::kCreate:
             FileIoCreateEvent file_create_event(event);
-        default:
-            break;
         }
+        else if (type == FileIoOperation::kDirEnum)
+        {
+            FileIoDirEnumEvent dir_enum_event(event);
+        }
+        else if (type == FileIoOperation::kDirNotify)
+        {
+            FileIoDirNotifyEvent dir_noti_event(event);
+        }
+
 
         return VOID();
     }
