@@ -19,7 +19,7 @@ DEFINE_GUID( /* 3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c */    ThreadGuid, 0x3d6fa8d
 DEFINE_GUID( /* bf3a50c5-a9c9-4988-a005-2df0b7c80f80 */    UdpIpGuid, 0xbf3a50c5, 0xa9c9, 0x4988, 0xa0, 0x05, 0x2d, 0xf0, 0xb7, 0xc8, 0x0f, 0x80);
 
 
-class EventType
+class EventGuid
 {
 public:
 	inline static const std::wstring kFileIo = L"{90CBDC39-4A3E-11D1-84F4-0000F80464E3}";

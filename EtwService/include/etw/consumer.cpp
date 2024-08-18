@@ -77,9 +77,22 @@ namespace etw
         return true;
     }
 
+    // int cnt = 0;
     VOID WINAPI KernelConsumer::ProcessEvent(PEVENT_TRACE p_event)
     {
-
+        /* 
+        // Stress test
+        int gg = 1;
+        for (int i = 1; i < 100000; i++)
+        {
+            gg = gg * i;
+        }
+        cnt++;
+        if (cnt % 10000 == 0)
+        {
+            ulti::WriteDebugA(std::to_string(cnt));
+        }
+        */
         if (IsEqualGUID(p_event->Header.Guid, EventTraceGuid) &&
             p_event->Header.Class.Type == EVENT_TRACE_TYPE_INFO)
         {
@@ -93,13 +106,10 @@ namespace etw
             {
                 ProcessFileIoEvent(event);
             }
-            
         }
                 
         return;
     }
-
-    int cnt = 0;
 
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
