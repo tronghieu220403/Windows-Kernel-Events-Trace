@@ -162,23 +162,11 @@ namespace etw
 	FileIoDirEnumEvent::FileIoDirEnumEvent(const Event& event)
 	{
 		this->FileIoDirEnumEventMember::FileIoDirEnumEventMember(event, &offset);
-		if (offset.is_successful == true)
-		{
-			std::wstring s(file_name);
-			if (s.size() > 0)
-				ulti::WriteDebugW(std::wstring(L"Dir enum: ") + file_name);
-		}
 	}
 
 	FileIoDirNotifyEvent::FileIoDirNotifyEvent(const Event& event)
 	{
 		this->FileIoDirEnumEventMember::FileIoDirEnumEventMember(event, &offset);
-		if (offset.is_successful == true)
-		{
-			std::wstring s(file_name);
-			if (s.size() > 0)
-				ulti::WriteDebugW(std::wstring(L"Dir noti: ") + file_name);
-		}
 	}
 
 	FileIoInfoEventMember::FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* offset)

@@ -110,13 +110,16 @@ namespace etw
         }
         else if (type == FileIoOperation::kDirEnum)
         {
-            FileIoDirEnumEvent dir_enum_event(event);
+            // FileIoDirEnumEvent dir_enum_event(event);
         }
         else if (type == FileIoOperation::kDirNotify)
         {
-            FileIoDirNotifyEvent dir_noti_event(event);
+            // FileIoDirNotifyEvent dir_noti_event(event);
         }
-
+        else if (type == FileIoOperation::kSetInfo)
+        {
+            FileIoSetInfoEvent set_info_event(event);
+        }
 
         return VOID();
     }
