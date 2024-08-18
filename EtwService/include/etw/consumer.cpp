@@ -106,7 +106,7 @@ namespace etw
         int type = event.GetType();
         if (type == FileIoOperation::Create)
         {
-			FileCreateEvent file_create_event(event);
+			FileIoCreateEvent file_create_event(event);
         }
 
         return VOID();

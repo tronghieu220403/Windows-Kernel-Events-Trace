@@ -5,60 +5,60 @@
 namespace etw
 {
 
-    FileCreateEvent::FileCreateEvent(const Event& event)
-    {
-		if (is_positioned_ == false)
+	FileIoCreateEventMember::FileIoCreateEventMember(const Event& event, FileIoCreateEventOffset* offset)
+	{
+		if (offset->is_positioned_ == false)
 		{
 			WmiEventClass wec(EventType().kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 			std::pair<int, int> p;
-			
+
 			p = wec.GetPropertyInfo(L"IrpPtr", event);
-			irp_ptr_offs = p.first;
-			irp_ptr_size = p.second;
+			offset->irp_ptr_offs_ = p.first;
+			offset->irp_ptr_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"TTID", event);
-			ttid_offs = p.first;
-			ttid_size = p.second;
+			offset->ttid_offs_ = p.first;
+			offset->ttid_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"FileObject", event);
-			file_object_offs = p.first;
-			file_object_size = p.second;
+			offset->file_object_offs_ = p.first;
+			offset->file_object_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"CreateOptions", event);
-			create_options_offs = p.first;
-			create_options_size = p.second;
+			offset->create_options_offs_ = p.first;
+			offset->create_options_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"FileAttributes", event);
-			file_attributes_offs = p.first;
-			file_attributes_size = p.second;
+			offset->file_attributes_offs_ = p.first;
+			offset->file_attributes_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"ShareAccess", event);
-			share_access_offs = p.first;
-			share_access_size = p.second;
+			offset->share_access_offs_ = p.first;
+			offset->share_access_size_ = p.second;
 
 			p = wec.GetPropertyInfo(L"OpenPath", event);
-			open_path_offs = p.first;
+			offset->open_path_offs_ = p.first;
 
-			if (0 == irp_ptr_size ||
-				0 == ttid_size ||
-				0 == file_object_size ||
-				0 == create_options_size ||
-				0 == file_attributes_size ||
-				0 == share_access_size)
+			if (0 == offset->irp_ptr_size_ ||
+				0 == offset->ttid_size_ ||
+				0 == offset->file_object_size_ ||
+				0 == offset->create_options_size_ ||
+				0 == offset->file_attributes_size_ ||
+				0 == offset->share_access_size_)
 			{
 				ulti::WriteDebugA("Error in GetPropertyInfo in FileCreateEvent");
 				return;
 			}
-			if (open_path_offs > irp_ptr_offs &&
-				open_path_offs > ttid_offs &&
-				open_path_offs > file_object_offs &&
-				open_path_offs > create_options_offs &&
-				open_path_offs > file_attributes_offs &&
-				open_path_offs > share_access_offs)
+			if (offset->open_path_offs_ > offset->irp_ptr_offs_ &&
+				offset->open_path_offs_ > offset->ttid_offs_ &&
+				offset->open_path_offs_ > offset->file_object_offs_ &&
+				offset->open_path_offs_ > offset->create_options_offs_ &&
+				offset->open_path_offs_ > offset->file_attributes_offs_ &&
+				offset->open_path_offs_ > offset->share_access_offs_)
 			{
-				ulti::WriteDebugA("The position for FileCreateEvent is  as expected.");
-				is_positioned_ = true;
+				ulti::WriteDebugA("The position for FileCreateEvent is as expected.");
+				offset->is_positioned_ = true;
 			}
 			else
 			{
@@ -66,15 +66,21 @@ namespace etw
 			}
 		}
 
-        PBYTE p_data = event.GetPEventData();
-		memcpy(&IrpPtr, p_data + irp_ptr_offs, irp_ptr_size);
-		memcpy(&TTID, p_data + ttid_offs, ttid_size);
-		memcpy(&FileObject, p_data + file_object_offs, file_object_size);
-		memcpy(&CreateOptions, p_data + create_options_offs, create_options_size);
-		memcpy(&FileAttributes, p_data + file_attributes_offs, file_attributes_size);
-		memcpy(&ShareAccess, p_data + share_access_offs, share_access_size);
-		OpenPath = (wchar_t*)(p_data + open_path_offs);
+		PBYTE p_data = event.GetPEventData();
+		memcpy(&IrpPtr, p_data + offset->irp_ptr_offs_, offset->irp_ptr_size_);
+		memcpy(&TTID, p_data + offset->ttid_offs_, offset->ttid_size_);
+		memcpy(&FileObject, p_data + offset->file_object_offs_, offset->file_object_size_);
+		memcpy(&CreateOptions, p_data + offset->create_options_offs_, offset->create_options_size_);
+		memcpy(&FileAttributes, p_data + offset->file_attributes_offs_, offset->file_attributes_size_);
+		memcpy(&ShareAccess, p_data + offset->share_access_offs_, offset->share_access_size_);
+		OpenPath = (wchar_t*)(p_data + offset->open_path_offs_);
+	}
+
+
+    FileIoCreateEvent::FileIoCreateEvent(const Event& event)
+    {
 		
+		FileIoCreateEventMember::FileIoCreateEventMember(event, &offset_);
 		std::wstring s(OpenPath);
 		//ulti::WriteDebugW(s);
 
