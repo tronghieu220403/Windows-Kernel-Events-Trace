@@ -104,9 +104,12 @@ namespace etw
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
         int type = event.GetType();
-        if (type == FileIoOperation::Create)
+        switch (type)
         {
-			FileIoCreateEvent file_create_event(event);
+		case FileIoOperation::kCreate:
+            FileIoCreateEvent file_create_event(event);
+        default:
+            break;
         }
 
         return VOID();

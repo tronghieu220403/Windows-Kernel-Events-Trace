@@ -7,7 +7,7 @@ namespace etw
 
     KernelProvider::KernelProvider()
     {
-        session_properties_ = (EVENT_TRACE_PROPERTIES*)malloc(buffer_size_);
+        session_properties_ = (EVENT_TRACE_PROPERTIES*)(new char[buffer_size_]);
         ZeroMemory(session_properties_, sizeof(EVENT_TRACE_PROPERTIES));
         session_properties_->Wnode.BufferSize = buffer_size_;
         session_properties_->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
