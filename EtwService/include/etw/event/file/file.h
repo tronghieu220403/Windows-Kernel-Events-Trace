@@ -25,7 +25,7 @@ namespace etw
 		kFileCreate = 32,
 		kFileDelete = 35,
 		kFileRundown = 36,
-		kOpEnd = 76,
+		kOperationEnd = 76,
 		kRead = 67,
 		kWrite = 68,
 		kCleanup = 65,
