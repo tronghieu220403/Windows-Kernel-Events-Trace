@@ -99,7 +99,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
-                ProcessPerfInfoEvent(event);
+                //ProcessPerfInfoEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), ThreadGuid))
             {
