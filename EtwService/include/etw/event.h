@@ -17,17 +17,23 @@ DEFINE_GUID( /* AE53722E-C863-11d2-8659-00C04FA321A1 */    RegistryGuid, 0xae537
 DEFINE_GUID( /* 9a280ac0-c8e0-11d1-84e2-00c04fb998a2 */    TcpIpGuid, 0x9a280ac0, 0xc8e0, 0x11d1, 0x84, 0xe2, 0x00, 0xc0, 0x4f, 0xb9, 0x98, 0xa2);
 DEFINE_GUID( /* 3d6fa8d1-fe05-11d0-9dda-00c04fd7ba7c */    ThreadGuid, 0x3d6fa8d1, 0xfe05, 0x11d0, 0x9d, 0xda, 0x00, 0xc0, 0x4f, 0xd7, 0xba, 0x7c);
 DEFINE_GUID( /* bf3a50c5-a9c9-4988-a005-2df0b7c80f80 */    UdpIpGuid, 0xbf3a50c5, 0xa9c9, 0x4988, 0xa0, 0x05, 0x2d, 0xf0, 0xb7, 0xc8, 0x0f, 0x80);
+DEFINE_GUID( /* 3d6fa8d3-fe05-11d0-9dda-00c04fd7ba7c */    PageFaultGuid, 0x3d6fa8d3, 0xfe05, 0x11d0, 0x9d, 0xda, 0x00, 0xc0, 0x4f, 0xd7, 0xba, 0x7c);
+DEFINE_GUID( /* ce1dbfb4-137e-4da6-87b0-3f59aa102cbc */    PerfInfoGuid, 0xce1dbfb4, 0x137e, 0x4da6, 0x87, 0xb0, 0x3f, 0x59, 0xaa, 0x10, 0x2c, 0xbc);
 
 
-class EventGuid
+struct EventGuid
 {
 public:
-	inline static const std::wstring kFileIo = L"{90CBDC39-4A3E-11D1-84F4-0000F80464E3}";
-	inline static const std::wstring kThread = L"{3D6FA8D1-FE05-11D0-9DDA-00C04FD7BA7C}";
-	inline static const std::wstring kProcess = L"{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}";
 	inline static const std::wstring kDiskIo = L"{3D6FA8D4-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kFileIo = L"{90CBDC39-4A3E-11D1-84F4-0000F80464E3}";
+	inline static const std::wstring kImageLoad = L"{2CB15D1D-5FC1-11D2-ABE1-00A0C911F518}";
+	inline static const std::wstring kProcess = L"{3D6FA8D0-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kRegistry = L"{AE53722E-C863-11d2-8659-00C04FA321A1}";
 	inline static const std::wstring kTcpip = L"{9A280AC0-C8E0-11D1-84E2-00C04FB998A2}";
+	inline static const std::wstring kThread = L"{3D6FA8D1-FE05-11D0-9DDA-00C04FD7BA7C}";
 	inline static const std::wstring kUdpip = L"{BF3A50C5-A9C9-4988-A005-2DF0B7C80F80}";
+	inline static const std::wstring kPageFault = L"{3D6FA8D3-FE05-11D0-9DDA-00C04FD7BA7C}";
+	inline static const std::wstring kPerfInfo = L"{CE1DBFB4-137E-4DA6-87B0-3F59AA102CBC}";
 };
 
 
@@ -54,7 +60,10 @@ namespace etw
 		ULONG GetMofLength() const;
 
 		PBYTE GetPEventData() const;
+		
+		size_t GetThreadId() const;
 
+		size_t GetProcessId() const;
 	};
 
 };

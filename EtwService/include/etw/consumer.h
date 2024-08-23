@@ -14,6 +14,9 @@
 #include "etw/event.h"
 
 #include "etw/event/file/file.h"
+#include "etw/event/process/process.h"
+#include "etw/event/page-fault/page-fault.h"
+#include "etw/event/perf-info/perf-info.h"
 
 namespace etw
 {
@@ -39,12 +42,15 @@ namespace etw
 		static VOID WINAPI ProcessEvent(PEVENT_TRACE p_event);
 
 		static VOID WINAPI ProcessFileIoEvent(Event event);
+		static VOID WINAPI ProcessProcessEvent(Event event);
+		static VOID WINAPI ProcessThreadEvent(Event event);
+		static VOID WINAPI ProcessPageFaultEvent(Event event);
+		static VOID WINAPI ProcessPerfInfoEvent(Event event);
+
 		/*
 		static VOID WINAPI ProcessImageLoadEvent(Event event);
-		static VOID WINAPI ProcessProcessEvent(Event event);
 		static VOID WINAPI ProcessRegistryEvent(Event event);
 		static VOID WINAPI ProcessTcpIpEvent(Event event);
-		static VOID WINAPI ProcessThreadEvent(Event event);
 		static VOID WINAPI ProcessNetworkEvent(Event event);
 		*/
 

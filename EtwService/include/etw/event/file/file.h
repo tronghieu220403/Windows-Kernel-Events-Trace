@@ -11,7 +11,7 @@
 
 namespace etw
 {
-	enum FileIoOperation
+	enum FileIoEventType
 	{
 		kCreate = 64,
 		kDirEnum = 72,
@@ -65,7 +65,6 @@ namespace etw
 		DWORD create_options_size = 0;
 		DWORD file_attributes_size = 0;
 		DWORD share_access_size = 0;
-
 	};
 
 	struct FileIoCreateEventMember

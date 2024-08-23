@@ -44,6 +44,16 @@ namespace etw
     PBYTE Event::GetPEventData() const {
         return (PBYTE)p_event_->MofData;
     }
+
+    size_t Event::GetThreadId() const
+    {
+        return (size_t)p_event_->Header.ThreadId;
+    }
+
+    size_t Event::GetProcessId() const
+    {
+        return (size_t)p_event_->Header.ProcessId;
+    }
 }
 
 #endif
