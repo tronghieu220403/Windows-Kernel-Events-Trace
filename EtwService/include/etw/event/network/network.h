@@ -62,8 +62,8 @@ namespace etw
 	struct TcpIpFailEventMember
 	{
 	public:
-		uint16_t Proto = 0;
-		uint16_t FailureCode = 0;
+		size_t Proto = 0;
+		size_t FailureCode = 0;
 
 		TcpIpFailEventMember() = default;
 		TcpIpFailEventMember(const Event& event, TcpIpFailEventOffset* offset);
@@ -124,16 +124,16 @@ namespace etw
 	struct TcpIpSendIPV4EventMember
 	{
 	public:
-		uint32_t pid = 0;
-		uint32_t size = 0;
+		size_t pid = 0;
+		size_t size = 0;
 		PVOID daddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID saddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID dport = nullptr;  // Assuming object type is represented as a pointer
 		PVOID sport = nullptr;  // Assuming object type is represented as a pointer
-		uint32_t startime = 0;
-		uint32_t endtime = 0;
-		uint32_t seqnum = 0;
-		uint32_t connid = 0;
+		size_t startime = 0;
+		size_t endtime = 0;
+		size_t seqnum = 0;
+		size_t connid = 0;
 
 		TcpIpSendIPV4EventMember() = default;
 		TcpIpSendIPV4EventMember(const Event& event, TcpIpSendIPV4EventOffset* offset);
@@ -209,14 +209,14 @@ namespace etw
 	struct TcpIpTypeGroup1EventMember
 	{
 	public:
-		uint32_t pid = 0;
-		uint32_t size = 0;
+		size_t pid = 0;
+		size_t size = 0;
 		PVOID daddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID saddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID dport = nullptr;  // Assuming object type is represented as a pointer
 		PVOID sport = nullptr;  // Assuming object type is represented as a pointer
-		uint32_t seqnum = 0;
-		uint32_t connid = 0;
+		size_t seqnum = 0;
+		size_t connid = 0;
 
 		TcpIpTypeGroup1EventMember() = default;
 		TcpIpTypeGroup1EventMember(const Event& event, TcpIpTypeGroup1EventOffset* offset);
@@ -384,21 +384,21 @@ namespace etw
 	struct TcpIpTypeGroup2EventMember
 	{
 	public:
-		uint32_t pid = 0;
-		uint32_t size = 0;
+		size_t pid = 0;
+		size_t size = 0;
 		PVOID daddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID saddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID dport = nullptr;  // Assuming object type is represented as a pointer
 		PVOID sport = nullptr;  // Assuming object type is represented as a pointer
-		uint16_t mss = 0;
-		uint16_t sackopt = 0;
-		uint16_t tsopt = 0;
-		uint16_t wsopt = 0;
-		uint32_t rcvwin = 0;
-		int16_t rcvwinscale = 0;
-		int16_t sndwinscale = 0;
-		uint32_t seqnum = 0;
-		uint32_t connid = 0;
+		size_t mss = 0;
+		size_t sackopt = 0;
+		size_t tsopt = 0;
+		size_t wsopt = 0;
+		size_t rcvwin = 0;
+		size_t rcvwinscale = 0;
+		size_t sndwinscale = 0;
+		size_t seqnum = 0;
+		size_t connid = 0;
 
 		TcpIpTypeGroup2EventMember() = default;
 		TcpIpTypeGroup2EventMember(const Event& event, TcpIpTypeGroup2EventOffset* offset);
@@ -465,8 +465,8 @@ namespace etw
 	struct UdpIpFailEventMember
 	{
 	public:
-		uint16_t Proto = 0;
-		uint16_t FailureCode = 0;
+		size_t Proto = 0;
+		size_t FailureCode = 0;
 
 		UdpIpFailEventMember() = default;
 		UdpIpFailEventMember(const Event& event, UdpIpFailEventOffset* offset);
@@ -534,14 +534,14 @@ namespace etw
 	struct UdpIpTypeGroup1EventMember
 	{
 	public:
-		uint32_t pid = 0;
-		uint32_t size = 0;
+		size_t pid = 0;
+		size_t size = 0;
 		PVOID daddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID saddr = nullptr;  // Assuming object type is represented as a pointer
 		PVOID dport = nullptr;  // Assuming object type is represented as a pointer
 		PVOID sport = nullptr;  // Assuming object type is represented as a pointer
-		uint32_t seqnum = 0;
-		uint32_t connid = 0;
+		size_t seqnum = 0;
+		size_t connid = 0;
 
 		UdpIpTypeGroup1EventMember() = default;
 		UdpIpTypeGroup1EventMember(const Event& event, UdpIpTypeGroup1EventOffset* offset);

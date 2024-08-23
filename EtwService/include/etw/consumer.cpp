@@ -80,19 +80,6 @@ namespace etw
     // int cnt = 0;
     VOID WINAPI KernelConsumer::ProcessEvent(PEVENT_TRACE p_event)
     {
-        /* 
-        // Stress test
-        int gg = 1;
-        for (int i = 1; i < 100000; i++)
-        {
-            gg = gg * i;
-        }
-        cnt++;
-        if (cnt % 10000 == 0)
-        {
-            ulti::WriteDebugA(std::to_string(cnt));
-        }
-        */
         if (IsEqualGUID(p_event->Header.Guid, EventTraceGuid) &&
             p_event->Header.Class.Type == EVENT_TRACE_TYPE_INFO)
         {
@@ -104,7 +91,23 @@ namespace etw
             
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
-                ProcessFileIoEvent(event);
+                //ProcessFileIoEvent(event);
+            }
+            else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
+            {
+                //ProcessPageFaultEvent(event);
+            }
+            else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
+            {
+                ProcessPerfInfoEvent(event);
+            }
+            else if (IsEqualGUID(event.GetGuid(), ThreadGuid))
+            {
+                //ProcessThreadEvent(event);
+            }
+            else if (IsEqualGUID(event.GetGuid(), ProcessGuid))
+            {
+                //ProcessProcessEvent(event);
             }
         }
                 
@@ -115,7 +118,7 @@ namespace etw
     {
         int type = event.GetType();
         // EventTypeName{"Create"}
-        if (type == FileIoOperation::kCreate)
+        if (type == FileIoEventType::kCreate)
         {
             FileIoCreateEvent file_create_event(event);
             /*
@@ -126,16 +129,16 @@ namespace etw
             */
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
-        else if (type == FileIoOperation::kDirEnum)
+        else if (type == FileIoEventType::kDirEnum)
         {
             // FileIoDirEnumEvent dir_enum_event(event);
         }
-        else if (type == FileIoOperation::kDirNotify)
+        else if (type == FileIoEventType::kDirNotify)
         {
             // FileIoDirNotifyEvent dir_noti_event(event);
         }
         // EventTypeName{ "SetInfo", "Delete", "Rename", "QueryInfo", "FSControl" }
-        else if (type == FileIoOperation::kSetInfo)
+        else if (type == FileIoEventType::kSetInfo)
         {
             FileIoSetInfoEvent set_info_event(event);
             /*
@@ -144,7 +147,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
         }
-        else if (type == FileIoOperation::kDelete)
+        else if (type == FileIoEventType::kDelete)
         {
 			FileIoDeleteEvent delete_event(event);
             /*
@@ -153,7 +156,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kRename)
+		else if (type == FileIoEventType::kRename)
 		{
 			FileIoRenameEvent rename_event(event);
             /*
@@ -162,7 +165,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kQueryInfo)
+		else if (type == FileIoEventType::kQueryInfo)
 		{
             /*
 			FileIoQueryInfoEvent query_info_event(event);
@@ -171,7 +174,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kFSControl)
+		else if (type == FileIoEventType::kFSControl)
 		{
             /*
 			FileIoFSControlEvent fs_control_event(event);
@@ -181,7 +184,7 @@ namespace etw
             */
 		}
 		// EventTypeName{"Name", "FileCreate", "FileDelete", "FileRundown"}
-		else if (type == FileIoOperation::kName)
+		else if (type == FileIoEventType::kName)
 		{
             /*
 			FileIoNameEvent name_event(event);
@@ -192,7 +195,7 @@ namespace etw
             */
 
 		}
-		else if (type == FileIoOperation::kFileCreate)
+		else if (type == FileIoEventType::kFileCreate)
 		{
             /*
 			FileIoFileCreateEvent file_create_event(event);
@@ -202,7 +205,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kFileDelete)
+		else if (type == FileIoEventType::kFileDelete)
 		{
             /*
 			FileIoFileDeleteEvent file_delete_event(event);
@@ -212,7 +215,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kFileRundown)
+		else if (type == FileIoEventType::kFileRundown)
 		{
             /*
 			FileIoFileRundownEvent file_rundown_event(event);
@@ -223,21 +226,21 @@ namespace etw
             */
 		}
         // EventTypeName{ "OperationEnd" }
-		else if (type == FileIoOperation::kOperationEnd)
+		else if (type == FileIoEventType::kOperationEnd)
 		{
 			// FileIoOperationEndEvent operation_end_event(event);
 		}
         // EventTypeName{"Read", "Write"}
-		else if (type == FileIoOperation::kRead)
+		else if (type == FileIoEventType::kRead)
 		{
 			FileIoReadEvent read_event(event);
 		}
-		else if (type == FileIoOperation::kWrite)
+		else if (type == FileIoEventType::kWrite)
 		{
 			FileIoWriteEvent write_event(event);
 		}
         // EventTypeName{ "Cleanup", "Close", "Flush" }
-        else if (type == FileIoOperation::kCleanup)
+        else if (type == FileIoEventType::kCleanup)
         {
             /*
             FileIoSimpleOpCleanupEvent cleanup_event(event);
@@ -246,7 +249,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kClose)
+		else if (type == FileIoEventType::kClose)
 		{
             FileIoSimpleOpCloseEvent close_event(event);
             /*
@@ -255,7 +258,7 @@ namespace etw
             ulti::WriteDebugA("\n");
             */
 		}
-		else if (type == FileIoOperation::kFlush)
+		else if (type == FileIoEventType::kFlush)
 		{
             /*
             FileIoSimpleOpFlushEvent flush_event(event);
@@ -268,6 +271,70 @@ namespace etw
         return VOID();
     }
 
+    VOID __stdcall KernelConsumer::ProcessProcessEvent(Event event)
+    {
+        int type = event.GetType();
+        if (type == ProcessEventType::kProcessStart)
+        {
+            ProcessStartEvent process_start_event(event);
+        }
+        if (type == ProcessEventType::kProcessEnd)
+        {
+            ProcessEndEvent process_end_event(event);
+        }
+        return VOID();
+    }
+
+    VOID __stdcall KernelConsumer::ProcessThreadEvent(Event event)
+    {
+        int type = event.GetType();
+        if (type == ThreadEventType::kThreadStart)
+        {
+            ThreadStartEvent thread_start_event(event);
+            size_t issuing_pid = event.GetProcessId();
+            size_t allocated_pid = thread_start_event.pid;
+        }
+        else if (type == ThreadEventType::kThreadEnd)
+        {
+            ThreadStartEvent thread_end_event(event);
+        }
+        return VOID();
+    }
+
+    VOID __stdcall KernelConsumer::ProcessPageFaultEvent(Event event)
+    {
+        int type = event.GetType();
+        if (type == PageFaultEventType::VirtualAlloc)
+        {
+            PageFaultVirtualAllocEvent alloc_event(event);
+            size_t issuing_pid = event.GetProcessId();
+            size_t allocated_pid = alloc_event.process_id;
+        }
+        else if (type == ThreadEventType::kThreadEnd)
+        {
+            PageFaultVirtualFreeEvent free_event(event);
+        }
+
+        return VOID();
+    }
+
+    VOID __stdcall KernelConsumer::ProcessPerfInfoEvent(Event event)
+    {
+        int type = event.GetType();
+        if (type == PerfInfoEventType::SysClEnter)
+        {
+            SysCallEnterEvent sys_call_enter_event(event);
+            ulti::WriteDebugA("[+] SysCallEnterEvent");
+            ulti::WriteDebugA("    - PID:     " + std::format("{:#x}", event.GetProcessId()));
+            ulti::WriteDebugA("    - TID:     " + std::format("{:#x}", event.GetThreadId()));
+            ulti::WriteDebugA("    - Time:     " + std::format("{:#x}", event.GetTimeInMs()));
+            ulti::WriteDebugA("    - Address: " + std::format("{:#x}",(size_t)sys_call_enter_event.sys_call_address));
+            ulti::WriteDebugA("\n");
+        }
+        return VOID();
+    }
+
+    
     
     ULONG KernelConsumer::Close()
     {
