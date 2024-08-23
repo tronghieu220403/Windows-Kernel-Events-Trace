@@ -147,6 +147,8 @@
     <ClCompile Include="include\etw\event.cpp" />
     <ClCompile Include="include\etw\event\file\file.cpp" />
     <ClCompile Include="include\etw\event\network\network.cpp" />
+    <ClCompile Include="include\etw\event\page-fault\page-fault.cpp" />
+    <ClCompile Include="include\etw\event\perf-info\perf-info.cpp" />
     <ClCompile Include="include\etw\event\process\process.cpp" />
     <ClCompile Include="include\etw\event\registry\registry.cpp" />
     <ClCompile Include="include\etw\provider.cpp" />
@@ -163,6 +165,8 @@
     <ClInclude Include="include\etw\event.h" />
     <ClInclude Include="include\etw\event\file\file.h" />
     <ClInclude Include="include\etw\event\network\network.h" />
+    <ClInclude Include="include\etw\event\page-fault\page-fault.h" />
+    <ClInclude Include="include\etw\event\perf-info\perf-info.h" />
     <ClInclude Include="include\etw\event\process\process.h" />
     <ClInclude Include="include\etw\event\registry\registry.h" />
     <ClInclude Include="include\etw\event\thread\thread.h" />

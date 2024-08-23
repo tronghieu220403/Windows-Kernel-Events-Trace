@@ -77,7 +77,6 @@ namespace etw
         return true;
     }
 
-    // int cnt = 0;
     VOID WINAPI KernelConsumer::ProcessEvent(PEVENT_TRACE p_event)
     {
         if (IsEqualGUID(p_event->Header.Guid, EventTraceGuid) &&
@@ -87,6 +86,7 @@ namespace etw
         }
         else
         {
+            event_count_++;
             Event event(p_event);
             
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
@@ -339,6 +339,9 @@ namespace etw
     ULONG KernelConsumer::Close()
     {
         ULONG status = ERROR_SUCCESS;
+
+        ulti::WriteDebugA("[+] Total event count: " + std::to_string(event_count_));
+
         if ((TRACEHANDLE)INVALID_HANDLE_VALUE != handle_trace_)
         {
             status = CloseTrace(handle_trace_);

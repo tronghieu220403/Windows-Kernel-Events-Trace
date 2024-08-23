@@ -24,6 +24,7 @@ namespace etw
 	class KernelConsumer
 	{
 	private:
+		static inline size_t event_count_ = 0;
 		EVENT_TRACE_LOGFILE trace_ = { 0 };
 		TRACEHANDLE handle_trace_ = NULL;
 		inline static int pointer_size_ = 0;
