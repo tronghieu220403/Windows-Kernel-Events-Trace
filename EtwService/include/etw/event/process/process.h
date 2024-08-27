@@ -91,8 +91,8 @@ namespace etw
 		size_t exit_status = 0;
 		size_t directory_table_base = 0;
 		//PVOID user_sid = nullptr;  // Assuming object type is represented as a pointer
-		//wchar_t* image_file_name = nullptr;
-		//wchar_t* command_line = nullptr;
+		wchar_t* image_file_name = nullptr;
+		wchar_t* command_line = nullptr;
 
 		ProcessTypeGroup1EventMember() = default;
 		ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* offset);

@@ -509,10 +509,6 @@ namespace etw
                 {
                     array_size = var_qualifier.intVal;
                     VariantClear(&var_qualifier);
-                    if (array_size != 1)
-                    {
-                        return;
-                    }
                 }
                 else
                 {
@@ -535,98 +531,17 @@ namespace etw
                 data_size = sizeof(ULONGLONG) * array_size;
                 return;
             }
-
-            case CIM_OBJECT:
-            {
-                hr = p_property->p_qualifiers->Get(L"Extension", 0, &var_qualifier, NULL);
-                if (SUCCEEDED(hr))
-                {
-                    if (_wcsicmp(L"SizeT", var_qualifier.bstrVal) == 0)
-                    {
-                        VariantClear(&var_qualifier);
-
-                        // You do not need to know the data type of the property, you just 
-                        // retrieve either 4 bytes or 8 bytes depending on the pointer's size.
-						data_size = pointer_size_ * array_size;
-                        return;
-                    }
-                    if (_wcsicmp(L"Port", var_qualifier.bstrVal) == 0)
-                    {
-                        element_size = sizeof(USHORT);
-                    }
-                    else if (_wcsicmp(L"IPAddr", var_qualifier.bstrVal) == 0 ||
-                        _wcsicmp(L"IPAddrV4", var_qualifier.bstrVal) == 0)
-                    {
-                        element_size = sizeof(ULONG);
-                    }
-                    else if (_wcsicmp(L"IPAddrV6", var_qualifier.bstrVal) == 0)
-                    {
-                        if (GetProcAddress(GetModuleHandle(L"ntdll"), "RtlIpv6AddressToStringW") == NULL)
-                        {
-                            return;
-                        }
-
-                        element_size = sizeof(IN6_ADDR);
-                    }
-                    else if (_wcsicmp(L"Guid", var_qualifier.bstrVal) == 0)
-                    {
-                        element_size = sizeof(GUID);
-                    }
-                }
-                else if (_wcsicmp(L"Sid", var_qualifier.bstrVal) == 0)
-                {
-                    // Handle sid here, in fact that our events does not contain any "SID" field;
-                    return;
-                }
-                else
-                {
-                    return;
-                }
-
-                VariantClear(&var_qualifier);
-                data_size = element_size * array_size;
-
-                return;
-            }
-
-            case CIM_SINT8:
-            case CIM_UINT8:
-            {
-                hr = p_property->p_qualifiers->Get(L"Extension", 0, &var_qualifier, NULL);
-                if (SUCCEEDED(hr))
-                {
-                    VariantClear(&var_qualifier);
-                    data_size += sizeof(GUID);
-                }
-                else
-                {
-                    for (ULONG i = 0; i < array_size; i++)
-                    {
-                        data_size += sizeof(UINT8);
-                    }
-                }
-                return;
-            }
-
-            case CIM_CHAR16:
-            case CIM_SINT16:
-            case CIM_UINT16:
-            {
-				data_size = sizeof(WCHAR) * array_size;
-                return;
-            }
-
             case CIM_STRING:
             {
                 PBYTE p_event_data = event.GetPEventData();
-				data_size = -1;
-				bool is_wide_string = false;
-				bool is_null_terminated = false;
+                data_size = -1;
+                bool is_wide_string = false;
+                bool is_null_terminated = false;
                 USHORT temp = 0;
-				hr = p_property->p_qualifiers->Get(L"Format", 0, NULL, NULL);
+                hr = p_property->p_qualifiers->Get(L"Format", 0, NULL, NULL);
                 if (SUCCEEDED(hr))
                 {
-					is_wide_string = true;
+                    is_wide_string = true;
                 }
 
                 hr = p_property->p_qualifiers->Get(L"StringTermination", 0, &var_qualifier, NULL);
@@ -658,7 +573,115 @@ namespace etw
 
                 return;
             }
+            case CIM_BOOLEAN:
+                data_size = sizeof(BOOL) * array_size;
+                return;
 
+            case CIM_SINT8:
+            case CIM_UINT8:
+            {
+                hr = p_property->p_qualifiers->Get(L"Extension", 0, &var_qualifier, NULL);
+                if (SUCCEEDED(hr))
+                {
+                    VariantClear(&var_qualifier);
+                    data_size += sizeof(GUID);
+                }
+                else
+                {
+                    data_size = sizeof(UINT8) * array_size;
+                }
+                return;
+            }
+
+            case CIM_CHAR16:
+            case CIM_SINT16:
+            case CIM_UINT16:
+            {
+                data_size = sizeof(WCHAR) * array_size;
+                return;
+            }
+
+            case CIM_OBJECT:
+            {
+                hr = p_property->p_qualifiers->Get(L"Extension", 0, &var_qualifier, NULL);
+                if (SUCCEEDED(hr))
+                {
+                    if (_wcsicmp(L"SizeT", var_qualifier.bstrVal) == 0)
+                    {
+                        VariantClear(&var_qualifier);
+						data_size = pointer_size_ * array_size;
+                        return;
+                    }
+                    if (_wcsicmp(L"Port", var_qualifier.bstrVal) == 0)
+                    {
+                        VariantClear(&var_qualifier);
+                        element_size = sizeof(USHORT) * array_size;
+                    }
+                    else if (_wcsicmp(L"IPAddr", var_qualifier.bstrVal) == 0 ||
+                        _wcsicmp(L"IPAddrV4", var_qualifier.bstrVal) == 0)
+                    {
+                        VariantClear(&var_qualifier);
+                        element_size = sizeof(ULONG) * array_size;
+                    }
+                    else if (_wcsicmp(L"IPAddrV6", var_qualifier.bstrVal) == 0)
+                    {
+                        HMODULE ntdll_handle = GetModuleHandle(L"ntdll");
+                        if (ntdll_handle != NULL && GetProcAddress(ntdll_handle, "RtlIpv6AddressToStringW") == NULL)
+                        {
+                            return;
+                        }
+
+                        element_size = sizeof(IN6_ADDR) * array_size;
+                    }
+                    else if (_wcsicmp(L"Guid", var_qualifier.bstrVal) == 0)
+                    {
+                        element_size = sizeof(GUID) * array_size;
+                    }
+                    else if (_wcsicmp(L"Sid", var_qualifier.bstrVal) == 0)
+                    {
+                        VariantClear(&var_qualifier);
+                        ULONG temp = 0;
+                        PVOID p_event_data = (PVOID)((size_t)event.GetPEventData() + offset);
+                        USHORT copy_length = 0;
+                        BYTE buffer[SECURITY_MAX_SID_SIZE];
+                        SID* psid;
+                        DWORD status = 0;
+                        for (int i = 0; i < array_size; i++)
+                        {
+                            CopyMemory(&temp, p_event_data, sizeof(ULONG));
+                            if (temp > 0)
+                            {
+                                USHORT bytes_to_sid = pointer_size_ * 2;
+                                p_event_data = (PVOID)((size_t)p_event_data + bytes_to_sid);
+                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > SECURITY_MAX_SID_SIZE) ?
+                                    SECURITY_MAX_SID_SIZE :
+                                    ((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
+                                CopyMemory(&buffer, p_event_data, copy_length);
+                                psid = (SID*)&buffer;
+                                data_size += SeLengthSid(psid);
+                                p_event_data = (PVOID)((size_t)p_event_data + SeLengthSid(psid));
+                            }
+                            else
+                            {
+                                data_size += sizeof(ULONG);
+                                p_event_data = (PVOID)((size_t)p_event_data + sizeof(ULONG));
+                            }
+                        }
+                        return;
+                    }
+                }
+
+                else
+                {
+                    return;
+                }
+
+                VariantClear(&var_qualifier);
+                data_size = element_size * array_size; 
+
+                return;
+            }
+            
             default:
             {
                 return;
