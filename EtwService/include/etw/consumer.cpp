@@ -107,7 +107,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), ProcessGuid))
             {
-                //ProcessProcessEvent(event);
+                ProcessProcessEvent(event);
             }
         }
                 

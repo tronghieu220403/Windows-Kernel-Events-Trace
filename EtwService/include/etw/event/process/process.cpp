@@ -6,12 +6,11 @@ namespace etw
 {
 	ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* offset)
 	{
+		std::pair<int, int> p;
+		WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
+
 		if (offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
-			std::pair<int, int> p;
-
 			p = wec.GetPropertyInfo(L"UniqueProcessKey", event);
 			offset->unique_process_key_offs = p.first;
 			offset->unique_process_key_size = p.second;
@@ -40,59 +39,21 @@ namespace etw
 			p = wec.GetPropertyInfo(L"UserSID", event);
 			offset->user_sid_offs = p.first;
 			offset->user_sid_size = p.second;
-
-			p = wec.GetPropertyInfo(L"ImageFileName", event);
-			offset->image_file_name_offs = p.first;
-			offset->image_file_name_size = p.second;
-
-			p = wec.GetPropertyInfo(L"CommandLine", event);
-			offset->command_line_offs = p.first;
-			offset->command_line_size = p.second;
-
+			*/
 			if (0 == offset->unique_process_key_size ||
 				0 == offset->process_id_size ||
 				0 == offset->parent_id_size ||
 				0 == offset->session_id_size ||
 				0 == offset->exit_status_size ||
-				0 == offset->directory_table_base_size ||
-				// 0 == offset->user_sid_size ||
-				0 == offset->image_file_name_size ||
-				0 == offset->command_line_size)
+				0 == offset->directory_table_base_size)
 			{
 				ulti::WriteDebugA("Error in GetPropertyInfo in ProcessTypeGroup1Event");
 				offset->is_successful = false;
 				return;
 			}
-			*/
 
 			offset->is_successful = true;
 			offset->is_positioned = true;
-			/*
-			if (offset->command_line_offs > offset->unique_process_key_offs &&
-				offset->command_line_offs > offset->process_id_offs &&
-				offset->command_line_offs > offset->parent_id_offs &&
-				offset->command_line_offs > offset->session_id_offs &&
-				offset->command_line_offs > offset->exit_status_offs &&
-				offset->command_line_offs > offset->directory_table_base_offs &&
-				// offset->command_line_offs > offset->user_sid_offs &&
-				offset->image_file_name_offs > offset->unique_process_key_offs &&
-				offset->image_file_name_offs > offset->process_id_offs &&
-				offset->image_file_name_offs > offset->parent_id_offs &&
-				offset->image_file_name_offs > offset->session_id_offs &&
-				offset->image_file_name_offs > offset->exit_status_offs &&
-				offset->image_file_name_offs > offset->directory_table_base_offs // &&
-				// offset->image_file_name_offs > offset->user_sid_offs
-				)
-			{
-				ulti::WriteDebugA("The position for ProcessTypeGroup1Event is as expected.");
-				offset->is_positioned = true;
-			}
-			else
-			{
-				ulti::WriteDebugA("The position for ProcessTypeGroup1Event is not as expected.");
-				offset->is_positioned = false;
-			}
-			*/
 		}
 
 		PBYTE p_data = event.GetPEventData();
@@ -102,9 +63,12 @@ namespace etw
 		memcpy(&session_id, p_data + offset->session_id_offs, offset->session_id_size);
 		memcpy(&exit_status, p_data + offset->exit_status_offs, offset->exit_status_size);
 		memcpy(&directory_table_base, p_data + offset->directory_table_base_offs, offset->directory_table_base_size);
-		// memcpy(&user_sid, p_data + offset->user_sid_offs, offset->user_sid_size);
-		// image_file_name = (wchar_t*)(p_data + offset->image_file_name_offs);
-		// process_command_line = (wchar_t*)(p_data + offset->command_line_offs);
+
+		p = wec.GetPropertyInfo(L"ImageFileName", event);
+		image_file_name = (wchar_t*)(p_data + p.first);
+
+		p = wec.GetPropertyInfo(L"CommandLine", event);
+		command_line = (wchar_t*)(p_data + p.first);
 	}
 
 	ProcessStartEvent::ProcessStartEvent(const Event& event)

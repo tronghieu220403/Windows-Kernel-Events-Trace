@@ -8,6 +8,9 @@
 #include "ulti/support.h"
 #include "event.h"
 
+#define SeLengthSid( Sid ) \
+    (8 + (4 * ((SID *)Sid)->SubAuthorityCount))
+
 namespace etw
 {
 
