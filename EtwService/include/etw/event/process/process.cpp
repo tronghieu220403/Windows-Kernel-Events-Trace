@@ -70,9 +70,8 @@ namespace etw
 		memcpy(&exit_status, p_data + offset->exit_status_offs, offset->exit_status_size);
 		memcpy(&directory_table_base, p_data + offset->directory_table_base_offs, offset->directory_table_base_size);
 
-		// This string can be a ANSI string, not always UNICODE
 		p = wec.GetPropertyInfo(L"ImageFileName", event);
-		image_file_name = (wchar_t*)(p_data + p.first);
+		image_file_name = (char*)(p_data + p.first);
 
 		p = wec.GetPropertyInfo(L"CommandLine", event);
 		command_line = (wchar_t*)(p_data + p.first);

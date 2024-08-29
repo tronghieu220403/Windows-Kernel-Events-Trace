@@ -95,7 +95,7 @@ namespace etw
 		size_t flags = 0; // The "Flags" attribute is undocumented, only tested on Windows 10 22h
 
 		//PVOID user_sid = nullptr;  // Assuming object type is represented as a pointer
-		wchar_t* image_file_name = nullptr;
+		char* image_file_name = nullptr;
 		wchar_t* command_line = nullptr;
 
 		ProcessTypeGroup1EventMember() = default;
