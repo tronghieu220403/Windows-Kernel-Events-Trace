@@ -279,7 +279,7 @@ namespace etw
             ProcessStartEvent process_start_event(event);
             ulti::WriteDebugA("[+] Process Start Event");
             ulti::WriteDebugA("    - PID:     " + std::format("{:#x}", process_start_event.pid));
-            ulti::WriteDebugW(L"    - Image: " + std::wstring((PWCHAR)process_start_event.image_file_name));
+            ulti::WriteDebugA("    - Image: " + std::string((PCHAR)process_start_event.image_file_name));
             ulti::WriteDebugW(L"    - Command Line: " + std::wstring((PWCHAR)process_start_event.command_line));
             ulti::WriteDebugA("\n");
 
