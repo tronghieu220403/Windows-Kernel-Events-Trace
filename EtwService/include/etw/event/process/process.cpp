@@ -35,6 +35,12 @@ namespace etw
 			offset->directory_table_base_offs = p.first;
 			offset->directory_table_base_size = p.second;
 
+			// The "Flags" attribute is undocumented, only tested on Windows 10 22h
+			/*
+			p = wec.GetPropertyInfo(L"Flags", event);
+			offset->directory_table_base_offs = p.first;
+			offset->directory_table_base_size = p.second;
+			*/
 			/*
 			p = wec.GetPropertyInfo(L"UserSID", event);
 			offset->user_sid_offs = p.first;
@@ -64,6 +70,7 @@ namespace etw
 		memcpy(&exit_status, p_data + offset->exit_status_offs, offset->exit_status_size);
 		memcpy(&directory_table_base, p_data + offset->directory_table_base_offs, offset->directory_table_base_size);
 
+		// This string can be a ANSI string, not always UNICODE
 		p = wec.GetPropertyInfo(L"ImageFileName", event);
 		image_file_name = (wchar_t*)(p_data + p.first);
 
