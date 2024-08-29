@@ -652,6 +652,7 @@ namespace etw
                             if (temp > 0)
                             {
                                 USHORT bytes_to_sid = pointer_size_ * 2;
+                                data_size += bytes_to_sid;
                                 p_event_data = (PVOID)((size_t)p_event_data + bytes_to_sid);
                                 copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > SECURITY_MAX_SID_SIZE) ?
                                     SECURITY_MAX_SID_SIZE :

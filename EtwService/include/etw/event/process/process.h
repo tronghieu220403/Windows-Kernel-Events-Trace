@@ -66,6 +66,7 @@ namespace etw
 		DWORD session_id_offs = 0;
 		DWORD exit_status_offs = 0;
 		DWORD directory_table_base_offs = 0;
+		DWORD flags_offs = 0;
 		//DWORD user_sid_offs = 0;
 		//DWORD image_file_name_offs = 0;
 		//DWORD command_line_offs = 0;
@@ -76,6 +77,7 @@ namespace etw
 		DWORD session_id_size = 0;
 		DWORD exit_status_size = 0;
 		DWORD directory_table_base_size = 0;
+		DWORD flags_size = 0;
 		//DWORD user_sid_size = 0;
 		//DWORD image_file_name_size = 0;
 		//DWORD command_line_size = 0;
@@ -90,6 +92,8 @@ namespace etw
 		size_t session_id = 0;
 		size_t exit_status = 0;
 		size_t directory_table_base = 0;
+		size_t flags = 0; // The "Flags" attribute is undocumented, only tested on Windows 10 22h
+
 		//PVOID user_sid = nullptr;  // Assuming object type is represented as a pointer
 		wchar_t* image_file_name = nullptr;
 		wchar_t* command_line = nullptr;
