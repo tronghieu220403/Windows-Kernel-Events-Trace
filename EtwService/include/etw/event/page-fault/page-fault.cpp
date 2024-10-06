@@ -31,7 +31,7 @@ namespace etw
 				offset->process_id_size == 0 ||
 				offset->flags_size == 0)
 			{
-				ulti::DebugLogA("Error in GetPropertyInfo in PageFaultVirtualAllocEvent");
+				ulti::DebugLogW(L"Error in GetPropertyInfo in PageFaultVirtualAllocEvent");
 				offset->is_successful = false;
 				return;
 			}

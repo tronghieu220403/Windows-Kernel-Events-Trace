@@ -53,7 +53,7 @@ namespace etw
 				0 == offset->exit_status_size ||
 				0 == offset->directory_table_base_size)
 			{
-				ulti::DebugLogA("Error in GetPropertyInfo in ProcessTypeGroup1Event");
+				ulti::DebugLogW(L"Error in GetPropertyInfo in ProcessTypeGroup1Event");
 				offset->is_successful = false;
 				return;
 			}
@@ -177,7 +177,7 @@ namespace etw
 				offset->io_priority_size == 0 ||
 				offset->thread_flags_size == 0)
 			{
-				ulti::DebugLogA("Error in GetPropertyInfo in ThreadTypeGroup1Event");
+				ulti::DebugLogW(L"Error in GetPropertyInfo in ThreadTypeGroup1Event");
 				offset->is_successful = false;
 				return;
 			}

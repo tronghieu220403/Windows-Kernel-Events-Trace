@@ -277,13 +277,14 @@ namespace etw
         if (type == ProcessEventType::kProcessStart)
         {
             ProcessStartEvent process_start_event(event);
-            ulti::DebugLogA("[+] Process Start Event");
-            ulti::DebugLogA("    - PID:     " + std::to_string(process_start_event.pid));
-			ulti::DebugLogA("    - PPID:    " + std::to_string(event.GetProcessId()));
-            ulti::DebugLogA("    - Image: " + std::string((PCHAR)process_start_event.image_file_name));
+            ulti::DebugLogW(L"[+] Process Start Event");
+            ulti::DebugLogW(L"    - PID:     " + std::to_wstring(process_start_event.pid));
+			ulti::DebugLogW(L"    - PPID:    " + std::to_wstring(event.GetProcessId()));
+			std::string image_name = std::string((PCHAR)process_start_event.image_file_name);
+            ulti::DebugLogW(L"    - Image: " + std::wstring(image_name.begin(), image_name.end()));
 			// TODO: Dump process name from command line
             ulti::DebugLogW(L"    - Command Line: " + std::wstring((PWCHAR)process_start_event.command_line));
-            ulti::DebugLogA("\n");
+            ulti::DebugLogW(L"\n");
             if (manager::kProcMan.GetImageFileName(process_start_event.pid).empty())
             {
                 manager::kProcMan.AddProcess(process_start_event.pid, event.GetProcessId());
@@ -322,12 +323,12 @@ namespace etw
             size_t allocated_pid = alloc_event.process_id;
 			if (manager::PageFaultEventFilter(issuing_pid, allocated_pid))
 			{
-				ulti::DebugLogA("[+] VirtualAlloc event is accepted");
-                ulti::DebugLogA("    - Issuing PID: " + std::to_string(issuing_pid));
+				ulti::DebugLogW(L"[+] VirtualAlloc event is accepted");
+                ulti::DebugLogW(L"    - Issuing PID: " + std::to_wstring(issuing_pid));
                 ulti::DebugLogW(L"    - Issuing Image: " + manager::kProcMan.GetImageFileName(issuing_pid));
-                ulti::DebugLogA("    - Allocated PID: " + std::to_string(allocated_pid));
+                ulti::DebugLogW(L"    - Allocated PID: " + std::to_wstring(allocated_pid));
                 ulti::DebugLogW(L"    - Allocated Image: " + manager::kProcMan.GetImageFileName(allocated_pid));
-                ulti::DebugLogA("\n");
+                ulti::DebugLogW(L"\n");
 			}
         }
         else if (type == ThreadEventType::kThreadEnd)
@@ -344,12 +345,12 @@ namespace etw
         if (type == PerfInfoEventType::SysClEnter)
         {
             SysCallEnterEvent sys_call_enter_event(event);
-            ulti::DebugLogA("[+] SysCallEnterEvent");
-            ulti::DebugLogA("    - PID:     " + std::format("{:#x}", event.GetProcessId()));
-            ulti::DebugLogA("    - TID:     " + std::format("{:#x}", event.GetThreadId()));
-            ulti::DebugLogA("    - Time:     " + std::format("{:#x}", event.GetTimeInMs()));
-            ulti::DebugLogA("    - Address: " + std::format("{:#x}",(size_t)sys_call_enter_event.sys_call_address));
-            ulti::DebugLogA("\n");
+            ulti::DebugLogW(L"[+] SysCallEnterEvent");
+            ulti::DebugLogW(L"    - PID:     " + std::to_wstring(event.GetProcessId()));
+            ulti::DebugLogW(L"    - TID:     " + std::to_wstring(event.GetThreadId()));
+            ulti::DebugLogW(L"    - Time:     " + std::to_wstring(event.GetTimeInMs()));
+            ulti::DebugLogW(L"    - Address: " + std::to_wstring((size_t)sys_call_enter_event.sys_call_address));
+            ulti::DebugLogW(L"\n");
         }
         return VOID();
     }
@@ -360,7 +361,7 @@ namespace etw
     {
         ULONG status = ERROR_SUCCESS;
 
-        ulti::DebugLogA("[+] Total event count: " + std::to_string(event_count_));
+        ulti::DebugLogW(L"[+] Total event count: " + std::to_wstring(event_count_));
 
         if ((TRACEHANDLE)INVALID_HANDLE_VALUE != handle_trace_)
         {

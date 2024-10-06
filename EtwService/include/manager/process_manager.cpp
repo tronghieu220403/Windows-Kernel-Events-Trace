@@ -180,7 +180,7 @@ namespace manager
         }
         else {
             error = GetLastError();
-            ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
+            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
         }
 
         if (error != ERROR_SUCCESS) {
