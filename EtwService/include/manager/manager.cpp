@@ -33,7 +33,6 @@ namespace manager {
 		{
 			return false;
 		}
-		*/
 		std::wstring issuing_image = manager::kProcMan.GetImageFileName(issuing_pid);
 		std::wstring allocated_image = manager::kProcMan.GetImageFileName(allocated_pid);
 		if (issuing_image.empty() || allocated_image.empty())
@@ -44,7 +43,8 @@ namespace manager {
 		{
 			return false;
 		}
-		//kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
+		kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
+		*/
 		return true;
 	}
 }

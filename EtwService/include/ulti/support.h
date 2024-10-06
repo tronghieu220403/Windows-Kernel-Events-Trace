@@ -64,16 +64,31 @@ namespace ulti
 {
     inline std::mutex mt;
 
+    inline std::wofstream outfile;
+
+	inline void InitDebugLog()
+	{
+    #ifdef _DEBUG
+		    outfile.open("C:\\debug.txt", std::ios_base::app);
+    #endif
+	}
+
+	inline void UninitDebugLog()
+	{
+    #ifdef _DEBUG
+		    outfile.close();
+    #endif
+	}
+
     inline void DebugLogW(const std::wstring& s)
     {
     #ifdef _DEBUG
         mt.lock();
-        std::wofstream outfile("C:\\debug.txt", std::ios_base::app);
 		if (s.at(s.length() - 1) == L'\n')
 			outfile << s;
 		else
 			outfile << s << "\n";
-        outfile.close();
+        outfile.flush();
         mt.unlock();
     #endif // DEBUG
     }

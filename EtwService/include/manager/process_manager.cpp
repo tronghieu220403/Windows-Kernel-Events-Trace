@@ -226,7 +226,10 @@ namespace manager
         else
         {
             error = GetLastError();
-            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
+            if (error != ERROR_INVALID_PARAMETER)
+            {
+                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
+            }
         }
 
         if (error == ERROR_SUCCESS)
@@ -241,7 +244,7 @@ namespace manager
     {
         if (process_map_.find(pid) != process_map_.end())
         {
-            return {};
+            return { 0, 0, L"", {} };
         }
 		return process_map_[pid];
     }

@@ -24,8 +24,8 @@ void SetUpProvider()
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
         //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
-        //| EVENT_TRACE_FLAG_FILE_IO_INIT 
-        //| EVENT_TRACE_FLAG_FILE_IO
+        | EVENT_TRACE_FLAG_FILE_IO_INIT 
+        | EVENT_TRACE_FLAG_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
         | EVENT_TRACE_FLAG_PROCESS
@@ -86,10 +86,12 @@ void ServiceMainWorker()
 {
 	ulti::DebugLogW(L"ServiceMainWorker");
     manager::Init();
+	ulti::InitDebugLog();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
     provider_thread.join();
     comsumer_thread.join();
+	ulti::UninitDebugLog();
 }
 
 void RunService()
