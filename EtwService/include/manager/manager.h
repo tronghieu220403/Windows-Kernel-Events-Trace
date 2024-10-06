@@ -8,5 +8,6 @@
 namespace manager {
 	inline ProcessManager kProcMan;
 	void Init();
+	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid);
 }
 #endif  // MANAGER_H_

@@ -6,4 +6,42 @@ namespace manager {
 		ulti::DebugLogW(L"Manager initialized");
 		kProcMan = ProcessManager();
 	}
+
+	std::set<std::pair<size_t, size_t>> kPageFaultEventCache;
+
+	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid)
+	{
+		if (issuing_pid == 0 || allocated_pid == 0)
+		{
+			return false;
+		}
+		if (issuing_pid == allocated_pid)
+		{
+			return false;
+		}
+		if (issuing_pid == 4)
+		{
+			return false;
+		}
+		if (manager::kProcMan.IsAncestor(issuing_pid, allocated_pid))
+		{
+			return false;
+		}
+		if (kPageFaultEventCache.find({issuing_pid, allocated_pid}) != kPageFaultEventCache.end())
+		{
+			return false;
+		}
+		std::wstring issuing_image = manager::kProcMan.GetImageFileName(issuing_pid);
+		std::wstring allocated_image = manager::kProcMan.GetImageFileName(allocated_pid);
+		if (issuing_image.empty() || allocated_image.empty())
+		{
+			return false;
+		}
+		if (issuing_image == allocated_image)
+		{
+			return false;
+		}
+		kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
+		return true;
+	}
 }

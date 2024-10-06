@@ -312,37 +312,6 @@ namespace etw
         return VOID();
     }
 
-    bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid)
-    {
-		if (issuing_pid == 0 || allocated_pid == 0)
-		{
-			return false;
-		}
-		if (issuing_pid == allocated_pid)
-		{
-			return false;
-		}
-		if (issuing_pid == 4)
-		{
-			return false;
-		}
-		if (manager::kProcMan.IsAncestor(issuing_pid, allocated_pid))
-		{
-			return false;
-		}
-		std::wstring issuing_image = manager::kProcMan.GetImageFileName(issuing_pid);
-		std::wstring allocated_image = manager::kProcMan.GetImageFileName(allocated_pid);
-		if (issuing_image.empty() || allocated_image.empty())
-		{
-			return false;
-		}
-		if (issuing_image == allocated_image)
-		{
-			return false;
-		}
-		return true;
-    }
-
     VOID __stdcall KernelConsumer::ProcessPageFaultEvent(Event event)
     {
         int type = event.GetType();
@@ -351,7 +320,7 @@ namespace etw
             PageFaultVirtualAllocEvent alloc_event(event);
             size_t issuing_pid = event.GetProcessId();
             size_t allocated_pid = alloc_event.process_id;
-			if (PageFaultEventFilter(issuing_pid, allocated_pid))
+			if (manager::PageFaultEventFilter(issuing_pid, allocated_pid))
 			{
 				ulti::DebugLogA("[+] VirtualAlloc event is accepted");
                 ulti::DebugLogA("    - Issuing PID: " + std::to_string(issuing_pid));
