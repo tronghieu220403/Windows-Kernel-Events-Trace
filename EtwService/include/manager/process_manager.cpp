@@ -94,7 +94,8 @@ namespace manager
         image_file_name_a.resize(MAX_PATH);
 
         hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
-        if (hProcess) {
+        if (hProcess) 
+        {
             // Try GetProcessImageFileNameW with resizing loop
             while (true) {
                 if (size_tmp = GetProcessImageFileNameW(hProcess, image_file_name_w.data(), image_file_name_w.size())) {
@@ -128,6 +129,7 @@ namespace manager
                             image_file_name_a.resize(image_file_name_a.size() * 2);
                         }
                         else {
+                            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + ulti::GetErrorMessage(error));
                             break; // Move to the next step on any other error
                         }
                     }
@@ -170,23 +172,15 @@ namespace manager
                                 image_file_name_a.resize(image_file_name_a.size() * 2);
                             }
                             else {
+                                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" QueryFullProcessImageName failed: " + ulti::GetErrorMessage(error));
                                 break; // Log and stop on any other error
                             }
                         }
                     }
                 }
             }
-            CloseHandle(hProcess);
-        }
-        else {
-            error = GetLastError();
-            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
-        }
 
-        if (error != ERROR_SUCCESS) {
-            // Try PROCESS_QUERY_INFORMATION | PROCESS_VM_READ path
-            hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, static_cast<DWORD>(pid));
-            if (hProcess) {
+            if (error != ERROR_SUCCESS) {
                 while (true) {
                     if (size_tmp = GetModuleFileNameExW(hProcess, nullptr, image_file_name_w.data(), image_file_name_w.size())) {
                         error = ERROR_SUCCESS;
@@ -220,19 +214,21 @@ namespace manager
                                 image_file_name_a.resize(image_file_name_a.size() * 2);
                             }
                             else {
-                                ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" GetModuleFileNameEx failed: " + ulti::GetErrorMessage(error));
+                                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetModuleFileNameEx failed: " + ulti::GetErrorMessage(error));
                                 break; // Log and stop on any other error
                             }
                         }
                     }
                 }
-                CloseHandle(hProcess);
             }
-            else {
-				error = GetLastError();
-                ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ) failed: " + ulti::GetErrorMessage(error));
-            }
+            CloseHandle(hProcess);
         }
+        else
+        {
+            error = GetLastError();
+            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
+        }
+
         if (error == ERROR_SUCCESS)
         {
 			UpdateImageFileName(pid, image_file_name_w);

@@ -7,6 +7,7 @@
 
 namespace manager {
 	inline ProcessManager kProcMan;
+	inline size_t kCurrentPid = 0;
 	void Init();
 	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid);
 }

@@ -89,6 +89,11 @@ namespace etw
             event_count_++;
             Event event(p_event);
             
+            if (event.GetProcessId() == manager::kCurrentPid)
+            {
+				return;
+            }
+
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
                 //ProcessFileIoEvent(event);
@@ -280,8 +285,9 @@ namespace etw
             ulti::DebugLogW(L"[+] Process Start Event");
             ulti::DebugLogW(L"    - PID:     " + std::to_wstring(process_start_event.pid));
 			ulti::DebugLogW(L"    - PPID:    " + std::to_wstring(event.GetProcessId()));
+            ulti::DebugLogW(L"    - Time:    " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
 			std::string image_name = std::string((PCHAR)process_start_event.image_file_name);
-            ulti::DebugLogW(L"    - Image: " + std::wstring(image_name.begin(), image_name.end()));
+            ulti::DebugLogW(L"    - Image:   " + std::wstring(image_name.begin(), image_name.end()));
 			// TODO: Dump process name from command line
             ulti::DebugLogW(L"    - Command Line: " + std::wstring((PWCHAR)process_start_event.command_line));
             ulti::DebugLogW(L"\n");
@@ -324,10 +330,12 @@ namespace etw
 			if (manager::PageFaultEventFilter(issuing_pid, allocated_pid))
 			{
 				ulti::DebugLogW(L"[+] VirtualAlloc event is accepted");
-                ulti::DebugLogW(L"    - Issuing PID: " + std::to_wstring(issuing_pid));
-                ulti::DebugLogW(L"    - Issuing Image: " + manager::kProcMan.GetImageFileName(issuing_pid));
-                ulti::DebugLogW(L"    - Allocated PID: " + std::to_wstring(allocated_pid));
+				ulti::DebugLogW(L"    - Size:            " + std::format(L"{:x}", alloc_event.region_size));
+                ulti::DebugLogW(L"    - Issuing PID:     " + std::to_wstring(issuing_pid));
+                ulti::DebugLogW(L"    - Issuing Image:   " + manager::kProcMan.GetImageFileName(issuing_pid));
+                ulti::DebugLogW(L"    - Allocated PID:   " + std::to_wstring(allocated_pid));
                 ulti::DebugLogW(L"    - Allocated Image: " + manager::kProcMan.GetImageFileName(allocated_pid));
+				ulti::DebugLogW(L"    - Time:            " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
                 ulti::DebugLogW(L"\n");
 			}
         }
