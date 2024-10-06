@@ -7,6 +7,7 @@
 
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
@@ -37,7 +38,7 @@ namespace etw
 		size_t sys_call_address = 0;
 
 		SysCallEnterEventMember() = default;
-		SysCallEnterEventMember(const Event& event, SysCallEnterEventOffset* offset);
+		SysCallEnterEventMember(const Event& event, SysCallEnterEventOffset* event_offset);
 	};
 
 	struct SysCallEnterEvent : SysCallEnterEventMember

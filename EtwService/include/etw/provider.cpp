@@ -7,16 +7,7 @@ namespace etw
 
     KernelProvider::KernelProvider()
     {
-        session_properties_ = (EVENT_TRACE_PROPERTIES*)(new char[buffer_size_]);
-        ZeroMemory(session_properties_, sizeof(EVENT_TRACE_PROPERTIES));
-        session_properties_->Wnode.BufferSize = buffer_size_;
-        session_properties_->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
-        session_properties_->Wnode.ClientContext = 2; //System clock resolution
-        session_properties_->Wnode.Guid = SystemTraceControlGuid;
-        session_properties_->LogFileMode = EVENT_TRACE_REAL_TIME_MODE;
-        session_properties_->MaximumFileSize = 0;
-        session_properties_->LoggerNameOffset = 0;
-
+        Initialize();
     }
 
     KernelProvider::KernelProvider(ULONG flags)
@@ -25,9 +16,27 @@ namespace etw
         SetFlags(flags);
     }
 
+    void KernelProvider::Initialize()
+    {
+        session_handle_ = 0;
+        if (session_properties_ == nullptr)
+        {
+            session_properties_ = (EVENT_TRACE_PROPERTIES*)(new char[buffer_size_]);
+        }
+        ZeroMemory(session_properties_, buffer_size_);
+        session_properties_->EnableFlags = flags_;
+        session_properties_->Wnode.BufferSize = buffer_size_;
+        session_properties_->Wnode.Flags = WNODE_FLAG_TRACED_GUID;
+        session_properties_->Wnode.ClientContext = 2; //System clock resolution
+        session_properties_->Wnode.Guid = SystemTraceControlGuid;
+        session_properties_->LogFileMode = EVENT_TRACE_REAL_TIME_MODE;
+        session_properties_->MaximumFileSize = 0;
+        session_properties_->LoggerNameOffset = 0;
+    }
+
     void KernelProvider::SetFlags(ULONG flags)
     {
-        session_properties_->EnableFlags = flags;
+        flags_ = flags;
     }
 
 
@@ -49,7 +58,15 @@ namespace etw
 	{
         ULONG status = ERROR_SUCCESS;
 
+        Initialize();
         status = StartTrace((PTRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_);
+
+        if (status == ERROR_ALREADY_EXISTS)
+        {
+            ControlTrace((TRACEHANDLE)session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
+            Initialize();
+            status = StartTrace((PTRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_);
+        }
 
         return status;
 
@@ -58,11 +75,7 @@ namespace etw
     ULONG KernelProvider::CloseTrace()
 	{
         ULONG status = ERROR_SUCCESS;
-        if (session_handle_ != NULL)
-        {
-            status = ControlTrace(session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
-            session_handle_ = NULL;
-        }
+        status = ControlTrace((TRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
 
         return status;
 	}

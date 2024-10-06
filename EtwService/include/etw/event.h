@@ -56,6 +56,7 @@ namespace etw
 
 		FILETIME GetFileTime() const;
 		ULONGLONG GetTimeInMs() const;
+		ULONGLONG GetTimeInMicroSec() const;
 
 		ULONG GetMofLength() const;
 

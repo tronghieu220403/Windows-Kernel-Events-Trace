@@ -4,7 +4,7 @@
 
 #include "ulti/support.h"
 
-namespace etw
+namespace mutex
 {
     class NamedMutex
     {
@@ -21,6 +21,7 @@ namespace etw
         std::string GetMutexName() const;
 
         void Lock();
+        bool TryLock();
         void Unlock();
 
         void Close();

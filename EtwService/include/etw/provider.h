@@ -15,6 +15,7 @@ namespace etw
 	{
 	private:
 		TRACEHANDLE session_handle_ = NULL;
+		DWORD flags_ = NULL;
 		int buffer_size_ = sizeof(EVENT_TRACE_PROPERTIES) + sizeof(KERNEL_LOGGER_NAME) * 2;
 		EVENT_TRACE_PROPERTIES* session_properties_;
 
@@ -22,6 +23,8 @@ namespace etw
 
 		KernelProvider();
 		KernelProvider(ULONG flags);
+
+		void Initialize();
 
 		void SetFlags(ULONG flags);
 

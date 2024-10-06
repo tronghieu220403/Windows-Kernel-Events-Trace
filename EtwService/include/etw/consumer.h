@@ -6,17 +6,17 @@
 #define ETWSERVICE_ETW_COMSUMER_H_
 
 #define INITGUID
-
 #include "ulti/support.h"
 #include "ulti/collections.h"
+#include "../ulti/debug.h"
 #include "mutex/mutex.h"
-
 #include "etw/event.h"
-
 #include "etw/event/file/file.h"
 #include "etw/event/process/process.h"
 #include "etw/event/page-fault/page-fault.h"
 #include "etw/event/perf-info/perf-info.h"
+#include "etw/event/registry/registry.h"
+#include "../manager/manager.h"
 
 namespace etw
 {
@@ -46,14 +46,12 @@ namespace etw
 		static VOID WINAPI ProcessProcessEvent(Event event);
 		static VOID WINAPI ProcessThreadEvent(Event event);
 		static VOID WINAPI ProcessPageFaultEvent(Event event);
-		static VOID WINAPI ProcessPerfInfoEvent(Event event);
-
-		/*
-		static VOID WINAPI ProcessImageLoadEvent(Event event);
 		static VOID WINAPI ProcessRegistryEvent(Event event);
-		static VOID WINAPI ProcessTcpIpEvent(Event event);
+
+		// Unused events
+		static VOID WINAPI ProcessImageLoadEvent(Event event);
 		static VOID WINAPI ProcessNetworkEvent(Event event);
-		*/
+		static VOID WINAPI ProcessPerfInfoEvent(Event event);
 
 		ULONG Close();
 

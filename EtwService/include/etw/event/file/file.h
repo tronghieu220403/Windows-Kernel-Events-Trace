@@ -6,6 +6,7 @@
 #ifndef ETWSERVICE_ETW_ETW_EVENT_FILE_FILE_H_
 #define ETWSERVICE_ETW_ETW_EVENT_FILE_FILE_H_
 
+#include "ulti/debug.h"
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
 
@@ -70,23 +71,23 @@ namespace etw
 	struct FileIoCreateEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
+		size_t file_object = 0;
 		size_t create_options = NULL;
 		size_t file_attributes = NULL;
 		size_t share_access = NULL;
 		wchar_t* open_path = nullptr;
 
 		FileIoCreateEventMember() = default;
-		FileIoCreateEventMember(const Event& event, FileIoCreateEventOffset* offset);
+		FileIoCreateEventMember(const Event& event, FileIoCreateEventOffset* event_offset);
 
 	};
 
 	struct FileIoCreateEvent: FileIoCreateEventMember
 	{
 	private:
-		static inline FileIoCreateEventOffset offset;
+		static inline FileIoCreateEventOffset event_offset_;
 	public:
 		FileIoCreateEvent(const Event& event);
 	};
@@ -131,23 +132,23 @@ namespace etw
 	struct FileIoDirEnumEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t length = NULL;
 		PVOID info_class = nullptr;
 		size_t file_index = NULL;
 		wchar_t* file_name = nullptr;
 
 		FileIoDirEnumEventMember() = default;
-		FileIoDirEnumEventMember(const Event& event, FileIoDirEnumEventOffset* offset);
+		FileIoDirEnumEventMember(const Event& event, FileIoDirEnumEventOffset* event_offset);
 	};
 
 	struct FileIoDirEnumEvent : FileIoDirEnumEventMember
 	{
 	private:
-		static inline FileIoDirEnumEventOffset offset;
+		static inline FileIoDirEnumEventOffset event_offset_;
 	public:
 		FileIoDirEnumEvent(const Event& event);
 	};
@@ -155,7 +156,7 @@ namespace etw
 	struct FileIoDirNotifyEvent : FileIoDirEnumEventMember
 	{
 	private:
-		static inline FileIoDirEnumEventOffset offset;
+		static inline FileIoDirEnumEventOffset event_offset_;
 	public:
 		FileIoDirNotifyEvent(const Event& event);
 	};
@@ -195,21 +196,21 @@ namespace etw
 	struct FileIoInfoEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t extra_info = NULL;
 		PVOID info_class = nullptr;
 
 		FileIoInfoEventMember() = default;
-		FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* offset);
+		FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* event_offset);
 	};
 
 	struct FileIoSetInfoEvent : FileIoInfoEventMember
 	{
 	private:
-		static inline FileIoInfoEventOffset offset;
+		static inline FileIoInfoEventOffset event_offset_;
 	public:
 		FileIoSetInfoEvent(const Event& event);
 	};
@@ -217,7 +218,7 @@ namespace etw
 	struct FileIoDeleteEvent : FileIoInfoEventMember
 	{
 	private:
-		static inline FileIoInfoEventOffset offset;
+		static inline FileIoInfoEventOffset event_offset_;
 	public:
 		FileIoDeleteEvent(const Event& event);
 	};
@@ -225,7 +226,7 @@ namespace etw
 	struct FileIoRenameEvent : FileIoInfoEventMember
 	{
 	private:
-		static inline FileIoInfoEventOffset offset;
+		static inline FileIoInfoEventOffset event_offset_;
 	public:
 		FileIoRenameEvent(const Event& event);
 	};
@@ -233,7 +234,7 @@ namespace etw
 	struct FileIoQueryInfoEvent : FileIoInfoEventMember
 	{
 	private:
-		static inline FileIoInfoEventOffset offset;
+		static inline FileIoInfoEventOffset event_offset_;
 	public:
 		FileIoQueryInfoEvent(const Event& event);
 	};
@@ -241,7 +242,7 @@ namespace etw
 	struct FileIoFSControlEvent : FileIoInfoEventMember
 	{
 	private:
-		static inline FileIoInfoEventOffset offset;
+		static inline FileIoInfoEventOffset event_offset_;
 	public:
 		FileIoFSControlEvent(const Event& event);
 	};
@@ -269,17 +270,17 @@ namespace etw
 	struct FileIoNameEventMember
 	{
 	public:
-		PVOID file_object = nullptr;
+		size_t file_object = 0;
 		wchar_t* file_name = nullptr;
 
 		FileIoNameEventMember() = default;
-		FileIoNameEventMember(const Event& event, FileIoNameEventOffset* offset);
+		FileIoNameEventMember(const Event& event, FileIoNameEventOffset* event_offset);
 	};
 
 	struct FileIoNameEvent : FileIoNameEventMember
 	{
 	private:
-		static inline FileIoNameEventOffset offset;
+		static inline FileIoNameEventOffset event_offset_;
 	public:
 		FileIoNameEvent(const Event& event);
 	};
@@ -287,7 +288,7 @@ namespace etw
 	struct FileIoFileCreateEvent : FileIoNameEventMember
 	{
 	private:
-		static inline FileIoNameEventOffset offset;
+		static inline FileIoNameEventOffset event_offset_;
 	public:
 		FileIoFileCreateEvent(const Event& event);
 	};
@@ -295,7 +296,7 @@ namespace etw
 	struct FileIoFileDeleteEvent : FileIoNameEventMember
 	{
 	private:
-		static inline FileIoNameEventOffset offset;
+		static inline FileIoNameEventOffset event_offset_;
 	public:
 		FileIoFileDeleteEvent(const Event& event);
 	};
@@ -303,7 +304,7 @@ namespace etw
 	struct FileIoFileRundownEvent : FileIoNameEventMember
 	{
 	private:
-		static inline FileIoNameEventOffset offset;
+		static inline FileIoNameEventOffset event_offset_;
 	public:
 		FileIoFileRundownEvent(const Event& event);
 	};
@@ -334,18 +335,18 @@ namespace etw
 	struct FileIoOpEndEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t extra_info = NULL;
 		size_t nt_status = NULL;
 
 		FileIoOpEndEventMember() = default;
-		FileIoOpEndEventMember(const Event& event, FileIoOpEndEventOffset* offset);
+		FileIoOpEndEventMember(const Event& event, FileIoOpEndEventOffset* event_offset);
 	};
 
 	struct FileIoOpEndEvent : FileIoOpEndEventMember
 	{
 	private:
-		static inline FileIoOpEndEventOffset offset;
+		static inline FileIoOpEndEventOffset event_offset_;
 	public:
 		FileIoOpEndEvent(const Event& event);
 	};
@@ -389,21 +390,21 @@ namespace etw
 	{
 	public:
 		uint64_t offset = 0;
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t io_size = NULL;
 		size_t io_flags = NULL;
 
 		FileIoReadWriteEventMember() = default;
-		FileIoReadWriteEventMember(const Event& event, FileIoReadWriteEventOffset* offset);
+		FileIoReadWriteEventMember(const Event& event, FileIoReadWriteEventOffset* event_offset);
 	};
 
 	struct FileIoReadEvent : FileIoReadWriteEventMember
 	{
 	private:
-		static inline FileIoReadWriteEventOffset offset;
+		static inline FileIoReadWriteEventOffset event_offset_;
 	public:
 		FileIoReadEvent(const Event& event);
 	};
@@ -411,7 +412,7 @@ namespace etw
 	struct FileIoWriteEvent : FileIoReadWriteEventMember
 	{
 	private:
-		static inline FileIoReadWriteEventOffset offset;
+		static inline FileIoReadWriteEventOffset event_offset_;
 	public:
 		FileIoWriteEvent(const Event& event);
 	};
@@ -445,19 +446,19 @@ namespace etw
 	struct FileIoSimpleOpEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 
 		FileIoSimpleOpEventMember() = default;
-		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* offset);
+		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* event_offset);
 	};
 
 	struct FileIoSimpleOpCleanupEvent : FileIoSimpleOpEventMember
 	{
 	private:
-		static inline FileIoSimpleOpEventOffset offset;
+		static inline FileIoSimpleOpEventOffset event_offset_;
 	public:
 		FileIoSimpleOpCleanupEvent(const Event& event);
 	};
@@ -465,7 +466,7 @@ namespace etw
 	struct FileIoSimpleOpCloseEvent : FileIoSimpleOpEventMember
 	{
 	private:
-		static inline FileIoSimpleOpEventOffset offset;
+		static inline FileIoSimpleOpEventOffset event_offset_;
 	public:
 		FileIoSimpleOpCloseEvent(const Event& event);
 	};
@@ -473,7 +474,7 @@ namespace etw
 	struct FileIoSimpleOpFlushEvent : FileIoSimpleOpEventMember
 	{
 	private:
-		static inline FileIoSimpleOpEventOffset offset;
+		static inline FileIoSimpleOpEventOffset event_offset_;
 	public:
 		FileIoSimpleOpFlushEvent(const Event& event);
 	};

@@ -1,6 +1,6 @@
 #include "mutex.h"
 
-namespace etw
+namespace mutex
 {
     NamedMutex::NamedMutex(const std::string& mutex_name):
         mutex_name_(mutex_name)
@@ -31,6 +31,12 @@ namespace etw
     void NamedMutex::Lock()
     {
         WaitForSingleObject(handle_mutex_, INT_MAX);
+    }
+
+    bool NamedMutex::TryLock()
+    {
+        DWORD dw_wait_result = WaitForSingleObject(handle_mutex_, 0);
+		return dw_wait_result == WAIT_OBJECT_0;
     }
 
     void NamedMutex::Unlock()
