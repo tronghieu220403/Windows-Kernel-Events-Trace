@@ -4,7 +4,7 @@
 #ifndef ETWSERVICE_SERVICE_PROCESSMONITORSERVICE_H_
 #define ETWSERVICE_SERVICE_PROCESSMONITORSERVICE_H_
 
-#include "ulti/support.h"
+#include "ulti/debug.h"
 #include "ulti/collections.h"
 #include "service/serviceevent.h"
 

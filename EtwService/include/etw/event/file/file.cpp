@@ -47,7 +47,7 @@ namespace etw
 				0 == event_offset->file_attributes_size ||
 				0 == event_offset->share_access_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileCreateEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileCreateEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -60,12 +60,12 @@ namespace etw
 				event_offset->open_path_offs > event_offset->file_attributes_offs &&
 				event_offset->open_path_offs > event_offset->share_access_offs)
 			{
-				ulti::DebugLogW(L"The position for FileCreateEvent is as expected.");
+				debug::DebugLogW(L"The position for FileCreateEvent is as expected.");
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				ulti::DebugLogW(L"The position for FileCreateEvent is not as expected.");
+				debug::DebugLogW(L"The position for FileCreateEvent is not as expected.");
 				event_offset->is_positioned = false;
 			}
 		}
@@ -133,7 +133,7 @@ namespace etw
 				0 == event_offset->info_class_size ||
 				0 == event_offset->file_index_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoDirEnumEventMember");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoDirEnumEventMember");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -208,7 +208,7 @@ namespace etw
 				0 == event_offset->extra_info_size ||
 				0 == event_offset->info_class_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoInfoEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoInfoEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -268,7 +268,7 @@ namespace etw
 			if (0 == event_offset->file_object_offs ||
 				0 == event_offset->file_name_offs)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoNameEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoNameEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -276,12 +276,12 @@ namespace etw
 
 			if (event_offset->file_name_offs > event_offset->file_object_offs)
 			{
-				ulti::DebugLogW(L"The position for FileIoNameEvent is as expected.");
+				debug::DebugLogW(L"The position for FileIoNameEvent is as expected.");
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				ulti::DebugLogW(L"The position for FileIoNameEvent is not as expected.");
+				debug::DebugLogW(L"The position for FileIoNameEvent is not as expected.");
 			}
 		}
 	}
@@ -330,7 +330,7 @@ namespace etw
 				0 == event_offset->extra_info_size ||
 				0 == event_offset->nt_status_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoOpEndEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoOpEndEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -393,7 +393,7 @@ namespace etw
 				0 == event_offset->io_size_size ||
 				0 == event_offset->io_flags_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoReadWriteEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoReadWriteEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -450,7 +450,7 @@ namespace etw
 				0 == event_offset->file_object_size ||
 				0 == event_offset->file_key_size)
 			{
-				ulti::DebugLogW(L"Error in GetPropertyInfo in FileIoSimpleOpEvent");
+				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoSimpleOpEvent");
 				event_offset->is_successful = false;
 				return;
 			}

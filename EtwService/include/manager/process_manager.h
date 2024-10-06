@@ -2,6 +2,7 @@
 #define PROCESS_MANAGER_H_
 
 #include "../ulti/support.h"
+#include "../ulti/debug.h"
 #include "file_manager.h"
 
 namespace manager {

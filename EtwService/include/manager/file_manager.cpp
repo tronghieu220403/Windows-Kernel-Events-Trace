@@ -37,7 +37,7 @@ namespace manager
             status = GetLastError();
             if (status != ERROR_INSUFFICIENT_BUFFER)
             {
-                ulti::DebugLogW(L"QueryDosDevice failed: " + ulti::GetErrorMessage(status));
+                debug::DebugLogW(L"QueryDosDevice failed: " + debug::GetErrorMessage(status));
                 return std::wstring();
             }
             dos_name.resize(dos_name.size() * 2);

@@ -7,10 +7,10 @@
 #define ETWSERVICE_ETW_ETW_EVENT_REGISTRY_REGISTRY_H_
 
 #include "etw/event.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
-
 	enum RegistryEventType
 	{
 		kRegistryCreate = 10,
@@ -72,7 +72,7 @@ namespace etw
 		wchar_t* KeyName = nullptr;
 
 		RegistryTypeGroup1EventMember() = default;
-		RegistryTypeGroup1EventMember(const Event& event, RegistryTypeGroup1EventOffset* offset);
+		RegistryTypeGroup1EventMember(const Event& event, RegistryTypeGroup1EventOffset* event_offset);
 	};
 
 	struct RegistryCreateEvent : RegistryTypeGroup1EventMember

@@ -3,7 +3,7 @@
 #ifndef ETWSERVICE_SERVICE_SERVICEEVENT_H_
 #define ETWSERVICE_SERVICE_SERVICEEVENT_H_
 
-#include "ulti/support.h"
+#include "ulti/debug.h"
 #include "ulti/collections.h"
 
 namespace etw

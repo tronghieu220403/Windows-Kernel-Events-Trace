@@ -3,7 +3,7 @@
 namespace manager {
 	void Init()
 	{
-		ulti::DebugLogW(L"Manager initialized");
+		debug::DebugLogW(L"Manager initialized");
 		kCurrentPid = GetCurrentProcessId();
 		kFileMan = new FileManager();
 		kProcMan = new ProcessManager();
@@ -12,7 +12,7 @@ namespace manager {
 
 	void Cleanup()
 	{
-		ulti::DebugLogW(L"Manager cleaned up");
+		debug::DebugLogW(L"Manager cleaned up");
 		delete kDriverComm;
 		delete kProcMan;
 		delete kFileMan;

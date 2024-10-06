@@ -1,6 +1,4 @@
 #include "process_manager.h"
-#include <psapi.h>
-#include <tchar.h>
 
 namespace manager
 {
@@ -129,7 +127,7 @@ namespace manager
                             image_file_name_a.resize(image_file_name_a.size() * 2);
                         }
                         else {
-                            ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + ulti::GetErrorMessage(error));
+                            debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + debug::GetErrorMessage(error));
                             break; // Move to the next step on any other error
                         }
                     }
@@ -172,7 +170,7 @@ namespace manager
                                 image_file_name_a.resize(image_file_name_a.size() * 2);
                             }
                             else {
-                                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" QueryFullProcessImageName failed: " + ulti::GetErrorMessage(error));
+                                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" QueryFullProcessImageName failed: " + debug::GetErrorMessage(error));
                                 break; // Log and stop on any other error
                             }
                         }
@@ -214,7 +212,7 @@ namespace manager
                                 image_file_name_a.resize(image_file_name_a.size() * 2);
                             }
                             else {
-                                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetModuleFileNameEx failed: " + ulti::GetErrorMessage(error));
+                                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetModuleFileNameEx failed: " + debug::GetErrorMessage(error));
                                 break; // Log and stop on any other error
                             }
                         }
@@ -228,7 +226,7 @@ namespace manager
             error = GetLastError();
             if (error != ERROR_INVALID_PARAMETER)
             {
-                ulti::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
+                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + debug::GetErrorMessage(error));
             }
         }
 

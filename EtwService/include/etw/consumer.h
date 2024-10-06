@@ -9,10 +9,9 @@
 
 #include "ulti/support.h"
 #include "ulti/collections.h"
+#include "../ulti/debug.h"
 #include "mutex/mutex.h"
-
 #include "etw/event.h"
-
 #include "etw/event/file/file.h"
 #include "etw/event/process/process.h"
 #include "etw/event/page-fault/page-fault.h"

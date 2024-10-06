@@ -7,6 +7,7 @@
 
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
@@ -50,7 +51,7 @@ namespace etw
 		size_t flags = 0;
 
 		PageFaultVirtualAllocEventMember() = default;
-		PageFaultVirtualAllocEventMember(const Event& event, PageFaultVirtualAllocEventOffset* offset);
+		PageFaultVirtualAllocEventMember(const Event& event, PageFaultVirtualAllocEventOffset* event_offset);
 	};
 
 	struct PageFaultVirtualAllocEvent : PageFaultVirtualAllocEventMember

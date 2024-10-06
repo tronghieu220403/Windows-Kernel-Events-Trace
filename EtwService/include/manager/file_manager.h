@@ -2,6 +2,7 @@
 #define FILE_MANAGER_H_
 
 #include "../ulti/support.h"
+#include "../ulti/debug.h"
 
 namespace manager {
 	inline std::map<std::wstring, std::wstring> kDosPath;

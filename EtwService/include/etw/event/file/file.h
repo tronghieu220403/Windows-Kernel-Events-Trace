@@ -6,6 +6,7 @@
 #ifndef ETWSERVICE_ETW_ETW_EVENT_FILE_FILE_H_
 #define ETWSERVICE_ETW_ETW_EVENT_FILE_FILE_H_
 
+#include "ulti/debug.h"
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
 
@@ -79,7 +80,7 @@ namespace etw
 		wchar_t* open_path = nullptr;
 
 		FileIoCreateEventMember() = default;
-		FileIoCreateEventMember(const Event& event, FileIoCreateEventOffset* offset);
+		FileIoCreateEventMember(const Event& event, FileIoCreateEventOffset* event_offset);
 
 	};
 
@@ -141,7 +142,7 @@ namespace etw
 		wchar_t* file_name = nullptr;
 
 		FileIoDirEnumEventMember() = default;
-		FileIoDirEnumEventMember(const Event& event, FileIoDirEnumEventOffset* offset);
+		FileIoDirEnumEventMember(const Event& event, FileIoDirEnumEventOffset* event_offset);
 	};
 
 	struct FileIoDirEnumEvent : FileIoDirEnumEventMember
@@ -203,7 +204,7 @@ namespace etw
 		PVOID info_class = nullptr;
 
 		FileIoInfoEventMember() = default;
-		FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* offset);
+		FileIoInfoEventMember(const Event& event, FileIoInfoEventOffset* event_offset);
 	};
 
 	struct FileIoSetInfoEvent : FileIoInfoEventMember
@@ -273,7 +274,7 @@ namespace etw
 		wchar_t* file_name = nullptr;
 
 		FileIoNameEventMember() = default;
-		FileIoNameEventMember(const Event& event, FileIoNameEventOffset* offset);
+		FileIoNameEventMember(const Event& event, FileIoNameEventOffset* event_offset);
 	};
 
 	struct FileIoNameEvent : FileIoNameEventMember
@@ -339,7 +340,7 @@ namespace etw
 		size_t nt_status = NULL;
 
 		FileIoOpEndEventMember() = default;
-		FileIoOpEndEventMember(const Event& event, FileIoOpEndEventOffset* offset);
+		FileIoOpEndEventMember(const Event& event, FileIoOpEndEventOffset* event_offset);
 	};
 
 	struct FileIoOpEndEvent : FileIoOpEndEventMember
@@ -397,7 +398,7 @@ namespace etw
 		size_t io_flags = NULL;
 
 		FileIoReadWriteEventMember() = default;
-		FileIoReadWriteEventMember(const Event& event, FileIoReadWriteEventOffset* offset);
+		FileIoReadWriteEventMember(const Event& event, FileIoReadWriteEventOffset* event_offset);
 	};
 
 	struct FileIoReadEvent : FileIoReadWriteEventMember
@@ -451,7 +452,7 @@ namespace etw
 		PVOID file_key = nullptr;
 
 		FileIoSimpleOpEventMember() = default;
-		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* offset);
+		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* event_offset);
 	};
 
 	struct FileIoSimpleOpCleanupEvent : FileIoSimpleOpEventMember

@@ -186,6 +186,7 @@
     <ClInclude Include="include\service\servicecontrol.h" />
     <ClInclude Include="include\service\serviceevent.h" />
     <ClInclude Include="include\ulti\collections.h" />
+    <ClInclude Include="include\ulti\debug.h" />
     <ClInclude Include="include\ulti\support.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

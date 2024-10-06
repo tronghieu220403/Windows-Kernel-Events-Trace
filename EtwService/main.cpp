@@ -40,11 +40,11 @@ void SetUpProvider()
     }
     provider_oke = true;
     
-    ulti::DebugLogW(L"Provider run oke");
+    debug::DebugLogW(L"Provider run oke");
 
 	Sleep(100000);
 
-    ulti::DebugLogW(L"Provider close");
+    debug::DebugLogW(L"Provider close");
 
 	kp->CloseTrace();
 	return;
@@ -60,21 +60,21 @@ void SetUpComsumer()
     
     if (kc->Open() != ERROR_SUCCESS)
     {
-        ulti::DebugLogW(L"Consummer can not be opened");
+        debug::DebugLogW(L"Consummer can not be opened");
         return;
     }
 
-    ulti::DebugLogW(L"Consummer is opened");
+    debug::DebugLogW(L"Consummer is opened");
 
     comsumer_oke = true;
 
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
-        ulti::DebugLogW(L"Consummer run failed");
+        debug::DebugLogW(L"Consummer run failed");
     }
     else
     {
-        ulti::DebugLogW(L"Consummer run oke");
+        debug::DebugLogW(L"Consummer run oke");
     }
 
     kc->Close();
@@ -84,14 +84,14 @@ void SetUpComsumer()
 
 void ServiceMainWorker()
 {
-    ulti::InitDebugLog();
-	ulti::DebugLogW(L"ServiceMainWorker");
+    debug::InitDebugLog();
+	debug::DebugLogW(L"ServiceMainWorker");
     manager::Init();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
     provider_thread.join();
     comsumer_thread.join();
-	ulti::CleanupDebugLog();
+	debug::CleanupDebugLog();
 }
 
 void RunService()

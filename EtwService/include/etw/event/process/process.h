@@ -8,6 +8,7 @@
 
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
@@ -99,7 +100,7 @@ namespace etw
 		wchar_t* command_line = nullptr;
 
 		ProcessTypeGroup1EventMember() = default;
-		ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* offset);
+		ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* event_offset);
 	};
 
 	struct ProcessStartEvent : ProcessTypeGroup1EventMember
@@ -223,7 +224,7 @@ namespace etw
 		size_t thread_flags = 0;
 
 		ThreadTypeGroup1EventMember() = default;
-		ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* offset);
+		ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* event_offset);
 	};
 
 	struct ThreadStartEvent : ThreadTypeGroup1EventMember
@@ -327,7 +328,7 @@ namespace etw
 		wchar_t* file_name = nullptr;
 
 		ImageLoadEventMember() = default;
-		ImageLoadEventMember(const Event& event, ImageLoadEventOffset* offset);
+		ImageLoadEventMember(const Event& event, ImageLoadEventOffset* event_offset);
 	};
 
 	struct ImageLoadEvent : ImageLoadEventMember

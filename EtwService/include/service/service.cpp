@@ -24,7 +24,7 @@ namespace etw
 
     void Service::Start()
     {
-        ulti::DebugLogW(L"Begin Start");
+        debug::DebugLogW(L"Begin Start");
         SERVICE_TABLE_ENTRY DispatchTable[] =
         {
             { &(name_)[0],				service_main_func_},
