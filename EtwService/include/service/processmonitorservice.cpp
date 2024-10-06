@@ -6,7 +6,7 @@ namespace etw
 {
     void ProcessMonitoringService::ProcessMonitoringServiceStop()
     {
-        ulti::WriteDebugA("Get SERVICE_CONTROL_STOP");
+        ulti::DebugLogA("Get SERVICE_CONTROL_STOP");
 
         if (service_status_.dwCurrentState != SERVICE_RUNNING)
             return;
@@ -17,7 +17,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000003;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_STOP_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_STOP_PENDING");
             exit(0);
         }
 
@@ -31,7 +31,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000001;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_STOPPED after SERVICE_STOP_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_STOPPED after SERVICE_STOP_PENDING");
             exit(0);
         }
 
@@ -41,7 +41,7 @@ namespace etw
 
     void ProcessMonitoringService::ProcessMonitoringServicePause()
     {
-        ulti::WriteDebugA("Get SERVICE_CONTROL_PAUSE");
+        ulti::DebugLogA("Get SERVICE_CONTROL_PAUSE");
 
         if (service_status_.dwCurrentState != SERVICE_RUNNING)
             return;
@@ -52,7 +52,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000006;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_PAUSE_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_PAUSE_PENDING");
             exit(0);
         }
        
@@ -67,7 +67,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000007;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_PAUSED after SERVICE_PAUSE_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_PAUSED after SERVICE_PAUSE_PENDING");
             exit(0);
         }
 
@@ -77,7 +77,7 @@ namespace etw
 
     void ProcessMonitoringService::ProcessMonitoringServiceContinue()
     {
-        ulti::WriteDebugA("Get SERVICE_CONTROL_CONTINUE");
+        ulti::DebugLogA("Get SERVICE_CONTROL_CONTINUE");
 
         if (service_status_.dwCurrentState != SERVICE_PAUSED)
             return;
@@ -88,7 +88,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000005;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_CONTINUE_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_CONTINUE_PENDING");
             exit(0);
         }
 
@@ -103,7 +103,7 @@ namespace etw
         service_status_.dwCheckPoint = 0x00000004;
 
         if (SetServiceStatus (status_handle_, &service_status_) == FALSE){
-            ulti::WriteDebugA("Failed to SetServiceStatus SERVICE_RUNNING after SERVICE_CONTINUE_PENDING");
+            ulti::DebugLogA("Failed to SetServiceStatus SERVICE_RUNNING after SERVICE_CONTINUE_PENDING");
             exit(0);
         }
 
@@ -112,7 +112,7 @@ namespace etw
 
     void ProcessMonitoringService::ProcessMonitoringServiceShutdown()
     {
-        ulti::WriteDebugA("Get SERVICE_CONTROL_SHUTDOWN");
+        ulti::DebugLogA("Get SERVICE_CONTROL_SHUTDOWN");
 
         exit(0);
     }
@@ -145,7 +145,7 @@ namespace etw
 
             default:
 
-                ulti::WriteDebugA("Get service control code: " + ctrl_code);
+                ulti::DebugLogA("Get service control code: " + ctrl_code);
                 break;
         }
 
@@ -153,7 +153,7 @@ namespace etw
 
     void ProcessMonitoringService::ProcessMonitoringWorkerFunction()
     {
-        ulti::WriteDebugA("In worker");
+        ulti::DebugLogA("In worker");
         // Tell the services that the service is running.
         service_status_.dwCurrentState = SERVICE_RUNNING;
         service_status_.dwWin32ExitCode = 0;
@@ -170,13 +170,13 @@ namespace etw
 
     VOID WINAPI ProcessMonitoringService::ProcessMonitoringServiceMain()
     {
-        ulti::WriteDebugA("In main");
+        ulti::DebugLogA("In main");
 
         status_handle_ = RegisterServiceCtrlHandler(kName.data(), (LPHANDLER_FUNCTION)ProcessMonitoringService::ProcessMonitoringServiceCtrlHandler);
 
         if (status_handle_ == NULL)
         {
-            ulti::WriteDebugA("Can not RegisterServiceCtrlHandler: " + GetLastError());
+            ulti::DebugLogA("Can not RegisterServiceCtrlHandler: " + GetLastError());
             goto EXIT;
         }
 
@@ -191,7 +191,7 @@ namespace etw
 
         if (SetServiceStatus (status_handle_ , &service_status_) == FALSE)
         {
-            ulti::WriteDebugA("Can not SetServiceStatus in line 218: " + GetLastError());
+            ulti::DebugLogA("Can not SetServiceStatus in line 218: " + GetLastError());
             goto EXIT;
         }
 
@@ -208,7 +208,7 @@ namespace etw
 
         if (SetServiceStatus(status_handle_, &service_status_) == FALSE)
         {
-            ulti::WriteDebugA("Can not SetServiceStatus in line 253: " + GetLastError());
+            ulti::DebugLogA("Can not SetServiceStatus in line 253: " + GetLastError());
         }
 
         EXIT:

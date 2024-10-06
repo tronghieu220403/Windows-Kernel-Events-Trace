@@ -13,6 +13,7 @@ C/C++ -> General -> Additional Include Dir -> $(ProjectDir)include
 #include "service/processmonitorservice.h"
 #include "service/servicecontrol.h"
 #include "service/service.h"
+#include "manager/manager.h"
 
 bool provider_oke = false;
 bool comsumer_oke = false;
@@ -30,7 +31,7 @@ void SetUpProvider()
         | EVENT_TRACE_FLAG_PROCESS
 		//| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
-        //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
+        | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
         );
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
@@ -39,11 +40,11 @@ void SetUpProvider()
     }
     provider_oke = true;
     
-    ulti::WriteDebugA("Provider run oke");
+    ulti::DebugLogA("Provider run oke");
 
 	Sleep(100000);
 
-    ulti::WriteDebugA("Provider close");
+    ulti::DebugLogA("Provider close");
 
 	kp->CloseTrace();
 	return;
@@ -59,21 +60,21 @@ void SetUpComsumer()
     
     if (kc->Open() != ERROR_SUCCESS)
     {
-        ulti::WriteDebugA("Consummer can not be opened");
+        ulti::DebugLogA("Consummer can not be opened");
         return;
     }
 
-    ulti::WriteDebugA("Consummer is opened");
+    ulti::DebugLogA("Consummer is opened");
 
     comsumer_oke = true;
 
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
-        ulti::WriteDebugA("Consummer run not oke");
+        ulti::DebugLogA("Consummer run failed");
     }
     else
     {
-        ulti::WriteDebugA("Consummer run oke");
+        ulti::DebugLogA("Consummer run oke");
     }
 
     kc->Close();
@@ -83,6 +84,8 @@ void SetUpComsumer()
 
 void ServiceMainWorker()
 {
+	ulti::DebugLogA("ServiceMainWorker");
+    manager::Init();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
     provider_thread.join();

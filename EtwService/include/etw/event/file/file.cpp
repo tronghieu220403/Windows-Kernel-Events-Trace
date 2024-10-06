@@ -47,7 +47,7 @@ namespace etw
 				0 == offset->file_attributes_size ||
 				0 == offset->share_access_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileCreateEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileCreateEvent");
 				offset->is_successful = false;
 				return;
 			}
@@ -60,12 +60,12 @@ namespace etw
 				offset->open_path_offs > offset->file_attributes_offs &&
 				offset->open_path_offs > offset->share_access_offs)
 			{
-				ulti::WriteDebugA("The position for FileCreateEvent is as expected.");
+				ulti::DebugLogA("The position for FileCreateEvent is as expected.");
 				offset->is_positioned = true;
 			}
 			else
 			{
-				ulti::WriteDebugA("The position for FileCreateEvent is not as expected.");
+				ulti::DebugLogA("The position for FileCreateEvent is not as expected.");
 				offset->is_positioned = false;
 			}
 		}
@@ -133,7 +133,7 @@ namespace etw
 				0 == offset->info_class_size ||
 				0 == offset->file_index_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoDirEnumEventMember");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoDirEnumEventMember");
 				offset->is_successful = false;
 				return;
 			}
@@ -208,7 +208,7 @@ namespace etw
 				0 == offset->extra_info_size ||
 				0 == offset->info_class_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoInfoEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoInfoEvent");
 				offset->is_successful = false;
 				return;
 			}
@@ -268,7 +268,7 @@ namespace etw
 			if (0 == offset->file_object_offs ||
 				0 == offset->file_name_offs)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoNameEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoNameEvent");
 				offset->is_successful = false;
 				return;
 			}
@@ -276,12 +276,12 @@ namespace etw
 
 			if (offset->file_name_offs > offset->file_object_offs)
 			{
-				ulti::WriteDebugA("The position for FileIoNameEvent is as expected.");
+				ulti::DebugLogA("The position for FileIoNameEvent is as expected.");
 				offset->is_positioned = true;
 			}
 			else
 			{
-				ulti::WriteDebugA("The position for FileIoNameEvent is not as expected.");
+				ulti::DebugLogA("The position for FileIoNameEvent is not as expected.");
 			}
 		}
 	}
@@ -330,7 +330,7 @@ namespace etw
 				0 == offset->extra_info_size ||
 				0 == offset->nt_status_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoOpEndEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoOpEndEvent");
 				offset->is_successful = false;
 				return;
 			}
@@ -393,7 +393,7 @@ namespace etw
 				0 == offset->io_size_size ||
 				0 == offset->io_flags_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoReadWriteEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoReadWriteEvent");
 				offset->is_successful = false;
 				return;
 			}
@@ -450,7 +450,7 @@ namespace etw
 				0 == offset->file_object_size ||
 				0 == offset->file_key_size)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in FileIoSimpleOpEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in FileIoSimpleOpEvent");
 				offset->is_successful = false;
 				return;
 			}

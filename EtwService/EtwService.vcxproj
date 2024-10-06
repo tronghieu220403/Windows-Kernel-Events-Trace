@@ -153,6 +153,9 @@
     <ClCompile Include="include\etw\event\registry\registry.cpp" />
     <ClCompile Include="include\etw\provider.cpp" />
     <ClCompile Include="include\etw\wmieventclass.cpp" />
+    <ClCompile Include="include\manager\file_manager.cpp" />
+    <ClCompile Include="include\manager\manager.cpp" />
+    <ClCompile Include="include\manager\process_manager.cpp" />
     <ClCompile Include="include\mutex\mutex.cpp" />
     <ClCompile Include="include\service\processmonitorservice.cpp" />
     <ClCompile Include="include\service\service.cpp" />
@@ -172,6 +175,9 @@
     <ClInclude Include="include\etw\event\thread\thread.h" />
     <ClInclude Include="include\etw\provider.h" />
     <ClInclude Include="include\etw\wmieventclass.h" />
+    <ClInclude Include="include\manager\file_manager.h" />
+    <ClInclude Include="include\manager\manager.h" />
+    <ClInclude Include="include\manager\process_manager.h" />
     <ClInclude Include="include\mutex\mutex.h" />
     <ClInclude Include="include\service\processmonitorservice.h" />
     <ClInclude Include="include\service\service.h" />

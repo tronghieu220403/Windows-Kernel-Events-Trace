@@ -45,7 +45,7 @@
 #include <deque>
 #include <syncstream>
 #include <mutex>
-
+#include <set>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
@@ -63,7 +63,7 @@ typedef unsigned int uint32;
 namespace ulti
 {
     inline std::mutex mt;
-    inline void WriteDebugA(std::string s)
+    inline void DebugLogA(const std::string& s)
     {
     #ifdef _DEBUG
         mt.lock();
@@ -73,7 +73,8 @@ namespace ulti
         mt.unlock();
     #endif // DEBUG
     }
-    inline void WriteDebugW(std::wstring s)
+
+    inline void DebugLogW(const std::wstring& s)
     {
     #ifdef _DEBUG
         mt.lock();
@@ -83,6 +84,19 @@ namespace ulti
         mt.unlock();
     #endif // DEBUG
     }
+
+    inline std::wstring GetErrorMessage(DWORD errorCode) {
+        LPWSTR messageBuffer = nullptr;
+        size_t size = FormatMessageW(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            (LPWSTR)&messageBuffer, 0, nullptr);
+
+        std::wstring message(messageBuffer, size);
+        LocalFree(messageBuffer);
+        return message;
+    }
+
 
     inline std::wstring StrToWStr(const std::string& str)
     {

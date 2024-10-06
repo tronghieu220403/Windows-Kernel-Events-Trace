@@ -16,7 +16,7 @@ namespace etw
 
 			if (offset->syscall_address_size == 0)
 			{
-				ulti::WriteDebugA("Error in GetPropertyInfo in SysCallEnterEvent");
+				ulti::DebugLogA("Error in GetPropertyInfo in SysCallEnterEvent");
 				offset->is_successful = false;
 				return;
 			}
