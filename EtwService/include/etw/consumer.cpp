@@ -281,9 +281,13 @@ namespace etw
             ulti::DebugLogA("    - PID:     " + std::to_string(process_start_event.pid));
 			ulti::DebugLogA("    - PPID:    " + std::to_string(event.GetProcessId()));
             ulti::DebugLogA("    - Image: " + std::string((PCHAR)process_start_event.image_file_name));
+			// TODO: Dump process name from command line
             ulti::DebugLogW(L"    - Command Line: " + std::wstring((PWCHAR)process_start_event.command_line));
             ulti::DebugLogA("\n");
-			manager::kProcMan.AddProcess(process_start_event.pid, event.GetProcessId());
+            if (manager::kProcMan.GetImageFileName(process_start_event.pid).empty())
+            {
+                manager::kProcMan.AddProcess(process_start_event.pid, event.GetProcessId());
+            }
         }
         if (type == ProcessEventType::kProcessEnd)
         {
@@ -350,15 +354,12 @@ namespace etw
 			if (PageFaultEventFilter(issuing_pid, allocated_pid))
 			{
 				ulti::DebugLogA("[+] VirtualAlloc event is accepted");
+                ulti::DebugLogA("    - Issuing PID: " + std::to_string(issuing_pid));
+                ulti::DebugLogW(L"    - Issuing Image: " + manager::kProcMan.GetImageFileName(issuing_pid));
+                ulti::DebugLogA("    - Allocated PID: " + std::to_string(allocated_pid));
+                ulti::DebugLogW(L"    - Allocated Image: " + manager::kProcMan.GetImageFileName(allocated_pid));
+                ulti::DebugLogA("\n");
 			}
-            else {
-                ulti::DebugLogA("[+] VirtualAlloc event is discarded");
-            }
-			ulti::DebugLogA("    - Issuing PID: " + std::format("{:#x}", issuing_pid));
-			ulti::DebugLogW(L"    - Issuing Image: " + manager::kProcMan.GetImageFileName(issuing_pid));
-			ulti::DebugLogA("    - Allocated PID: " + std::format("{:#x}", allocated_pid));
-			ulti::DebugLogW(L"    - Allocated Image: " + manager::kProcMan.GetImageFileName(allocated_pid));
-			ulti::DebugLogA("\n");
         }
         else if (type == ThreadEventType::kThreadEnd)
         {

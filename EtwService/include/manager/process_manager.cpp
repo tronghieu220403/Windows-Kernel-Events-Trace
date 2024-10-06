@@ -179,7 +179,8 @@ namespace manager
             CloseHandle(hProcess);
         }
         else {
-            ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(GetLastError()));
+            error = GetLastError();
+            ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + ulti::GetErrorMessage(error));
         }
 
         if (error != ERROR_SUCCESS) {
@@ -228,7 +229,8 @@ namespace manager
                 CloseHandle(hProcess);
             }
             else {
-                ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ) failed: " + ulti::GetErrorMessage(GetLastError()));
+				error = GetLastError();
+                ulti::DebugLogW(L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ) failed: " + ulti::GetErrorMessage(error));
             }
         }
         if (error == ERROR_SUCCESS)
