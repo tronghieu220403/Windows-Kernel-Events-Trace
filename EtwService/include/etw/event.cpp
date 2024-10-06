@@ -36,6 +36,11 @@ namespace etw
         return p_event_->Header.TimeStamp.QuadPart / 10000;
     }
 
+    ULONGLONG Event::GetTimeInMicroSec() const
+    {
+        return p_event_->Header.TimeStamp.QuadPart / 10;
+    }
+
     ULONG Event::GetMofLength() const
     {
         return p_event_->MofLength;

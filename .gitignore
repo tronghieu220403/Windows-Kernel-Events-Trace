@@ -4,3 +4,11 @@ EtwService/EtwService.vcxproj.filters
 EtwService/EtwService.vcxproj.user
 /EtwService/EtwService
 /EtwService/x64
+EtwService/EtwService.vcxproj
+EtwService/EtwService.vcxproj
+/driver/.vs
+/driver/x64
+/EtwService/packages
+EtwService/packages.config
+/RunDriver/.vs
+/driver/AntiRansomKernel/x64

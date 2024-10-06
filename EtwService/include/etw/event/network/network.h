@@ -6,6 +6,7 @@
 #define ETWSERVICE_ETW_ETW_EVENT_NETWORK_NETWORK_H_
 
 #include "etw/event.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
@@ -66,7 +67,7 @@ namespace etw
 		size_t FailureCode = 0;
 
 		TcpIpFailEventMember() = default;
-		TcpIpFailEventMember(const Event& event, TcpIpFailEventOffset* offset);
+		TcpIpFailEventMember(const Event& event, TcpIpFailEventOffset* event_offset);
 	};
 
 	struct TcpIpFailEvent : TcpIpFailEventMember
@@ -136,7 +137,7 @@ namespace etw
 		size_t connid = 0;
 
 		TcpIpSendIPV4EventMember() = default;
-		TcpIpSendIPV4EventMember(const Event& event, TcpIpSendIPV4EventOffset* offset);
+		TcpIpSendIPV4EventMember(const Event& event, TcpIpSendIPV4EventOffset* event_offset);
 	};
 
 	struct TcpIpSendIPV4Event : TcpIpSendIPV4EventMember
@@ -219,7 +220,7 @@ namespace etw
 		size_t connid = 0;
 
 		TcpIpTypeGroup1EventMember() = default;
-		TcpIpTypeGroup1EventMember(const Event& event, TcpIpTypeGroup1EventOffset* offset);
+		TcpIpTypeGroup1EventMember(const Event& event, TcpIpTypeGroup1EventOffset* event_offset);
 	};
 
 	struct TcpIpRecvIPV4Event : TcpIpTypeGroup1EventMember
@@ -401,7 +402,7 @@ namespace etw
 		size_t connid = 0;
 
 		TcpIpTypeGroup2EventMember() = default;
-		TcpIpTypeGroup2EventMember(const Event& event, TcpIpTypeGroup2EventOffset* offset);
+		TcpIpTypeGroup2EventMember(const Event& event, TcpIpTypeGroup2EventOffset* event_offset);
 	};
 
 	struct TcpIpConnectIPV4Event : TcpIpTypeGroup2EventMember
@@ -469,7 +470,7 @@ namespace etw
 		size_t FailureCode = 0;
 
 		UdpIpFailEventMember() = default;
-		UdpIpFailEventMember(const Event& event, UdpIpFailEventOffset* offset);
+		UdpIpFailEventMember(const Event& event, UdpIpFailEventOffset* event_offset);
 	};
 
 	struct UdpIpFailEvent : UdpIpFailEventMember
@@ -544,7 +545,7 @@ namespace etw
 		size_t connid = 0;
 
 		UdpIpTypeGroup1EventMember() = default;
-		UdpIpTypeGroup1EventMember(const Event& event, UdpIpTypeGroup1EventOffset* offset);
+		UdpIpTypeGroup1EventMember(const Event& event, UdpIpTypeGroup1EventOffset* event_offset);
 	};
 
 	struct UdpIpSendIPV4Event : UdpIpTypeGroup1EventMember

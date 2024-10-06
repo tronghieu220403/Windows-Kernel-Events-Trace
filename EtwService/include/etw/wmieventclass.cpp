@@ -5,13 +5,74 @@
 namespace etw
 {
 
+    HRESULT Init()
+    {
+        HRESULT hr = S_OK;
+        IWbemLocator* p_locator = NULL;
+
+        BSTR bstr_name_space = _bstr_t(L"root\\wmi");
+        hr = CoInitialize(0);
+
+        hr = CoCreateInstance(__uuidof(WbemLocator),
+            0,
+            CLSCTX_INPROC_SERVER,
+            __uuidof(IWbemLocator),
+            (LPVOID*)&p_locator);
+
+        if (FAILED(hr))
+        {
+            wprintf(L"CoCreateInstance failed with 0x%x\n", hr);
+            goto cleanup;
+        }
+
+        hr = p_locator->ConnectServer(bstr_name_space,
+            NULL, NULL, NULL,
+            0L, NULL, NULL,
+            &kServices);
+
+        if (FAILED(hr))
+        {
+            wprintf(L"p_locator->ConnectServer failed with 0x%x\n", hr);
+            goto cleanup;
+        }
+
+        hr = CoSetProxyBlanket(kServices,
+            RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
+            NULL,
+            RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE,
+            NULL, EOAC_NONE);
+
+        if (FAILED(hr))
+        {
+            wprintf(L"CoSetProxyBlanket failed with 0x%x\n", hr);
+            kServices->Release();
+            kServices = NULL;
+        }
+
+    cleanup:
+
+        if (p_locator)
+            p_locator->Release();
+
+        return hr;
+    }
+
+	void CleanUp()
+	{
+		if (kServices)
+		{
+			kServices->Release();
+			kServices = NULL;
+		}
+		CoUninitialize();
+	}
+
     WmiEventClass::WmiEventClass(std::wstring class_guid, ULONG version, ULONG type, USHORT pointer_size):
         class_guid_(class_guid),
         version_(version),
         type_(type),
         pointer_size_(pointer_size)
     {
-        ConnectToETWNamespace();
     }
 
     USHORT WmiEventClass::GetPointerSize() const
@@ -48,59 +109,6 @@ namespace etw
         type_ = type;
     }
 
-
-    long long WmiEventClass::ConnectToETWNamespace()
-    {
-        HRESULT hr = S_OK;
-        IWbemLocator* p_locator = NULL;
-
-        BSTR bstr_name_space = _bstr_t(L"root\\wmi");
-        hr = CoInitialize(0);
-
-        hr = CoCreateInstance(__uuidof(WbemLocator),
-            0,
-            CLSCTX_INPROC_SERVER,
-            __uuidof(IWbemLocator),
-            (LPVOID*)&p_locator);
-        
-        if (FAILED(hr))
-        {
-            wprintf(L"CoCreateInstance failed with 0x%x\n", hr);
-            goto cleanup;
-        }
-
-        hr = p_locator->ConnectServer(bstr_name_space,
-            NULL, NULL, NULL,
-            0L, NULL, NULL,
-            &p_services_);
-
-        if (FAILED(hr))
-        {
-            wprintf(L"p_locator->ConnectServer failed with 0x%x\n", hr);
-            goto cleanup;
-        }
-
-        hr = CoSetProxyBlanket(p_services_,
-            RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE,
-            NULL,
-            RPC_C_AUTHN_LEVEL_PKT, RPC_C_IMP_LEVEL_IMPERSONATE,
-            NULL, EOAC_NONE);
-
-        if (FAILED(hr))
-        {
-            wprintf(L"CoSetProxyBlanket failed with 0x%x\n", hr);
-            p_services_->Release();
-            p_services_ = NULL;
-        }
-
-        cleanup:
-
-        if (p_locator)
-            p_locator->Release();
-
-        return hr;
-    }
-
     IWbemClassObject* WmiEventClass::GetEventCategoryClass(BSTR bstr_class_guid, ULONG version)
     {
         HRESULT hr = S_OK;
@@ -112,7 +120,7 @@ namespace etw
         VARIANT var_guid = { 0 };
         VARIANT var_version = { 0 };
 
-        hr = p_services_->CreateClassEnum(_bstr_t(L"EventTrace"),
+        hr = kServices->CreateClassEnum(_bstr_t(L"EventTrace"),
             WBEM_FLAG_DEEP | WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_USE_AMENDED_QUALIFIERS,
             NULL, &p_classes);
 
@@ -221,13 +229,13 @@ namespace etw
             goto cleanup;
         }
 
-        hr = p_services_->CreateClassEnum(var_class_name.bstrVal,
+        hr = kServices->CreateClassEnum(var_class_name.bstrVal,
             WBEM_FLAG_SHALLOW | WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_USE_AMENDED_QUALIFIERS,
             NULL, &p_classes);
 
         if (FAILED(hr))
         {
-            wprintf(L"p_services_->CreateClassEnum failed with 0x%x\n", hr);
+            wprintf(L"kServices->CreateClassEnum failed with 0x%x\n", hr);
             goto cleanup;
         }
 
@@ -398,6 +406,7 @@ namespace etw
                 }
                 else if (WBEM_E_NOT_FOUND == hr)
                 {
+                    hr = S_OK;
                     continue; // Ignore property without WmiDataId
                 }
                 else
@@ -646,7 +655,7 @@ namespace etw
                         BYTE buffer[SECURITY_MAX_SID_SIZE];
                         SID* psid;
                         DWORD status = 0;
-                        for (int i = 0; i < array_size; i++)
+                        for (ULONG i = 0; i < array_size; i++)
                         {
                             CopyMemory(&temp, p_event_data, sizeof(ULONG));
                             if (temp > 0)
@@ -654,9 +663,9 @@ namespace etw
                                 USHORT bytes_to_sid = pointer_size_ * 2;
                                 data_size += bytes_to_sid;
                                 p_event_data = (PVOID)((size_t)p_event_data + bytes_to_sid);
-                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > SECURITY_MAX_SID_SIZE) ?
+                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > (size_t)SECURITY_MAX_SID_SIZE) ?
                                     SECURITY_MAX_SID_SIZE :
-                                    ((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
+                                    (USHORT)((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
                                 CopyMemory(&buffer, p_event_data, copy_length);
                                 psid = (SID*)&buffer;
                                 data_size += SeLengthSid(psid);
@@ -690,16 +699,6 @@ namespace etw
 
             } // switch
         }
-    }
-
-    WmiEventClass::~WmiEventClass()
-    {
-        if (p_services_)
-        {
-            p_services_->Release();
-            p_services_ = NULL;
-        }
-        CoUninitialize();
     }
 
     std::pair<int, int> WmiEventClass::GetPropertyInfo(std::wstring property_name, const Event& event)

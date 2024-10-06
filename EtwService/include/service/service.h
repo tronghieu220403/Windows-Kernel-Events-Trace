@@ -3,27 +3,34 @@
 #ifndef ETWSERVICE_SERVICE_SERVICE_H_
 #define ETWSERVICE_SERVICE_SERVICE_H_
 
-#include "ulti/support.h"
+#include "ulti/debug.h"
 #include "ulti/collections.h"
 
-namespace etw
+namespace srv
 {
-    class Service
-    {
-    private:
-        std::wstring name_;
-        LPSERVICE_MAIN_FUNCTION service_main_func_ = nullptr;
+	class Service
+	{
+	private:
+		std::wstring service_name_;
+		std::wstring service_path_;
+		SC_HANDLE h_services_control_manager_ = NULL;
+		DWORD type_ = NULL;
+		DWORD start_type_ = NULL;
 
-    public:
+	public:
 
-        LPSERVICE_MAIN_FUNCTION GetServiceMainFunc() const;
-        void SetServiceMainFunc(LPSERVICE_MAIN_FUNCTION main_func);
+		Service() = default;
 
-        std::wstring GetName() const;
-        void SetName(std::wstring name);
+		DWORD Create(const std::wstring& service_path, const DWORD& type, const DWORD& start_type);
+		DWORD Run();
+		DWORD Stop();
+		DWORD Delete();
 
-        void Start();
-    };
+		Service(const std::wstring& name);
+
+		~Service();
+	};
+
 }
 
 #endif

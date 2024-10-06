@@ -7,13 +7,14 @@
 
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
 	enum PageFaultEventType
 	{
-		VirtualAlloc = 98,
-		VirtualFree = 99
+		kVirtualAlloc = 98,
+		kVirtualFree = 99
 	};
 	/*
 	[EventType{98, 99}, EventTypeName{"VirtualAlloc", "VirtualFree"}]
@@ -50,7 +51,7 @@ namespace etw
 		size_t flags = 0;
 
 		PageFaultVirtualAllocEventMember() = default;
-		PageFaultVirtualAllocEventMember(const Event& event, PageFaultVirtualAllocEventOffset* offset);
+		PageFaultVirtualAllocEventMember(const Event& event, PageFaultVirtualAllocEventOffset* event_offset);
 	};
 
 	struct PageFaultVirtualAllocEvent : PageFaultVirtualAllocEventMember

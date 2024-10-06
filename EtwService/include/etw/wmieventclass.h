@@ -13,12 +13,13 @@
 
 namespace etw
 {
+    inline static IWbemServices* kServices = NULL;
+    HRESULT Init();
+	void CleanUp();
 
     class WmiEventClass
     {
         private:
-
-            inline static IWbemServices* p_services_ = NULL;
 
             USHORT pointer_size_ = 0;
 
@@ -53,12 +54,8 @@ namespace etw
             void SetVersion(ULONG version);
             ULONG GetType() const;
             void SetType(ULONG type);
-
-            long long ConnectToETWNamespace();
             
             std::pair<int, int> GetPropertyInfo(std::wstring property_name, const Event& event);
-
-            ~WmiEventClass();
     };
 }
 #endif

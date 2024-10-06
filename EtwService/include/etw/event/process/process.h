@@ -1,6 +1,4 @@
 #ifdef _WIN32
-
-
 #pragma once
 
 #ifndef ETWSERVICE_ETW_ETW_EVENT_PROCESS_PROCESS_H_
@@ -8,6 +6,7 @@
 
 #include "etw/event.h"
 #include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
@@ -99,13 +98,13 @@ namespace etw
 		wchar_t* command_line = nullptr;
 
 		ProcessTypeGroup1EventMember() = default;
-		ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* offset);
+		ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* event_offset);
 	};
 
 	struct ProcessStartEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset;
+		static inline ProcessTypeGroup1EventOffset offset_;
 	public:
 		ProcessStartEvent(const Event& event);
 	};
@@ -113,7 +112,7 @@ namespace etw
 	struct ProcessEndEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset;
+		static inline ProcessTypeGroup1EventOffset offset_;
 	public:
 		ProcessEndEvent(const Event& event);
 	};
@@ -121,7 +120,7 @@ namespace etw
 	struct ProcessDCStartEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset;
+		static inline ProcessTypeGroup1EventOffset offset_;
 	public:
 		ProcessDCStartEvent(const Event& event);
 	};
@@ -129,7 +128,7 @@ namespace etw
 	struct ProcessDCEndEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset;
+		static inline ProcessTypeGroup1EventOffset offset_;
 	public:
 		ProcessDCEndEvent(const Event& event);
 	};
@@ -137,7 +136,7 @@ namespace etw
 	struct ProcessDefunctEvent : ProcessTypeGroup1EventMember
 	{
 	private:
-		static inline ProcessTypeGroup1EventOffset offset;
+		static inline ProcessTypeGroup1EventOffset offset_;
 	public:
 		ProcessDefunctEvent(const Event& event);
 	};
@@ -223,13 +222,13 @@ namespace etw
 		size_t thread_flags = 0;
 
 		ThreadTypeGroup1EventMember() = default;
-		ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* offset);
+		ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* event_offset);
 	};
 
 	struct ThreadStartEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset;
+		static inline ThreadTypeGroup1EventOffset offset_;
 	public:
 		ThreadStartEvent(const Event& event);
 	};
@@ -237,7 +236,7 @@ namespace etw
 	struct ThreadEndEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset;
+		static inline ThreadTypeGroup1EventOffset offset_;
 	public:
 		ThreadEndEvent(const Event& event);
 	};
@@ -245,7 +244,7 @@ namespace etw
 	struct ThreadDCStartEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset;
+		static inline ThreadTypeGroup1EventOffset offset_;
 	public:
 		ThreadDCStartEvent(const Event& event);
 	};
@@ -253,7 +252,7 @@ namespace etw
 	struct ThreadDCEndEvent : ThreadTypeGroup1EventMember
 	{
 	private:
-		static inline ThreadTypeGroup1EventOffset offset;
+		static inline ThreadTypeGroup1EventOffset offset_;
 	public:
 		ThreadDCEndEvent(const Event& event);
 	};
@@ -327,13 +326,13 @@ namespace etw
 		wchar_t* file_name = nullptr;
 
 		ImageLoadEventMember() = default;
-		ImageLoadEventMember(const Event& event, ImageLoadEventOffset* offset);
+		ImageLoadEventMember(const Event& event, ImageLoadEventOffset* event_offset);
 	};
 
 	struct ImageLoadEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset;
+		static inline ImageLoadEventOffset offset_;
 	public:
 		ImageLoadEvent(const Event& event);
 	};
@@ -341,7 +340,7 @@ namespace etw
 	struct ImageUnloadEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset;
+		static inline ImageLoadEventOffset offset_;
 	public:
 		ImageUnloadEvent(const Event& event);
 	};
@@ -349,7 +348,7 @@ namespace etw
 	struct ImageDCStartEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset;
+		static inline ImageLoadEventOffset offset_;
 	public:
 		ImageDCStartEvent(const Event& event);
 	};
@@ -357,18 +356,14 @@ namespace etw
 	struct ImageDCEndEvent : ImageLoadEventMember
 	{
 	private:
-		static inline ImageLoadEventOffset offset;
+		static inline ImageLoadEventOffset offset_;
 	public:
 		ImageDCEndEvent(const Event& event);
 	};
 
 	/*---------------------------------*/
 
-
-
-
 };
 
-#endif
-
-#endif
+#endif // ETWSERVICE_ETW_ETW_EVENT_PROCESS_PROCESS_H_
+#endif // _WIN32

@@ -1,16 +1,14 @@
 #ifdef _WIN32
-
-
 #pragma once
-
 #ifndef ETWSERVICE_ETW_ETW_EVENT_REGISTRY_REGISTRY_H_
 #define ETWSERVICE_ETW_ETW_EVENT_REGISTRY_REGISTRY_H_
 
 #include "etw/event.h"
+#include "etw/wmieventclass.h"
+#include "ulti/debug.h"
 
 namespace etw
 {
-
 	enum RegistryEventType
 	{
 		kRegistryCreate = 10,
@@ -72,21 +70,23 @@ namespace etw
 		wchar_t* KeyName = nullptr;
 
 		RegistryTypeGroup1EventMember() = default;
-		RegistryTypeGroup1EventMember(const Event& event, RegistryTypeGroup1EventOffset* offset);
+		RegistryTypeGroup1EventMember(const Event& event, RegistryTypeGroup1EventOffset* event_offset);
 	};
 
 	struct RegistryCreateEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryCreateEvent(const Event& event);
 	};
 
+	using RegistryOverallEvent = RegistryCreateEvent;
+
 	struct RegistryOpenEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryOpenEvent(const Event& event);
 	};
@@ -94,7 +94,7 @@ namespace etw
 	struct RegistryDeleteEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryDeleteEvent(const Event& event);
 	};
@@ -102,7 +102,7 @@ namespace etw
 	struct RegistryQueryEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryQueryEvent(const Event& event);
 	};
@@ -110,7 +110,7 @@ namespace etw
 	struct RegistrySetValueEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistrySetValueEvent(const Event& event);
 	};
@@ -118,7 +118,7 @@ namespace etw
 	struct RegistryDeleteValueEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryDeleteValueEvent(const Event& event);
 	};
@@ -126,7 +126,7 @@ namespace etw
 	struct RegistryQueryValueEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryQueryValueEvent(const Event& event);
 	};
@@ -134,7 +134,7 @@ namespace etw
 	struct RegistryEnumerateKeyEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryEnumerateKeyEvent(const Event& event);
 	};
@@ -142,7 +142,7 @@ namespace etw
 	struct RegistryEnumerateValueKeyEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryEnumerateValueKeyEvent(const Event& event);
 	};
@@ -150,7 +150,7 @@ namespace etw
 	struct RegistryQueryMultipleValueEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryQueryMultipleValueEvent(const Event& event);
 	};
@@ -158,7 +158,7 @@ namespace etw
 	struct RegistrySetInformationEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistrySetInformationEvent(const Event& event);
 	};
@@ -166,7 +166,7 @@ namespace etw
 	struct RegistryFlushEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryFlushEvent(const Event& event);
 	};
@@ -174,7 +174,7 @@ namespace etw
 	struct RegistryKCBCreateEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryKCBCreateEvent(const Event& event);
 	};
@@ -182,7 +182,7 @@ namespace etw
 	struct RegistryKCBDeleteEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryKCBDeleteEvent(const Event& event);
 	};
@@ -190,7 +190,7 @@ namespace etw
 	struct RegistryKCBRundownBeginEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryKCBRundownBeginEvent(const Event& event);
 	};
@@ -198,7 +198,7 @@ namespace etw
 	struct RegistryKCBRundownEndEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryKCBRundownEndEvent(const Event& event);
 	};
@@ -206,7 +206,7 @@ namespace etw
 	struct RegistryVirtualizeEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryVirtualizeEvent(const Event& event);
 	};
@@ -214,13 +214,12 @@ namespace etw
 	struct RegistryCloseEvent : RegistryTypeGroup1EventMember
 	{
 	private:
-		static inline RegistryTypeGroup1EventOffset offset;
+		static inline RegistryTypeGroup1EventOffset offset_;
 	public:
 		RegistryCloseEvent(const Event& event);
 	};
 
 };
 
-#endif
-
-#endif
+#endif // ETWSERVICE_ETW_ETW_EVENT_REGISTRY_REGISTRY_H_
+#endif // _WIN32
