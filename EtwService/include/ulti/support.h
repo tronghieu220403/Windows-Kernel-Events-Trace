@@ -60,23 +60,26 @@ typedef unsigned int uint32;
 
 #define GetCurrentDir _getcwd
 
+#define DEBUG_LOG_THRESHOLD 1000
+
 namespace ulti
 {
     inline std::mutex mt;
 
     inline std::wofstream outfile;
-
+    inline int debug_cnt = 0;
 	inline void InitDebugLog()
 	{
     #ifdef _DEBUG
-		    outfile.open("C:\\debug.txt", std::ios_base::app);
+		outfile.open("C:\\debug.txt", std::ios_base::app);
+        debug_cnt = 0;
     #endif
 	}
 
-	inline void UninitDebugLog()
+	inline void CleanupDebugLog()
 	{
     #ifdef _DEBUG
-		    outfile.close();
+		outfile.close();
     #endif
 	}
 
@@ -84,11 +87,17 @@ namespace ulti
     {
     #ifdef _DEBUG
         mt.lock();
+		debug_cnt++;
 		if (s.at(s.length() - 1) == L'\n')
 			outfile << s;
 		else
 			outfile << s << "\n";
         outfile.flush();
+		if (debug_cnt >= DEBUG_LOG_THRESHOLD)
+		{
+            CleanupDebugLog();
+			InitDebugLog();
+		}
         mt.unlock();
     #endif // DEBUG
     }

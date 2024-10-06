@@ -9,7 +9,9 @@ namespace manager {
 
 	class FileManager {
 	public:
-		void AddFile(const std::wstring& file_path);
+		void AddFile(const size_t file_object, const std::wstring& file_path);
+		void RemoveFile(const size_t file_object);
+		std::wstring GetFilePath(const size_t file_object) const;
 	private:
 		std::map<size_t, std::wstring> file_map_;
 	};

@@ -88,7 +88,7 @@ namespace manager
         HANDLE hProcess = nullptr;
         std::wstring image_file_name_w;
         std::string image_file_name_a;
-        int size_tmp = 0;
+        size_t size_tmp = 0;
         DWORD error = 0;
         image_file_name_w.resize(MAX_PATH);
         image_file_name_a.resize(MAX_PATH);
@@ -98,7 +98,7 @@ namespace manager
         {
             // Try GetProcessImageFileNameW with resizing loop
             while (true) {
-                if (size_tmp = GetProcessImageFileNameW(hProcess, image_file_name_w.data(), image_file_name_w.size())) {
+                if (size_tmp = GetProcessImageFileNameW(hProcess, image_file_name_w.data(), (DWORD)image_file_name_w.size())) {
                     error = ERROR_SUCCESS;
                     image_file_name_w.resize(size_tmp);
                     break;
@@ -117,7 +117,7 @@ namespace manager
             if (error != ERROR_SUCCESS) {
                 // Try GetProcessImageFileNameA with resizing loop
                 while (true) {
-                    if (size_tmp = GetProcessImageFileNameA(hProcess, image_file_name_a.data(), image_file_name_a.size())) {
+                    if (size_tmp = GetProcessImageFileNameA(hProcess, image_file_name_a.data(), (DWORD)image_file_name_a.size())) {
                         error = ERROR_SUCCESS;
                         image_file_name_a.resize(size_tmp);
                         image_file_name_w = std::wstring(image_file_name_a.begin(), image_file_name_a.end());
@@ -182,7 +182,7 @@ namespace manager
 
             if (error != ERROR_SUCCESS) {
                 while (true) {
-                    if (size_tmp = GetModuleFileNameExW(hProcess, nullptr, image_file_name_w.data(), image_file_name_w.size())) {
+                    if (size_tmp = GetModuleFileNameExW(hProcess, nullptr, image_file_name_w.data(), (DWORD)image_file_name_w.size())) {
                         error = ERROR_SUCCESS;
                         image_file_name_w.resize(size_tmp);
                         image_file_name_w = GetDosPath(&image_file_name_w);
@@ -201,7 +201,7 @@ namespace manager
 
                 if (error != ERROR_SUCCESS) {
                     while (true) {
-                        if (size_tmp = GetModuleFileNameExA(hProcess, nullptr, image_file_name_a.data(), image_file_name_a.size())) {
+                        if (size_tmp = GetModuleFileNameExA(hProcess, nullptr, image_file_name_a.data(), (DWORD)image_file_name_a.size())) {
                             error = ERROR_SUCCESS;
                             image_file_name_a.resize(size_tmp);
                             image_file_name_w = std::wstring(image_file_name_a.begin(), image_file_name_a.end());
@@ -232,6 +232,8 @@ namespace manager
             }
         }
 
+		// TODO: Ask driver from DriverComm to get image file name and set error to ERROR_SUCCESS
+
         if (error == ERROR_SUCCESS)
         {
 			UpdateImageFileName(pid, image_file_name_w);
@@ -240,7 +242,7 @@ namespace manager
         return L"";
     }
 
-    const ProcessInfo& ProcessManager::GetProcessInfo(size_t pid)
+    ProcessInfo ProcessManager::GetProcessInfo(size_t pid)
     {
         if (process_map_.find(pid) != process_map_.end())
         {

@@ -84,14 +84,14 @@ void SetUpComsumer()
 
 void ServiceMainWorker()
 {
+    ulti::InitDebugLog();
 	ulti::DebugLogW(L"ServiceMainWorker");
     manager::Init();
-	ulti::InitDebugLog();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
     provider_thread.join();
     comsumer_thread.join();
-	ulti::UninitDebugLog();
+	ulti::CleanupDebugLog();
 }
 
 void RunService()

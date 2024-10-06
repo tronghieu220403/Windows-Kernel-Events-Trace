@@ -1,4 +1,4 @@
-#ifndef PROCESS_MANAGER_H_
+﻿#ifndef PROCESS_MANAGER_H_
 #define PROCESS_MANAGER_H_
 
 #include "../ulti/support.h"
@@ -7,8 +7,8 @@
 namespace manager {
 
     struct ProcessInfo {
-        size_t pid;
-        size_t ppid;
+        size_t pid = 0;
+        size_t ppid = 0;
         std::wstring image_file_name;
         std::set<size_t> cpid_list;
     };
@@ -26,13 +26,14 @@ namespace manager {
         // Check if a process is an ancestor of another process
         bool IsAncestor(size_t ancestor_pid, size_t descendant_pid);
 
+        // TODO: Tìm không ra thì hỏi kernel
 		// Add image file name of a process
 		void UpdateImageFileName(size_t pid, const std::wstring& image_file_name);
 
         // Get image file name of a process
         std::wstring GetImageFileName(size_t pid);
         
-		const ProcessInfo& GetProcessInfo(size_t pid);
+		ProcessInfo GetProcessInfo(size_t pid);
 
     private:
         std::map<size_t, ProcessInfo> process_map_;

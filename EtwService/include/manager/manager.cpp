@@ -5,10 +5,29 @@ namespace manager {
 	{
 		ulti::DebugLogW(L"Manager initialized");
 		kCurrentPid = GetCurrentProcessId();
-		kProcMan = ProcessManager();
+		kFileMan = new FileManager();
+		kProcMan = new ProcessManager();
+		kDriverComm = new DriverComm();
+	}
+
+	void Cleanup()
+	{
+		ulti::DebugLogW(L"Manager cleaned up");
+		delete kDriverComm;
+		delete kProcMan;
+		delete kFileMan;
 	}
 
 	std::set<std::pair<size_t, size_t>> kPageFaultEventCache;
+
+	bool OverallEventFilter(size_t issuing_pid)
+	{
+		if (issuing_pid == 0 || issuing_pid == 4 || issuing_pid == kCurrentPid)
+		{
+			return false;
+		}
+		return true;
+	}
 
 	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid)
 	{
@@ -24,7 +43,7 @@ namespace manager {
 		{
 			return false;
 		}
-		if (manager::kProcMan.IsAncestor(issuing_pid, allocated_pid))
+		if (manager::kProcMan->IsAncestor(issuing_pid, allocated_pid))
 		{
 			return false;
 		}

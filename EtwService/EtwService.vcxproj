@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="include\com\driver_comm.cpp" />
     <ClCompile Include="include\etw\consumer.cpp" />
     <ClCompile Include="include\etw\event.cpp" />
     <ClCompile Include="include\etw\event\file\file.cpp" />
@@ -164,6 +165,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\com\driver_comm.h" />
     <ClInclude Include="include\etw\consumer.h" />
     <ClInclude Include="include\etw\event.h" />
     <ClInclude Include="include\etw\event\file\file.h" />

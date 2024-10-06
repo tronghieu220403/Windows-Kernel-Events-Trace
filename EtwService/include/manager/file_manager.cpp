@@ -2,14 +2,25 @@
 
 namespace manager
 {
-	void FileManager::AddFile(const std::wstring& file_path)
+	void FileManager::AddFile(const size_t file_object, const std::wstring& file_path)
 	{
-		std::wstring dos_path = GetDosPath(&file_path);
-		if (dos_path.empty()) return;
-
-		size_t hash = std::hash<std::wstring>{}(dos_path);
-		file_map_[hash] = dos_path;
+		file_map_[file_object] = file_path;
 	}
+
+	void FileManager::RemoveFile(const size_t file_object)
+	{
+		file_map_.erase(file_object);
+	}
+
+    std::wstring FileManager::GetFilePath(const size_t file_object) const
+    {
+        auto it = file_map_.find(file_object);
+        if (it == file_map_.end())
+        {
+            return std::wstring();
+        }
+        return it->second;
+    }
 
     std::wstring GetDosPath(const std::wstring* wstr)
     {
@@ -21,7 +32,7 @@ namespace manager
         std::wstring dos_name;
         dos_name.resize(MAX_PATH);
         DWORD status;
-        while (QueryDosDeviceW(device_name.data(), (WCHAR*)dos_name.data(), dos_name.size()) == 0)
+        while (QueryDosDeviceW(device_name.data(), (WCHAR*)dos_name.data(), (DWORD)dos_name.size()) == 0)
         {
             status = GetLastError();
             if (status != ERROR_INSUFFICIENT_BUFFER)
