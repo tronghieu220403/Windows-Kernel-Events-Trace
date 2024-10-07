@@ -43,17 +43,20 @@ namespace manager {
 		{
 			return false;
 		}
+
+		// The case for an ancestor process is only accepted if the issuing pid is still safe
+		// TODO: Check if the issuing_pid is still safe, create a safe process list
 		if (manager::kProcMan->IsAncestor(issuing_pid, allocated_pid))
 		{
 			return false;
 		}
-		/*
+
 		if (kPageFaultEventCache.find({issuing_pid, allocated_pid}) != kPageFaultEventCache.end())
 		{
 			return false;
 		}
-		std::wstring issuing_image = manager::kProcMan.GetImageFileName(issuing_pid);
-		std::wstring allocated_image = manager::kProcMan.GetImageFileName(allocated_pid);
+		std::wstring issuing_image = manager::kProcMan->GetImageFileName(issuing_pid);
+		std::wstring allocated_image = manager::kProcMan->GetImageFileName(allocated_pid);
 		if (issuing_image.empty() || allocated_image.empty())
 		{
 			return false;
@@ -63,7 +66,7 @@ namespace manager {
 			return false;
 		}
 		kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
-		*/
+		// TODO: Mark the issuing_pid and allocated_pid as unsafe
 		return true;
 	}
 }
