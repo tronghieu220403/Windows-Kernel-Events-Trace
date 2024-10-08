@@ -53,11 +53,12 @@ namespace etw
 				0 == event_offset->exit_status_size ||
 				0 == event_offset->directory_table_base_size)
 			{
-				debug::DebugLogW(L"Error in GetPropertyInfo in ProcessTypeGroup1Event");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -79,23 +80,23 @@ namespace etw
 
 	ProcessStartEvent::ProcessStartEvent(const Event& event)
 	{
-		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset);
+		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset_);
 	}
 	ProcessEndEvent::ProcessEndEvent(const Event& event)
 	{
-		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset);
+		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset_);
 	}
 	ProcessDCStartEvent::ProcessDCStartEvent(const Event& event)
 	{
-		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset);
+		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset_);
 	}
 	ProcessDCEndEvent::ProcessDCEndEvent(const Event& event)
 	{
-		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset);
+		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset_);
 	}
 	ProcessDefunctEvent::ProcessDefunctEvent(const Event& event)
 	{
-		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset);
+		this->ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(event, &offset_);
 	}
 
 	ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* event_offset)
@@ -177,11 +178,12 @@ namespace etw
 				event_offset->io_priority_size == 0 ||
 				event_offset->thread_flags_size == 0)
 			{
-				debug::DebugLogW(L"Error in GetPropertyInfo in ThreadTypeGroup1Event");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -204,20 +206,109 @@ namespace etw
 	}
 	ThreadStartEvent::ThreadStartEvent(const Event& event)
 	{
-		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset);
+		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset_);
 	}
 	ThreadEndEvent::ThreadEndEvent(const Event& event)
 	{
-		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset);
+		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset_);
 	}
 	ThreadDCStartEvent::ThreadDCStartEvent(const Event& event)
 	{
-		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset);
+		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset_);
 	}
 	ThreadDCEndEvent::ThreadDCEndEvent(const Event& event)
 	{
-		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset);
+		this->ThreadTypeGroup1EventMember::ThreadTypeGroup1EventMember(event, &offset_);
 	}
+
+
+	ImageLoadEventMember::ImageLoadEventMember(const Event& event, ImageLoadEventOffset* event_offset)
+	{
+		WmiEventClass wec(EventGuid::kImageLoad, event.GetVersion(), event.GetType(), sizeof(PVOID));
+
+		if (event_offset->is_positioned == false)
+		{
+			std::pair<int, int> p;
+
+			p = wec.GetPropertyInfo(L"ImageBase", event);
+			event_offset->image_base_offs = p.first;
+			event_offset->image_base_size = p.second;
+
+			p = wec.GetPropertyInfo(L"ImageSize", event);
+			event_offset->image_size_offs = p.first;
+			event_offset->image_size_size = p.second;
+
+			p = wec.GetPropertyInfo(L"ProcessId", event);
+			event_offset->process_id_offs = p.first;
+			event_offset->process_id_size = p.second;
+
+			p = wec.GetPropertyInfo(L"ImageCheckSum", event);
+			event_offset->image_checksum_offs = p.first;
+			event_offset->image_checksum_size = p.second;
+
+			p = wec.GetPropertyInfo(L"TimeDateStamp", event);
+			event_offset->time_date_stamp_offs = p.first;
+			event_offset->time_date_stamp_size = p.second;
+
+			// Get offsets for reserved fields and file name
+			p = wec.GetPropertyInfo(L"Reserved0", event);
+			event_offset->reserved0_offs = p.first;
+			event_offset->reserved0_size = p.second;
+
+			p = wec.GetPropertyInfo(L"DefaultBase", event);
+			event_offset->default_base_offs = p.first;
+			event_offset->default_base_size = p.second;
+
+			p = wec.GetPropertyInfo(L"FileName", event);
+			event_offset->file_name_offs = p.first;
+			event_offset->file_name_size = p.second;
+
+			if (0 == event_offset->image_base_size ||
+				0 == event_offset->image_size_size ||
+				0 == event_offset->process_id_size ||
+				0 == event_offset->image_checksum_size ||
+				0 == event_offset->time_date_stamp_size ||
+				0 == event_offset->file_name_size)
+			{
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				event_offset->is_successful = false;
+				return;
+			}
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+			event_offset->is_successful = true;
+			event_offset->is_positioned = true;
+		}
+
+		PBYTE p_data = event.GetPEventData();
+		memcpy(&ImageBase, p_data + event_offset->image_base_offs, event_offset->image_base_size);
+		memcpy(&ImageSize, p_data + event_offset->image_size_offs, event_offset->image_size_size);
+		memcpy(&ProcessId, p_data + event_offset->process_id_offs, event_offset->process_id_size);
+		memcpy(&ImageCheckSum, p_data + event_offset->image_checksum_offs, event_offset->image_checksum_size);
+		memcpy(&TimeDateStamp, p_data + event_offset->time_date_stamp_offs, event_offset->time_date_stamp_size);
+
+		file_name = (wchar_t*)(p_data + event_offset->file_name_offs);
+	}
+
+	ImageLoadEvent::ImageLoadEvent(const Event& event)
+	{
+		this->ImageLoadEventMember::ImageLoadEventMember(event, &offset_);
+	}
+
+	ImageUnloadEvent::ImageUnloadEvent(const Event& event)
+	{
+		this->ImageLoadEventMember::ImageLoadEventMember(event, &offset_);
+	}
+
+	ImageDCStartEvent::ImageDCStartEvent(const Event& event)
+	{
+		this->ImageLoadEventMember::ImageLoadEventMember(event, &offset_);
+	}
+
+	ImageDCEndEvent::ImageDCEndEvent(const Event& event)
+	{
+		this->ImageLoadEventMember::ImageLoadEventMember(event, &offset_);
+	}
+
 };
 
 #endif

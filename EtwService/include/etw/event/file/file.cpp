@@ -60,12 +60,12 @@ namespace etw
 				event_offset->open_path_offs > event_offset->file_attributes_offs &&
 				event_offset->open_path_offs > event_offset->share_access_offs)
 			{
-				debug::DebugLogW(L"The position for FileCreateEvent is as expected.");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				debug::DebugLogW(L"The position for FileCreateEvent is not as expected.");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
 				event_offset->is_positioned = false;
 			}
 		}

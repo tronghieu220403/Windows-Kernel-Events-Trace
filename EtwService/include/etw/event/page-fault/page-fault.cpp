@@ -31,11 +31,12 @@ namespace etw
 				event_offset->process_id_size == 0 ||
 				event_offset->flags_size == 0)
 			{
-				debug::DebugLogW(L"Error in GetPropertyInfo in PageFaultVirtualAllocEvent");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

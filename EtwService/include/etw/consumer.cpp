@@ -119,6 +119,19 @@ namespace etw
         return;
     }
 
+    inline void PrintDebugPid(size_t pid)
+    {
+        std::wstring issuing_image_path = manager::kProcMan->GetImageFileName(pid);
+        if (issuing_image_path.empty())
+        {
+            debug::DebugLogW(L"    - PID:           " + std::to_wstring(pid));
+        }
+        else
+        {
+            debug::DebugLogW(L"    - Issuing Image: " + issuing_image_path);
+        }
+    }
+
     inline void PrintDebugFileObject(size_t file_object)
     {
         std::wstring file_path = manager::kFileMan->GetFilePath(file_object);
@@ -129,19 +142,6 @@ namespace etw
         else
         {
             debug::DebugLogW(L"    - File Path:   " + file_path);
-        }
-    }
-
-	inline void PrintDebugPid(size_t pid)
-	{
-        std::wstring issuing_image_path = manager::kProcMan->GetImageFileName(pid);
-        if (issuing_image_path.empty())
-        {
-            debug::DebugLogW(L"    - PID:           " + std::to_wstring(pid));
-        }
-        else
-        {
-            debug::DebugLogW(L"    - Issuing Image: " + issuing_image_path);
         }
     }
 
@@ -177,7 +177,7 @@ namespace etw
         else if (type == FileIoEventType::kSetInfo)
         {
             FileIoSetInfoEvent set_info_event(event);
-            debug::DebugLogW(L"[+] File I/O: Set info event");
+            debug::DebugLogW(L"[+] File I/O: SetInfo event");
 			PrintDebugFileObject((size_t)set_info_event.file_object);
             PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
@@ -202,16 +202,16 @@ namespace etw
 		{
 			FileIoQueryInfoEvent query_info_event(event);
             /*
-			debug::DebugLogW(L"[+] File I/O: Query info event");
-			debug::DebugLogW(L"    - File Object: 0x" + std::format(L"{:x}", (size_t)query_info_event.file_object));
-            debug::DebugLogW(L"    - PID:         " + std::to_wstring(event.GetProcessId()));
+			debug::DebugLogW(L"[+] File I/O: QueryInfo event");
+            PrintDebugFileObject((size_t)query_info_event.file_object);
+            PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
             */
 		}
 		else if (type == FileIoEventType::kFSControl)
 		{
 			FileIoFSControlEvent fs_control_event(event);
-			debug::DebugLogW(L"[+] File I/O: FS control event");
+			debug::DebugLogW(L"[+] File I/O: FsControl event");
             PrintDebugFileObject((size_t)fs_control_event.file_object);
             PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
@@ -220,7 +220,7 @@ namespace etw
 		else if (type == FileIoEventType::kName)
 		{
 			FileIoNameEvent name_event(event);
-			debug::DebugLogW(L"[+] File I/O: File name event");
+			debug::DebugLogW(L"[+] File I/O: FileName event");
             debug::DebugLogW(L"    - File Name:   " + std::wstring(name_event.file_name));
             PrintDebugFileObject((size_t)name_event.file_object);
             PrintDebugPid(event.GetProcessId());
@@ -229,7 +229,7 @@ namespace etw
 		else if (type == FileIoEventType::kFileCreate)
 		{
 			FileIoFileCreateEvent file_create_event(event);
-			debug::DebugLogW(L"[+] File I/O: File create event");
+			debug::DebugLogW(L"[+] File I/O: FileCreate event");
 			debug::DebugLogW(L"    - File Name: " + std::wstring(file_create_event.file_name));
             PrintDebugFileObject((size_t)file_create_event.file_object);
             PrintDebugPid(event.GetProcessId());
@@ -238,7 +238,7 @@ namespace etw
 		else if (type == FileIoEventType::kFileDelete)
 		{
 			FileIoFileDeleteEvent file_delete_event(event);
-			debug::DebugLogW(L"[+] File I/O: File delete event");
+			debug::DebugLogW(L"[+] File I/O: FileDelete event");
 			debug::DebugLogW(L"    - File Name:   " + std::wstring(file_delete_event.file_name));
             PrintDebugFileObject((size_t)file_delete_event.file_object);
             PrintDebugPid(event.GetProcessId());
@@ -247,7 +247,7 @@ namespace etw
 		else if (type == FileIoEventType::kFileRundown)
 		{
 			FileIoFileRundownEvent file_rundown_event(event);
-			debug::DebugLogW(L"[+] File I/O: File rundown event");
+			debug::DebugLogW(L"[+] File I/O: FileRundown event");
 			debug::DebugLogW(L"    - File Name:   " + std::wstring(file_rundown_event.file_name));
             PrintDebugFileObject((size_t)file_rundown_event.file_object);
             PrintDebugPid(event.GetProcessId());
@@ -272,8 +272,8 @@ namespace etw
         {
             /*
             FileIoSimpleOpCleanupEvent cleanup_event(event);
-			debug::DebugLogW(L"[+] File I/O: Cleanup event");
-			debug::DebugLogW(L"    - File Object: 0x" + std::format(L"{:x}", (size_t)cleanup_event.file_object));
+            PrintDebugFileObject((size_t)cleanup_event.file_object);
+            PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
             */
 		}
@@ -293,8 +293,8 @@ namespace etw
 		{
             /*
             FileIoSimpleOpFlushEvent flush_event(event);
-			debug::DebugLogW(L"[+] File I/O: Flush event");
-			debug::DebugLogW(L"    - File Object: 0x" + std::format(L"{:x}", (size_t)flush_event.file_object));
+            PrintDebugFileObject((size_t)flush_event.file_object);
+            PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
             */
 		}
@@ -325,9 +325,10 @@ namespace etw
         if (type == ProcessEventType::kProcessEnd)
         {
             ProcessEndEvent process_end_event(event);
-            debug::DebugLogW(L"[+] Process: Start event");
+            debug::DebugLogW(L"[+] Process: End event");
             debug::DebugLogW(L"    - PID:     " + std::to_wstring(process_end_event.pid));
             debug::DebugLogW(L"    - Time:    " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
+            debug::DebugLogW(L"    - Src PID: " + std::to_wstring(event.GetProcessId()));
         }
         return VOID();
     }
@@ -375,6 +376,115 @@ namespace etw
 
         return VOID();
     }
+
+    inline void PrintDebugRegistryEvent(const std::wstring& name, const RegistryTypeGroup1EventMember& event, size_t pid)
+    {
+        debug::DebugLogW(L"[+] Registry: " + name + L" event");
+        debug::DebugLogW(L"    - Key Name:    " + std::wstring(event.KeyName));
+        debug::DebugLogW(L"    - Key Handle:  0x" + std::format(L"{:x}", event.KeyHandle));
+        PrintDebugPid(pid);
+        debug::DebugLogW(L"\n");
+    }
+
+    VOID __stdcall KernelConsumer::ProcessRegistryEvent(Event event)
+    {
+        int type = event.GetType();
+        size_t pid = event.GetProcessId();
+
+        if (type == RegistryEventType::kRegistryCreate)
+        {
+            RegistryCreateEvent registry_create_event(event);
+            PrintDebugRegistryEvent(L"Create", registry_create_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryOpen)
+        {
+            RegistryOpenEvent registry_open_event(event);
+            PrintDebugRegistryEvent(L"Open", registry_open_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryDelete)
+        {
+            RegistryDeleteEvent registry_delete_event(event);
+            PrintDebugRegistryEvent(L"Delete", registry_delete_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryQuery)
+        {
+            RegistryQueryEvent registry_query_event(event);
+            PrintDebugRegistryEvent(L"Query", registry_query_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistrySetValue)
+        {
+            RegistrySetValueEvent registry_set_value_event(event);
+            PrintDebugRegistryEvent(L"SetValue", registry_set_value_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryDeleteValue)
+        {
+            RegistryDeleteValueEvent registry_delete_value_event(event);
+            PrintDebugRegistryEvent(L"DeleteValue", registry_delete_value_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryQueryValue)
+        {
+            RegistryQueryValueEvent registry_query_value_event(event);
+            PrintDebugRegistryEvent(L"QueryValue", registry_query_value_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryEnumerateKey)
+        {
+            RegistryEnumerateKeyEvent registry_enumerate_key_event(event);
+            PrintDebugRegistryEvent(L"EnumerateKey", registry_enumerate_key_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryEnumerateValueKey)
+        {
+            RegistryEnumerateValueKeyEvent registry_enumerate_value_key_event(event);
+            PrintDebugRegistryEvent(L"EnumerateValueKey", registry_enumerate_value_key_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryQueryMultipleValue)
+        {
+            RegistryQueryMultipleValueEvent registry_query_multiple_value_event(event);
+            PrintDebugRegistryEvent(L"QueryMultipleValue", registry_query_multiple_value_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistrySetInformation)
+        {
+            RegistrySetInformationEvent registry_set_information_event(event);
+            PrintDebugRegistryEvent(L"SetInformation", registry_set_information_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryFlush)
+        {
+            RegistryFlushEvent registry_flush_event(event);
+            PrintDebugRegistryEvent(L"Flush", registry_flush_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryKCBCreate)
+        {
+            RegistryKCBCreateEvent registry_kcb_create_event(event);
+            PrintDebugRegistryEvent(L"KCBCreate", registry_kcb_create_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryKCBDelete)
+        {
+            RegistryKCBDeleteEvent registry_kcb_delete_event(event);
+            PrintDebugRegistryEvent(L"KCBDelete", registry_kcb_delete_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryKCBRundownBegin)
+        {
+            RegistryKCBRundownBeginEvent registry_kcb_rundown_begin_event(event);
+            PrintDebugRegistryEvent(L"KCBRundownBegin", registry_kcb_rundown_begin_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryKCBRundownEnd)
+        {
+            RegistryKCBRundownEndEvent registry_kcb_rundown_end_event(event);
+            PrintDebugRegistryEvent(L"KCBRundownEnd", registry_kcb_rundown_end_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryVirtualize)
+        {
+            RegistryVirtualizeEvent registry_virtualize_event(event);
+            PrintDebugRegistryEvent(L"Virtualize", registry_virtualize_event, pid);
+        }
+        else if (type == RegistryEventType::kRegistryClose)
+        {
+            RegistryCloseEvent registry_close_event(event);
+            PrintDebugRegistryEvent(L"Close", registry_close_event, pid);
+        }
+
+        return VOID();
+    }
+
 
     VOID __stdcall KernelConsumer::ProcessPerfInfoEvent(Event event)
     {

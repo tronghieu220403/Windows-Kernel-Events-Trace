@@ -16,6 +16,7 @@
 #include "etw/event/process/process.h"
 #include "etw/event/page-fault/page-fault.h"
 #include "etw/event/perf-info/perf-info.h"
+#include "etw/event/registry/registry.h"
 #include "../manager/manager.h"
 
 namespace etw

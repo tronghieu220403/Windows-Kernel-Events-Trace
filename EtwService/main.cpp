@@ -70,7 +70,7 @@ void SetUpComsumer()
 
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
-        debug::DebugLogW(L"Consummer run failed");
+        debug::DebugLogW(L"Consummer run failed\n");
     }
     else
     {
