@@ -114,6 +114,17 @@ namespace etw
             {
                 ProcessProcessEvent(event);
             }
+            else if (IsEqualGUID(event.GetGuid(), RegistryGuid))
+            {
+                try
+                {
+                    ProcessRegistryEvent(event);
+                }
+                catch (const std::exception&)
+                {
+					debug::DebugLogW(L"[+] Exception caught in ProcessRegistryEvent\n");
+                }
+            }
         }
                 
         return;
