@@ -28,10 +28,10 @@ void SetUpProvider()
         //| EVENT_TRACE_FLAG_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
-        //| EVENT_TRACE_FLAG_PROCESS
-		| EVENT_TRACE_FLAG_REGISTRY // Heavyweight, DO NOT USE
+        | EVENT_TRACE_FLAG_PROCESS
+		//| EVENT_TRACE_FLAG_REGISTRY // Heavyweight, DO NOT USE
         //| EVENT_TRACE_FLAG_THREAD
-        | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
+        //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
         );
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -79,6 +79,13 @@ void SetUpComsumer()
 
     comsumer_oke = true;
     auto start_time = std::chrono::high_resolution_clock::now();
+    while (etw::Init() != S_OK)
+    {
+		debug::DebugLogW(L"ETW namespace is waiting for connection");
+        Sleep(1000);
+    }
+	debug::DebugLogW(L"ETW namespace is connected");
+
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
         debug::DebugLogW(L"Consummer run failed\n");
@@ -89,6 +96,7 @@ void SetUpComsumer()
     }
 
     kc->Close();
+	etw::CleanUp();
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
     debug::DebugLogW(L"Consummer is closed after " + std::to_wstring(duration) + L" seconds");

@@ -6,10 +6,11 @@ namespace etw
 {
 	ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* event_offset)
 	{
+		WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
+		std::pair<int, int> p;
+
 		if (event_offset->is_positioned == false)
 		{
-			WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
-			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"UniqueProcessKey", event);
 			event_offset->unique_process_key_offs = p.first;
