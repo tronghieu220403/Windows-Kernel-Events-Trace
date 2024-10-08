@@ -17,5 +17,6 @@ namespace manager {
 
 	bool OverallEventFilter(size_t issuing_pid);
 	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid);
+	bool RegistryEventFilter(size_t status, size_t handle);
 }
 #endif  // MANAGER_H_

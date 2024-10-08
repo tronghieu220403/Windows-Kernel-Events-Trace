@@ -386,6 +386,8 @@ namespace etw
         debug::DebugLogW(L"[+] Registry: " + name + L" event");
         debug::DebugLogW(L"    - Key Name:    " + std::wstring(event.KeyName));
         debug::DebugLogW(L"    - Key Handle:  0x" + std::format(L"{:x}", event.KeyHandle));
+        debug::DebugLogW(L"    - Status:      0x" + std::format(L"{:x}", event.Status));
+        debug::DebugLogW(L"    - Index:       0x" + std::to_wstring(event.Index));
         PrintDebugPid(pid);
         debug::DebugLogW(L"\n");
     }
@@ -399,6 +401,13 @@ namespace etw
         {
             return VOID();
         }
+
+        RegistryOverallEvent registry_event(event);
+        if (manager::RegistryEventFilter(registry_event.Status, registry_event.KeyHandle) == false)
+        {
+            return VOID();
+        }
+
 
         if (type == RegistryEventType::kRegistryCreate)
         {
@@ -418,7 +427,7 @@ namespace etw
         else if (type == RegistryEventType::kRegistryQuery)
         {
             RegistryQueryEvent registry_query_event(event);
-            PrintDebugRegistryEvent(L"Query", registry_query_event, pid);
+            //PrintDebugRegistryEvent(L"Query", registry_query_event, pid);
         }
         else if (type == RegistryEventType::kRegistrySetValue)
         {
@@ -433,22 +442,22 @@ namespace etw
         else if (type == RegistryEventType::kRegistryQueryValue)
         {
             RegistryQueryValueEvent registry_query_value_event(event);
-            PrintDebugRegistryEvent(L"QueryValue", registry_query_value_event, pid);
+            //PrintDebugRegistryEvent(L"QueryValue", registry_query_value_event, pid);
         }
         else if (type == RegistryEventType::kRegistryEnumerateKey)
         {
             RegistryEnumerateKeyEvent registry_enumerate_key_event(event);
-            PrintDebugRegistryEvent(L"EnumerateKey", registry_enumerate_key_event, pid);
+            //PrintDebugRegistryEvent(L"EnumerateKey", registry_enumerate_key_event, pid);
         }
         else if (type == RegistryEventType::kRegistryEnumerateValueKey)
         {
             RegistryEnumerateValueKeyEvent registry_enumerate_value_key_event(event);
-            PrintDebugRegistryEvent(L"EnumerateValueKey", registry_enumerate_value_key_event, pid);
+            //PrintDebugRegistryEvent(L"EnumerateValueKey", registry_enumerate_value_key_event, pid);
         }
         else if (type == RegistryEventType::kRegistryQueryMultipleValue)
         {
             RegistryQueryMultipleValueEvent registry_query_multiple_value_event(event);
-            PrintDebugRegistryEvent(L"QueryMultipleValue", registry_query_multiple_value_event, pid);
+            //PrintDebugRegistryEvent(L"QueryMultipleValue", registry_query_multiple_value_event, pid);
         }
         else if (type == RegistryEventType::kRegistrySetInformation)
         {
@@ -458,7 +467,7 @@ namespace etw
         else if (type == RegistryEventType::kRegistryFlush)
         {
             RegistryFlushEvent registry_flush_event(event);
-            PrintDebugRegistryEvent(L"Flush", registry_flush_event, pid);
+            //PrintDebugRegistryEvent(L"Flush", registry_flush_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBCreate)
         {
@@ -483,7 +492,7 @@ namespace etw
         else if (type == RegistryEventType::kRegistryVirtualize)
         {
             RegistryVirtualizeEvent registry_virtualize_event(event);
-            PrintDebugRegistryEvent(L"Virtualize", registry_virtualize_event, pid);
+            //PrintDebugRegistryEvent(L"Virtualize", registry_virtualize_event, pid);
         }
         else if (type == RegistryEventType::kRegistryClose)
         {

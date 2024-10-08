@@ -69,4 +69,12 @@ namespace manager {
 		// TODO: Mark the issuing_pid and allocated_pid as unsafe
 		return true;
 	}
+	bool RegistryEventFilter(size_t status, size_t handle)
+	{
+		if (status != 0 || handle == 0)
+		{
+			return false;
+		}
+		return true;
+	}
 }

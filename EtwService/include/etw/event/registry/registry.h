@@ -81,6 +81,8 @@ namespace etw
 		RegistryCreateEvent(const Event& event);
 	};
 
+	using RegistryOverallEvent = RegistryCreateEvent;
+
 	struct RegistryOpenEvent : RegistryTypeGroup1EventMember
 	{
 	private:
