@@ -7,7 +7,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kPerfInfo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"SysCallAddress", event);
@@ -16,12 +15,12 @@ namespace etw
 
 			if (event_offset->syscall_address_size == 0)
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

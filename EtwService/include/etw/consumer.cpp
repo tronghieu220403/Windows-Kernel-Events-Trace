@@ -86,7 +86,6 @@ namespace etw
         }
         else
         {
-            event_count_++;
             Event event(p_event);
             
             if (manager::OverallEventFilter(event.GetProcessId()) == false)
@@ -96,11 +95,11 @@ namespace etw
 
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
-                ProcessFileIoEvent(event);
+                //ProcessFileIoEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
             {
-                ProcessPageFaultEvent(event);
+                //ProcessPageFaultEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
@@ -112,10 +111,11 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), ProcessGuid))
             {
-                ProcessProcessEvent(event);
+                //ProcessProcessEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), RegistryGuid))
             {
+                event_count_++;
                 ProcessRegistryEvent(event);
             }
         }
@@ -397,18 +397,12 @@ namespace etw
         int type = event.GetType();
         size_t pid = event.GetProcessId();
         
-        return VOID();
-
         if (type < RegistryEventType::kRegistryCreate || type > RegistryEventType::kRegistryClose)
         {
             return VOID();
         }
 
         RegistryOverallEvent registry_event(event);
-        if (manager::RegistryEventFilter(registry_event.Status, registry_event.KeyHandle) == false)
-        {
-            return VOID();
-        }
 
         if (type == RegistryEventType::kRegistryCreate)
         {
@@ -460,19 +454,19 @@ namespace etw
         }
         else if (type == RegistryEventType::kRegistryKCBCreate)
         {
-            PrintDebugRegistryEvent(L"KCBCreate", registry_event, pid);
+            //PrintDebugRegistryEvent(L"KCBCreate", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBDelete)
         {
-            PrintDebugRegistryEvent(L"KCBDelete", registry_event, pid);
+            //PrintDebugRegistryEvent(L"KCBDelete", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBRundownBegin)
         {
-            PrintDebugRegistryEvent(L"KCBRundownBegin", registry_event, pid);
+            //PrintDebugRegistryEvent(L"KCBRundownBegin", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBRundownEnd)
         {
-            PrintDebugRegistryEvent(L"KCBRundownEnd", registry_event, pid);
+            //PrintDebugRegistryEvent(L"KCBRundownEnd", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryVirtualize)
         {

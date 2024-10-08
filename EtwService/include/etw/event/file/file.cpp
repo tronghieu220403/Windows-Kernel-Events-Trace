@@ -10,7 +10,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"IrpPtr", event);
@@ -60,12 +59,12 @@ namespace etw
 				event_offset->open_path_offs > event_offset->file_attributes_offs &&
 				event_offset->open_path_offs > event_offset->share_access_offs)
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo completed\n");
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo failed\n");
 				event_offset->is_positioned = false;
 			}
 		}
@@ -91,7 +90,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"IrpPtr", event);
@@ -174,7 +172,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"IrpPtr", event);
@@ -255,7 +252,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"FileObject", event);
@@ -311,7 +307,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"IrpPtr", event);
@@ -354,7 +349,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"Offset", event);
@@ -426,7 +420,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kFileIo, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"IrpPtr", event);

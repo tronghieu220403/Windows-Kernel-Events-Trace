@@ -6,11 +6,11 @@ namespace etw
 {
 	ProcessTypeGroup1EventMember::ProcessTypeGroup1EventMember(const Event& event, ProcessTypeGroup1EventOffset* event_offset)
 	{
-		std::pair<int, int> p;
-		WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 		if (event_offset->is_positioned == false)
 		{
+			WmiEventClass wec(EventGuid::kProcess, event.GetVersion(), event.GetType(), sizeof(PVOID));
+			std::pair<int, int> p;
+
 			p = wec.GetPropertyInfo(L"UniqueProcessKey", event);
 			event_offset->unique_process_key_offs = p.first;
 			event_offset->unique_process_key_size = p.second;
@@ -53,12 +53,12 @@ namespace etw
 				0 == event_offset->exit_status_size ||
 				0 == event_offset->directory_table_base_size)
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -104,7 +104,6 @@ namespace etw
 		if (event_offset->is_positioned == false)
 		{
 			WmiEventClass wec(EventGuid::kThread, event.GetVersion(), event.GetType(), sizeof(PVOID));
-
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"ProcessId", event);
@@ -178,12 +177,12 @@ namespace etw
 				event_offset->io_priority_size == 0 ||
 				event_offset->thread_flags_size == 0)
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -224,10 +223,10 @@ namespace etw
 
 	ImageLoadEventMember::ImageLoadEventMember(const Event& event, ImageLoadEventOffset* event_offset)
 	{
-		WmiEventClass wec(EventGuid::kImageLoad, event.GetVersion(), event.GetType(), sizeof(PVOID));
 
 		if (event_offset->is_positioned == false)
 		{
+			WmiEventClass wec(EventGuid::kImageLoad, event.GetVersion(), event.GetType(), sizeof(PVOID));
 			std::pair<int, int> p;
 
 			p = wec.GetPropertyInfo(L"ImageBase", event);
@@ -270,11 +269,11 @@ namespace etw
 				0 == event_offset->time_date_stamp_size ||
 				0 == event_offset->file_name_size)
 			{
-				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo failed\n");
+				debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo failed\n");
 				event_offset->is_successful = false;
 				return;
 			}
-			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] GetPropertyInfo completed\n");
+			debug::DebugLogW(std::wstring(L"[+] [") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] Event type " + std::to_wstring(event.GetType()) + L" GetPropertyInfo completed\n");
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

@@ -12,22 +12,17 @@ namespace debug
     inline int debug_cnt = 0;
     inline void InitDebugLog()
     {
-#ifdef _DEBUG
         outfile.open("C:\\debug.txt", std::ios_base::app);
         debug_cnt = 0;
-#endif
     }
 
     inline void CleanupDebugLog()
     {
-#ifdef _DEBUG
         outfile.close();
-#endif
     }
 
     inline void DebugLogW(const std::wstring& s)
     {
-#ifdef _DEBUG
         mt.lock();
         debug_cnt++;
         if (s.at(s.length() - 1) == L'\n')
@@ -41,7 +36,6 @@ namespace debug
             InitDebugLog();
         }
         mt.unlock();
-#endif // DEBUG
     }
 
     inline std::wstring GetErrorMessage(DWORD errorCode) {
