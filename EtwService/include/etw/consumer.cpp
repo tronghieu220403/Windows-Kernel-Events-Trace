@@ -116,14 +116,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), RegistryGuid))
             {
-                try
-                {
-                    ProcessRegistryEvent(event);
-                }
-                catch (const std::exception&)
-                {
-					debug::DebugLogW(L"[+] Exception caught in ProcessRegistryEvent\n");
-                }
+                ProcessRegistryEvent(event);
             }
         }
                 
@@ -401,6 +394,11 @@ namespace etw
     {
         int type = event.GetType();
         size_t pid = event.GetProcessId();
+
+        if (type < RegistryEventType::kRegistryCreate || type > RegistryEventType::kRegistryClose)
+        {
+            return VOID();
+        }
 
         if (type == RegistryEventType::kRegistryCreate)
         {

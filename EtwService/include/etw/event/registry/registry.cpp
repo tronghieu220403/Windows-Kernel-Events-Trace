@@ -12,7 +12,7 @@ namespace etw
 		{
 			std::pair<int, int> p;
 
-			p = wec.GetPropertyInfo(L"InitialTime", event);
+			p = wec.GetPropertyInfo(L"Initial Time", event); // Different than the document ?????
 			event_offset->initial_time_offs = p.first;
 			event_offset->initial_time_size = p.second;
 
