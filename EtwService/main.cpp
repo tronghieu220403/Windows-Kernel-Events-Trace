@@ -1,4 +1,4 @@
-#ifndef ETWSERVICE_ETWSERVICE_MAIN
+﻿#ifndef ETWSERVICE_ETWSERVICE_MAIN
 #define ETWSERVICE_ETWSERVICE_MAIN
 
 
@@ -29,24 +29,35 @@ void SetUpProvider()
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
         | EVENT_TRACE_FLAG_PROCESS
-		| EVENT_TRACE_FLAG_REGISTRY
+		//| EVENT_TRACE_FLAG_REGISTRY // Heavyweight, DO NOT USE
         //| EVENT_TRACE_FLAG_THREAD
         | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
         );
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
     {
         return;
     }
     provider_oke = true;
-    
-    debug::DebugLogW(L"Provider run oke");
 
-	Sleep(100000);
+    if (status == ERROR_ALREADY_EXISTS)
+    {
+        debug::DebugLogW(L"Provider is already exists");
+    }
+    else
+    {
+        debug::DebugLogW(L"Provider run oke");
+    }
+    Sleep(100000);
+    debug::DebugLogW(L"Provider is closing");
+    kp->CloseTrace();
+    auto end_time = std::chrono::high_resolution_clock::now();
+    double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
+    debug::DebugLogW(L"Provider is closed after " + std::to_wstring(duration) + L" seconds");
 
-    debug::DebugLogW(L"Provider close");
 
-	kp->CloseTrace();
 	return;
 }
 
@@ -67,18 +78,20 @@ void SetUpComsumer()
     debug::DebugLogW(L"Consummer is opened");
 
     comsumer_oke = true;
-
+    auto start_time = std::chrono::high_resolution_clock::now();
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
         debug::DebugLogW(L"Consummer run failed\n");
     }
     else
     {
-        debug::DebugLogW(L"Consummer run oke");
+        debug::DebugLogW(L"Consummer run is running");
     }
 
     kc->Close();
-
+    auto end_time = std::chrono::high_resolution_clock::now();
+    double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
+    debug::DebugLogW(L"Consummer is closed after " + std::to_wstring(duration) + L" seconds");
     return;
 }
 

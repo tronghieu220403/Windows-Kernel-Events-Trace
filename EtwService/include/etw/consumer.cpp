@@ -396,6 +396,8 @@ namespace etw
     {
         int type = event.GetType();
         size_t pid = event.GetProcessId();
+        
+        return VOID();
 
         if (type < RegistryEventType::kRegistryCreate || type > RegistryEventType::kRegistryClose)
         {
@@ -408,96 +410,77 @@ namespace etw
             return VOID();
         }
 
-
         if (type == RegistryEventType::kRegistryCreate)
         {
-            RegistryCreateEvent registry_create_event(event);
-            PrintDebugRegistryEvent(L"Create", registry_create_event, pid);
+            //PrintDebugRegistryEvent(L"Create", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryOpen)
         {
-            RegistryOpenEvent registry_open_event(event);
-            PrintDebugRegistryEvent(L"Open", registry_open_event, pid);
+            //PrintDebugRegistryEvent(L"Open", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryDelete)
         {
-            RegistryDeleteEvent registry_delete_event(event);
-            PrintDebugRegistryEvent(L"Delete", registry_delete_event, pid);
+            //PrintDebugRegistryEvent(L"Delete", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryQuery)
         {
-            RegistryQueryEvent registry_query_event(event);
-            //PrintDebugRegistryEvent(L"Query", registry_query_event, pid);
+            //PrintDebugRegistryEvent(L"Query", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistrySetValue)
         {
-            RegistrySetValueEvent registry_set_value_event(event);
-            PrintDebugRegistryEvent(L"SetValue", registry_set_value_event, pid);
+            //PrintDebugRegistryEvent(L"SetValue", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryDeleteValue)
         {
-            RegistryDeleteValueEvent registry_delete_value_event(event);
-            PrintDebugRegistryEvent(L"DeleteValue", registry_delete_value_event, pid);
+            //PrintDebugRegistryEvent(L"DeleteValue", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryQueryValue)
         {
-            RegistryQueryValueEvent registry_query_value_event(event);
-            //PrintDebugRegistryEvent(L"QueryValue", registry_query_value_event, pid);
+            //PrintDebugRegistryEvent(L"QueryValue", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryEnumerateKey)
         {
-            RegistryEnumerateKeyEvent registry_enumerate_key_event(event);
-            //PrintDebugRegistryEvent(L"EnumerateKey", registry_enumerate_key_event, pid);
+            //PrintDebugRegistryEvent(L"EnumerateKey", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryEnumerateValueKey)
         {
-            RegistryEnumerateValueKeyEvent registry_enumerate_value_key_event(event);
-            //PrintDebugRegistryEvent(L"EnumerateValueKey", registry_enumerate_value_key_event, pid);
+            //PrintDebugRegistryEvent(L"EnumerateValueKey", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryQueryMultipleValue)
         {
-            RegistryQueryMultipleValueEvent registry_query_multiple_value_event(event);
-            //PrintDebugRegistryEvent(L"QueryMultipleValue", registry_query_multiple_value_event, pid);
+            //PrintDebugRegistryEvent(L"QueryMultipleValue", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistrySetInformation)
         {
-            RegistrySetInformationEvent registry_set_information_event(event);
-            PrintDebugRegistryEvent(L"SetInformation", registry_set_information_event, pid);
+            //PrintDebugRegistryEvent(L"SetInformation", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryFlush)
         {
-            RegistryFlushEvent registry_flush_event(event);
-            //PrintDebugRegistryEvent(L"Flush", registry_flush_event, pid);
+            //PrintDebugRegistryEvent(L"Flush", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBCreate)
         {
-            RegistryKCBCreateEvent registry_kcb_create_event(event);
-            PrintDebugRegistryEvent(L"KCBCreate", registry_kcb_create_event, pid);
+            PrintDebugRegistryEvent(L"KCBCreate", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBDelete)
         {
-            RegistryKCBDeleteEvent registry_kcb_delete_event(event);
-            PrintDebugRegistryEvent(L"KCBDelete", registry_kcb_delete_event, pid);
+            PrintDebugRegistryEvent(L"KCBDelete", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBRundownBegin)
         {
-            RegistryKCBRundownBeginEvent registry_kcb_rundown_begin_event(event);
-            PrintDebugRegistryEvent(L"KCBRundownBegin", registry_kcb_rundown_begin_event, pid);
+            PrintDebugRegistryEvent(L"KCBRundownBegin", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryKCBRundownEnd)
         {
-            RegistryKCBRundownEndEvent registry_kcb_rundown_end_event(event);
-            PrintDebugRegistryEvent(L"KCBRundownEnd", registry_kcb_rundown_end_event, pid);
+            PrintDebugRegistryEvent(L"KCBRundownEnd", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryVirtualize)
         {
-            RegistryVirtualizeEvent registry_virtualize_event(event);
-            //PrintDebugRegistryEvent(L"Virtualize", registry_virtualize_event, pid);
+            //PrintDebugRegistryEvent(L"Virtualize", registry_event, pid);
         }
         else if (type == RegistryEventType::kRegistryClose)
         {
-            RegistryCloseEvent registry_close_event(event);
-            PrintDebugRegistryEvent(L"Close", registry_close_event, pid);
+            //PrintDebugRegistryEvent(L"Close", registry_event, pid);
         }
 
         return VOID();
