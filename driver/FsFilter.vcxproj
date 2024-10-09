@@ -280,8 +280,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="com\comport\comport.h" />
-    <ClInclude Include="com\ioctl\common.h" />
+    <ClInclude Include="com\common.h" />
     <ClInclude Include="com\ioctl\ioctl.h" />
+    <ClInclude Include="function\query.h" />
+    <ClInclude Include="function\self_defense.h" />
     <ClInclude Include="std\algo\hash.h" />
     <ClInclude Include="std\algo\kmp.h" />
     <ClInclude Include="std\file\file.h" />
@@ -304,6 +306,8 @@
   <ItemGroup>
     <ClCompile Include="com\comport\comport.cpp" />
     <ClCompile Include="com\ioctl\ioctl.cpp" />
+    <ClCompile Include="function\query.cpp" />
+    <ClCompile Include="function\self_defense.cpp" />
     <ClCompile Include="std\file\file.cpp" />
     <ClCompile Include="std\memory\memory.cpp" />
     <ClCompile Include="std\sync\mutex.cpp" />

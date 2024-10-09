@@ -4,6 +4,7 @@
 #include <dontuse.h>
 
 #include "../../std/vector/vector.h"
+#include "../common.h"
 
 namespace com
 {

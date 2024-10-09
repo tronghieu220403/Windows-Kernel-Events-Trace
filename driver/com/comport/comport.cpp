@@ -1,4 +1,4 @@
-#include "ComPort.h"
+#include "comport.h"
 
 namespace com
 {

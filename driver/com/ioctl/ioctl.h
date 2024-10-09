@@ -7,7 +7,7 @@
 
 #include "../../template/register.h"
 #include "../../template/flt-ex.h"
-#include "common.h"
+#include "../common.h"
 
 inline UNICODE_STRING DEVICE_NAME = RTL_CONSTANT_STRING(L"\\Device\\HieuDevice");
 inline UNICODE_STRING DEVICE_SYMBOLIC_NAME = RTL_CONSTANT_STRING(L"\\??\\HieuDeviceLink");

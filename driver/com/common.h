@@ -9,10 +9,10 @@ namespace ioctl
 {
 	enum IOCTL_CMD_CLASS
 	{
-		kQueryProcPath			= 0x80002000,
-		kQueryFileCreation		= 0x80002001,
-		kEnableSelfDefense		= 0x80002002,
-		kDisableSelfDefense		= 0x80002003,
+		kQueryProcPath = 0x80002000,
+		kQueryFileCreation = 0x80002001,
+		kEnableSelfDefense = 0x80002002,
+		kDisableSelfDefense = 0x80002003,
 	};
 
 	struct IOCTL_CMD_QUERY_FILE_CREATION
@@ -63,5 +63,19 @@ namespace ioctl
 			::MemCopy(&file_path[0], (WCHAR*)data, data_len);
 			return IOCTL_CMD_QUERY_FILE_CREATION{ file_path };
 		}
-
 	};
+
+	/*
+	Write muliple functions to flatten all the above structures of IOCTL_CMD_CLASS into an IOCTL_CMD consecutive array of char, so that I can send it through a communication port in kernel mode driver. The function take only one parameter: the IOCTL_CMD_xxx structure. First we must allocate memory for IOCTL_CMD structure (the remaining data is write right after the data[1]). Return a pointer to that IOCTL_CMD.
+	*/
+
+	// User must free the returned buffer.
+	inline IOCTL_CMD* FlattenIoctlCmd(IOCTL_CMD_CLASS query_class, const String<WCHAR>& str)
+	{
+		IOCTL_CMD* ioctl_cmd = (IOCTL_CMD*)new char[sizeof(IOCTL_CMD) + str.Size() * sizeof(WCHAR)];
+		ioctl_cmd->cmd_class = query_class;
+		ioctl_cmd->data_len = str.Size() * sizeof(WCHAR);
+		::MemCopy((char*)ioctl_cmd->data, (char*)str.Data(), ioctl_cmd->data_len);
+		return ioctl_cmd;
+	}
+}

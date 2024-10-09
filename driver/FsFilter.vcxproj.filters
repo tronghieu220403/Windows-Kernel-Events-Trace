@@ -47,7 +47,7 @@
     <ClInclude Include="template\flt-ex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="com\ioctl\common.h">
+    <ClInclude Include="com\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="template\system_routine.h">
@@ -92,6 +92,12 @@
     <ClInclude Include="std\vector\vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="function\self_defense.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="function\query.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="template\MiniFs.cpp">
@@ -119,6 +125,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="std\sync\mutex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="function\self_defense.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="function\query.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
