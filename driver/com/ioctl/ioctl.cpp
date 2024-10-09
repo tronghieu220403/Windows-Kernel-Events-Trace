@@ -53,7 +53,6 @@ NTSTATUS ioctl::HandleIoctl(PDEVICE_OBJECT device_object, PIRP irp)
 	IOCTL_CMD* cmd = (IOCTL_CMD*)irp->AssociatedIrp.SystemBuffer;
 
 	bool test_start_reply = false;
-	proc_mon::Report report;
 
 	if (stack_loc->Parameters.DeviceIoControl.IoControlCode != IOCTL_HIEU)
 	{
@@ -66,102 +65,25 @@ NTSTATUS ioctl::HandleIoctl(PDEVICE_OBJECT device_object, PIRP irp)
 	int pid;
 	switch (type)
 	{
-	case IOCTL_CMD_CLASS::kHideFile:
+	case IOCTL_CMD_CLASS::kQueryProcPath:
 
-		str = cmd->ParseHideFile().file_path;
+		pid = cmd->ParseQueryProcPath().pid;
+		// TODO: Get process path by pid
 		break;
 
-	case IOCTL_CMD_CLASS::kHideDir:
+	case IOCTL_CMD_CLASS::kQueryFileCreation:
 
-		str = cmd->ParseHideDir().dir_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kUnhideFile:
-
-		str = cmd->ParseUnhideFile().file_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kUnhideDir:
-
-		str = cmd->ParseUnhideDir().dir_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kHideProcId:
-		pid = cmd->ParseHideProcId().pid;
-		break;
-
-	case IOCTL_CMD_CLASS::kUnhideProcId:
-		pid = cmd->ParseHideProcId().pid;
-		break;
-
-	case IOCTL_CMD_CLASS::kProtectProcId:
-		pid = cmd->ParseProtectProcId().pid;
-
-		break;
-	case IOCTL_CMD_CLASS::kHideProcImage:
+		str = cmd->ParseQueryFileCreation().file_path;
 
 		break;
 
-	case IOCTL_CMD_CLASS::kUnhideProcImage:
-
-		break;
-
-	case IOCTL_CMD_CLASS::kHideReg:
-
-		break;
-
-	case IOCTL_CMD_CLASS::kUnhideReg:
-
-		break;
-
-	case IOCTL_CMD_CLASS::kProctectFile:
-
-		str = cmd->ParseProtectFile().file_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kUnproctectFile:
-
-		str = cmd->ParseUnprotectFile().file_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kProctectDir:
-
-		str = cmd->ParseProtectDir().dir_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kUnproctectDir:
-
-		str = cmd->ParseUnprotectDir().dir_path;
-		break;
-
-	case IOCTL_CMD_CLASS::kTestEnableRansom:
-		DebugMessage("Get kTestEnableRansom from service");
-		ransom::is_enabled = true;
-		ransom::test_mode = true;
-		proc_mon::p_manager->ResetReport();
+	case IOCTL_CMD_CLASS::kEnableSelfDefense:
 		test_start_reply = true;
-
-		pid = cmd->ParseEnableTestRansom().pid;
-		proc_mon::p_manager->DeleteProcess(pid);
-
-		proc_mon::proctected_pids->Clear();
-		proc_mon::proctected_pids->PushBack(pid);
-
-		irp->IoStatus.Information = sizeof(bool);
-		irp->IoStatus.Status = STATUS_SUCCESS;
-
 		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &test_start_reply, sizeof(bool));
 		break;
-	case IOCTL_CMD_CLASS::kTestDisableRansom:
-		DebugMessage("Get kTestDisableRansom from service");
-		ransom::is_enabled = false;
-		ransom::test_mode = false;
-		proc_mon::p_manager->KillAll();
-		irp->IoStatus.Information = sizeof(proc_mon::Report);
-		irp->IoStatus.Status = STATUS_SUCCESS;
-		report = proc_mon::p_manager->GetReport();
-		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &report, sizeof(proc_mon::Report));
-		proc_mon::p_manager->ResetReport();
+	case IOCTL_CMD_CLASS::kDisableSelfDefense:
+		test_start_reply = true;
+		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &test_start_reply, sizeof(bool));
 		break;
 	default:
 		break;

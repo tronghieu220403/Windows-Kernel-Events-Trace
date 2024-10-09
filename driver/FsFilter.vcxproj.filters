@@ -44,22 +44,40 @@
     <ClInclude Include="com\ioctl\ioctl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="std\file\file.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="process\ps-monitor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="template\flt-ex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="std\map\map.hpp">
+    <ClInclude Include="com\ioctl\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="template\system_routine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\algo\hash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\algo\kmp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\file\file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\iterator\iterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\map\map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="std\memory\memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="std\memory\pair.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="std\memory\sharedptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="std\set\set.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="std\string\string.h">
@@ -68,40 +86,10 @@
     <ClInclude Include="std\sync\mutex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="std\ulti\def.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="std\vector\vector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="std\memory\pair.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="process\eprocess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="com\ioctl\common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="std\map\red-black-tree-map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="template\system_routine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="function\ransom\watcher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="function\ransom\ransom-flt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="function\ransom\proc-mon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="std\algo\kmp.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="function\ransom\config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="std\algo\hash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -118,34 +106,19 @@
     <ClCompile Include="com\ioctl\ioctl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="std\file\file.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="process\ps-monitor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="template\flt-ex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="template\system_routine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="std\file\file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="std\memory\memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="std\sync\mutex.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="process\eprocess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="template\system_routine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="function\ransom\watcher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="function\ransom\ransom-flt.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="function\ransom\proc-mon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
