@@ -163,7 +163,9 @@ namespace etw
 
             debug::DebugLogW(L"[+] File I/O: Create event");
 			debug::DebugLogW(L"    - Open Path:   " + file_path);
-			debug::DebugLogW(L"    - File Object: 0x" + std::format(L"{:x}", (size_t)file_create_event.file_object));
+			debug::DebugLogW(L"    - File Object:           0x" + std::format(L"{:x}", (size_t)file_create_event.file_object));
+            debug::DebugLogW(L"    - Create Options:        0x" + std::format(L"{:x}", file_create_event.create_options));
+			debug::DebugLogW(L"    - File Attributes:       0x" + std::format(L"{:x}", file_create_event.file_attributes));
 			PrintDebugPid(event.GetProcessId());
             debug::DebugLogW(L"\n");
 
@@ -212,6 +214,7 @@ namespace etw
             debug::DebugLogW(L"\n");
             */
 		}
+        /*
 		else if (type == FileIoEventType::kFSControl)
 		{
 			FileIoFSControlEvent fs_control_event(event);
@@ -274,13 +277,9 @@ namespace etw
         // EventTypeName{ "Cleanup", "Close", "Flush" }
         else if (type == FileIoEventType::kCleanup)
         {
-            /*
             FileIoSimpleOpCleanupEvent cleanup_event(event);
-            PrintDebugFileObject((size_t)cleanup_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-            */
 		}
+        */
 		else if (type == FileIoEventType::kClose)
 		{
             FileIoSimpleOpCloseEvent close_event(event);

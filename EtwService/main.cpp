@@ -27,10 +27,10 @@ void SetUpProvider()
         | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
-        | EVENT_TRACE_FLAG_PROCESS
-		| EVENT_TRACE_FLAG_REGISTRY
+        //| EVENT_TRACE_FLAG_PROCESS
+		//| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
-        | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
+        //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
         );
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -49,7 +49,7 @@ void SetUpProvider()
     {
         debug::DebugLogW(L"Provider run oke");
     }
-    Sleep(10000);
+    Sleep(100000);
     debug::DebugLogW(L"Provider is closing");
     kp->CloseTrace();
     auto end_time = std::chrono::high_resolution_clock::now();
