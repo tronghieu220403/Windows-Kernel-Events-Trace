@@ -13,8 +13,8 @@ namespace etw
 {
 	enum PageFaultEventType
 	{
-		VirtualAlloc = 98,
-		VirtualFree = 99
+		kVirtualAlloc = 98,
+		kVirtualFree = 99
 	};
 	/*
 	[EventType{98, 99}, EventTypeName{"VirtualAlloc", "VirtualFree"}]

@@ -406,6 +406,7 @@ namespace etw
                 }
                 else if (WBEM_E_NOT_FOUND == hr)
                 {
+                    hr = S_OK;
                     continue; // Ignore property without WmiDataId
                 }
                 else

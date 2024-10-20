@@ -256,13 +256,12 @@ namespace etw
 
 			p = wec.GetPropertyInfo(L"FileObject", event);
 			event_offset->file_object_offs = p.first;
-			event_offset->file_name_offs = p.second;
+			event_offset->file_object_size = p.second;
 
 			p = wec.GetPropertyInfo(L"FileName", event);
 			event_offset->file_name_offs = p.first;
 
-			if (0 == event_offset->file_object_offs ||
-				0 == event_offset->file_name_offs)
+			if (0 == event_offset->file_object_size)
 			{
 				debug::DebugLogW(L"Error in GetPropertyInfo in FileIoNameEvent");
 				event_offset->is_successful = false;
@@ -280,6 +279,10 @@ namespace etw
 				debug::DebugLogW(L"The position for FileIoNameEvent is not as expected.");
 			}
 		}
+		PBYTE p_data = event.GetPEventData();
+		memcpy(&file_object, p_data + event_offset->file_object_offs, event_offset->file_object_size);
+		file_name = (wchar_t*)(p_data + event_offset->file_name_offs);
+
 	}
 
 	FileIoNameEvent::FileIoNameEvent(const Event& event)

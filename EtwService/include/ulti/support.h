@@ -46,6 +46,9 @@
 #include <syncstream>
 #include <mutex>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
+#include <queue>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")

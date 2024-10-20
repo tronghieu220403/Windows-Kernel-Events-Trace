@@ -25,6 +25,7 @@ namespace debug
     {
         mt.lock();
         debug_cnt++;
+        outfile << L"[+] Hieu ETW Service: ";
         if (s.at(s.length() - 1) == L'\n')
             outfile << s;
         else

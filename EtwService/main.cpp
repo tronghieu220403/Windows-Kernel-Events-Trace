@@ -23,7 +23,7 @@ void SetUpProvider()
     ULONG status;
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
-        //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
+        | EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
         | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
@@ -37,24 +37,18 @@ void SetUpProvider()
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
     {
+        debug::DebugLogW(L"Provider run failed\n");
         return;
     }
     provider_oke = true;
 
-    if (status == ERROR_ALREADY_EXISTS)
-    {
-        debug::DebugLogW(L"Provider is already exists");
-    }
-    else
-    {
-        debug::DebugLogW(L"Provider run oke");
-    }
-    Sleep(100000);
+    Sleep(30000);
     debug::DebugLogW(L"Provider is closing");
     kp->CloseTrace();
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
     debug::DebugLogW(L"Provider is closed after " + std::to_wstring(duration) + L" seconds");
+    std::cout << "Provider is closed after " << duration << " seconds" << std::endl;
 
 
 	return;

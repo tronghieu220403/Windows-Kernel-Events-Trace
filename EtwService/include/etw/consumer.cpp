@@ -100,7 +100,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
             {
-                ProcessPageFaultEvent(event);
+                //ProcessPageFaultEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
@@ -123,36 +123,11 @@ namespace etw
         return;
     }
 
-    inline void PrintDebugPid(size_t pid)
-    {
-        std::wstring issuing_image_path = manager::kProcMan->GetImageFileName(pid);
-        if (issuing_image_path.empty())
-        {
-            debug::DebugLogW(L"    - PID:           " + std::to_wstring(pid));
-        }
-        else
-        {
-            debug::DebugLogW(L"    - Issuing Image: " + issuing_image_path);
-        }
-    }
-
-    inline void PrintDebugFileObject(size_t file_object)
-    {
-        std::wstring file_path = manager::kFileMan->GetFilePath(file_object);
-        if (file_path.empty())
-        {
-            debug::DebugLogW(L"    - File Object: 0x" + std::format(L"{:x}", file_object));
-        }
-        else
-        {
-            debug::DebugLogW(L"    - File Path:   " + file_path);
-        }
-    }
-
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
         int type = event.GetType();
 		std::wstring file_path;
+
         // EventTypeName{"Create"}
         if (type == FileIoEventType::kCreate)
         {
@@ -160,15 +135,11 @@ namespace etw
 			file_path = file_create_event.open_path;
 
 			manager::kFileMan->AddFile((size_t)file_create_event.file_object, file_path);
-
-            debug::DebugLogW(L"[+] File I/O: Create event");
-			debug::DebugLogW(L"    - Open Path:   " + file_path);
-			debug::DebugLogW(L"    - File Object:           0x" + std::format(L"{:x}", (size_t)file_create_event.file_object));
-            debug::DebugLogW(L"    - Create Options:        0x" + std::format(L"{:x}", file_create_event.create_options));
-			debug::DebugLogW(L"    - File Attributes:       0x" + std::format(L"{:x}", file_create_event.file_attributes));
-			PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-
+            std::wstring wstr;
+            wstr.resize(2000);
+			int pid = static_cast<int>(event.GetProcessId());
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Create event, path %ws, file object 0x%p, create options 0x%llx, file attributes 0x%llx, pid %d, image path %ws\n", file_create_event.open_path, file_create_event.file_object, file_create_event.create_options, file_create_event.file_attributes, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
         else if (type == FileIoEventType::kDirEnum)
@@ -183,87 +154,79 @@ namespace etw
         else if (type == FileIoEventType::kSetInfo)
         {
             FileIoSetInfoEvent set_info_event(event);
-            debug::DebugLogW(L"[+] File I/O: SetInfo event");
-			PrintDebugFileObject((size_t)set_info_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
+            std::wstring wstr;
+            wstr.resize(2000);
+			int pid = static_cast<int>(event.GetProcessId());
+			file_path = manager::kFileMan->GetFilePath((size_t)set_info_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, SetInfo event, path %ws, file object 0x%p, IrpPtr 0x%p, file key 0x%p, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), set_info_event.file_object, set_info_event.irp_ptr, set_info_event.file_key, set_info_event.extra_info, set_info_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
         }
         else if (type == FileIoEventType::kDelete)
         {
-			FileIoDeleteEvent delete_event(event);
-			debug::DebugLogW(L"[+] File I/O: Delete event");
-			PrintDebugFileObject((size_t)delete_event.file_object);
-			PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
 		}
 		else if (type == FileIoEventType::kRename)
 		{
 			FileIoRenameEvent rename_event(event);
-			debug::DebugLogW(L"[+] File I/O: Rename event");
-            PrintDebugFileObject((size_t)rename_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-		}
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath((size_t)rename_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Rename event, path %ws, file object 0x%p, IrpPtr 0x%p, file key 0x%p, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), rename_event.file_object, rename_event.irp_ptr, rename_event.file_key, rename_event.extra_info, rename_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
+        }
 		else if (type == FileIoEventType::kQueryInfo)
 		{
 			FileIoQueryInfoEvent query_info_event(event);
-            /*
-			debug::DebugLogW(L"[+] File I/O: QueryInfo event");
-            PrintDebugFileObject((size_t)query_info_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-            */
 		}
-        /*
+        
 		else if (type == FileIoEventType::kFSControl)
 		{
 			FileIoFSControlEvent fs_control_event(event);
-			debug::DebugLogW(L"[+] File I/O: FsControl event");
-            PrintDebugFileObject((size_t)fs_control_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-		}
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath((size_t)fs_control_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FSControl event, path %ws, file object 0x%p, IrpPtr 0x%p, file key 0x%p, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), fs_control_event.file_object, fs_control_event.irp_ptr, fs_control_event.file_key, fs_control_event.extra_info, fs_control_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
+        }
 		// EventTypeName{"Name", "FileCreate", "FileDelete", "FileRundown"}
 		else if (type == FileIoEventType::kName)
 		{
 			FileIoNameEvent name_event(event);
-			debug::DebugLogW(L"[+] File I/O: FileName event");
-            debug::DebugLogW(L"    - File Name:   " + std::wstring(name_event.file_name));
-            PrintDebugFileObject((size_t)name_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath((size_t)name_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FileName event, path %ws, file object 0x%p, file name %ws, pid %d, image path %ws\n", file_path.data(), name_event.file_object, name_event.file_name, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
 		}
 		else if (type == FileIoEventType::kFileCreate)
 		{
 			FileIoFileCreateEvent file_create_event(event);
-			debug::DebugLogW(L"[+] File I/O: FileCreate event");
-			debug::DebugLogW(L"    - File Name: " + std::wstring(file_create_event.file_name));
-            PrintDebugFileObject((size_t)file_create_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            // To determine the file name, match the value of this file_object property to the file_key property of a previous event.
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FileCreate event, path %ws, file key 0x%p, file name %ws, pid %d, image path %ws\n", file_path.data(), file_create_event.file_object, file_create_event.file_name, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
 		}
 		else if (type == FileIoEventType::kFileDelete)
 		{
 			FileIoFileDeleteEvent file_delete_event(event);
-			debug::DebugLogW(L"[+] File I/O: FileDelete event");
-			debug::DebugLogW(L"    - File Name:   " + std::wstring(file_delete_event.file_name));
-            PrintDebugFileObject((size_t)file_delete_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
 		}
 		else if (type == FileIoEventType::kFileRundown)
 		{
 			FileIoFileRundownEvent file_rundown_event(event);
-			debug::DebugLogW(L"[+] File I/O: FileRundown event");
-			debug::DebugLogW(L"    - File Name:   " + std::wstring(file_rundown_event.file_name));
-            PrintDebugFileObject((size_t)file_rundown_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
 		}
         // EventTypeName{ "OperationEnd" }
 		else if (type == FileIoEventType::kOperationEnd)
 		{
-			// FileIoOperationEndEvent operation_end_event(event);
+			FileIoOpEndEvent operation_end_event(event);
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, OperationEnd event, IrpPtr 0x%p, NTSTATUS 0x%x, extra info 0x%llx, pid %d, image path %ws\n", operation_end_event.irp_ptr, (DWORD)operation_end_event.nt_status, operation_end_event.extra_info, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
 		}
         // EventTypeName{"Read", "Write"}
 		else if (type == FileIoEventType::kRead)
@@ -278,30 +241,29 @@ namespace etw
         else if (type == FileIoEventType::kCleanup)
         {
             FileIoSimpleOpCleanupEvent cleanup_event(event);
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath((size_t)cleanup_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Cleanup event, path %ws, file object 0x%p, IrpPtr 0x%p, file key 0x%p, pid %d, image path %ws\n", file_path.data(), cleanup_event.file_object, cleanup_event.irp_ptr, cleanup_event.file_key, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
+
 		}
-        */
-		else if (type == FileIoEventType::kClose)
+        else if (type == FileIoEventType::kClose)
 		{
             FileIoSimpleOpCloseEvent close_event(event);
-
-			debug::DebugLogW(L"[+] File I/O: Close event");
-            PrintDebugFileObject((size_t)close_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-            
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath((size_t)close_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Close event, path %ws, file object 0x%p, IrpPtr 0x%p, file key 0x%p, pid %d, image path %ws\n", file_path.data(), close_event.file_object, close_event.irp_ptr, close_event.file_key, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            debug::DebugLogW(wstr);
             manager::kFileMan->RemoveFile((size_t)close_event.file_object);
 
 		}
 		else if (type == FileIoEventType::kFlush)
 		{
-            /*
-            FileIoSimpleOpFlushEvent flush_event(event);
-            PrintDebugFileObject((size_t)flush_event.file_object);
-            PrintDebugPid(event.GetProcessId());
-            debug::DebugLogW(L"\n");
-            */
 		}
-
         return VOID();
     }
 
@@ -311,15 +273,14 @@ namespace etw
         if (type == ProcessEventType::kProcessStart)
         {
             ProcessStartEvent process_start_event(event);
-            debug::DebugLogW(L"[+] Process: Start event");
-            debug::DebugLogW(L"    - PID:     " + std::to_wstring(process_start_event.pid));
-			debug::DebugLogW(L"    - PPID:    " + std::to_wstring(event.GetProcessId()));
-            debug::DebugLogW(L"    - Time:    " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
-			std::string image_name = std::string((PCHAR)process_start_event.image_file_name);
-            debug::DebugLogW(L"    - Image:   " + std::wstring(image_name.begin(), image_name.end()));
-			// TODO: Dump process name from command line
-            debug::DebugLogW(L"    - Command Line: " + std::wstring((PWCHAR)process_start_event.command_line));
-            debug::DebugLogW(L"\n");
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+			std::string image = process_start_event.image_file_name;
+			std::wstring w_image(image.begin(), image.end());
+            const std::wstring image_path = manager::kProcMan->GetImageFileName(pid);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, Create event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line));
+            debug::DebugLogW(wstr);
             if (manager::kProcMan->GetImageFileName(process_start_event.pid).empty())
             {
                 manager::kProcMan->AddProcess(process_start_event.pid, event.GetProcessId());
@@ -328,10 +289,27 @@ namespace etw
         if (type == ProcessEventType::kProcessEnd)
         {
             ProcessEndEvent process_end_event(event);
-            debug::DebugLogW(L"[+] Process: End event");
-            debug::DebugLogW(L"    - PID:     " + std::to_wstring(process_end_event.pid));
-            debug::DebugLogW(L"    - Time:    " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
-            debug::DebugLogW(L"    - Src PID: " + std::to_wstring(event.GetProcessId()));
+            std::wstring wstr;
+            wstr.resize(2000);
+            const std::wstring image_path = manager::kProcMan->GetImageFileName(process_end_event.pid);
+            const std::wstring issued_image_path = manager::kProcMan->GetImageFileName(event.GetProcessId());
+            std::string image = process_end_event.image_file_name;
+            std::wstring w_image(image.begin(), image.end());
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, End event, pid %lld, issued pid %lld, image %s, image path %ws, issued image path %ws, commandline %ws", process_end_event.pid, event.GetProcessId(), image_path.data(), image_path.data(), issued_image_path.data(), process_end_event.command_line));
+            debug::DebugLogW(wstr);
+            manager::kProcMan->RemoveProcess(process_end_event.pid);
+        } 
+        else if (type == ProcessEventType::kProcessDCStart)
+        {
+
+        }
+        else if (type == ProcessEventType::kProcessDCEnd)
+        {
+
+        }
+        else if (type == ProcessEventType::kProcessDefunct)
+        {
+
         }
         return VOID();
     }
@@ -355,26 +333,24 @@ namespace etw
     VOID __stdcall KernelConsumer::ProcessPageFaultEvent(Event event)
     {
         int type = event.GetType();
-        if (type == PageFaultEventType::VirtualAlloc)
+        if (type == PageFaultEventType::kVirtualAlloc)
         {
             PageFaultVirtualAllocEvent alloc_event(event);
-            size_t issuing_pid = event.GetProcessId();
+            size_t issued_pid = event.GetProcessId();
             size_t allocated_pid = alloc_event.process_id;
-			if (manager::PageFaultEventFilter(issuing_pid, allocated_pid))
+			if (manager::PageFaultEventFilter(issued_pid, allocated_pid))
 			{
-				debug::DebugLogW(L"[+] VirtualAlloc event is accepted");
-				debug::DebugLogW(L"    - Size:            0x" + std::format(L"{:x}", alloc_event.region_size));
-                debug::DebugLogW(L"    - Issuing PID:     " + std::to_wstring(issuing_pid));
-                debug::DebugLogW(L"    - Issuing Image:   " + manager::kProcMan->GetImageFileName(issuing_pid));
-                debug::DebugLogW(L"    - Allocated PID:   " + std::to_wstring(allocated_pid));
-                debug::DebugLogW(L"    - Allocated Image: " + manager::kProcMan->GetImageFileName(allocated_pid));
-				debug::DebugLogW(L"    - Time:            " + std::to_wstring((size_t)event.GetTimeInMicroSec()));
-                debug::DebugLogW(L"\n");
+                std::wstring wstr;
+                wstr.resize(2000);
+                const std::wstring issued_image_path = manager::kProcMan->GetImageFileName(issued_pid);
+                const std::wstring allocated_image_path = manager::kProcMan->GetImageFileName(allocated_pid);
+                wstr.resize(swprintf(wstr.data(), wstr.size(), L"Page Fault, VirtualAlloc event, allocated pid %lld, issued pid %lld, size 0x%llx, allocated image path %ws, issued image path %ws", issued_pid, allocated_pid, alloc_event.region_size, issued_image_path.data(), allocated_image_path.data()));
+                debug::DebugLogW(wstr);
 			}
         }
         else if (type == ThreadEventType::kThreadEnd)
         {
-            PageFaultVirtualFreeEvent free_event(event);
+            //PageFaultVirtualFreeEvent free_event(event);
         }
 
         return VOID();
@@ -382,6 +358,7 @@ namespace etw
 
     inline void PrintDebugRegistryEvent(const std::wstring& name, const RegistryTypeGroup1EventMember& event, size_t pid)
     {
+        /*
         debug::DebugLogW(L"[+] Registry: " + name + L" event");
         debug::DebugLogW(L"    - Key Name:    " + std::wstring(event.KeyName));
         debug::DebugLogW(L"    - Key Handle:  0x" + std::format(L"{:x}", event.KeyHandle));
@@ -389,6 +366,7 @@ namespace etw
         debug::DebugLogW(L"    - Index:       0x" + std::to_wstring(event.Index));
         PrintDebugPid(pid);
         debug::DebugLogW(L"\n");
+        */
     }
 
     VOID __stdcall KernelConsumer::ProcessRegistryEvent(Event event)
@@ -485,6 +463,7 @@ namespace etw
         int type = event.GetType();
         if (type == PerfInfoEventType::SysClEnter)
         {
+            /*
             SysCallEnterEvent sys_call_enter_event(event);
             debug::DebugLogW(L"[+] SysCallEnterEvent");
             debug::DebugLogW(L"    - PID:     " + std::to_wstring(event.GetProcessId()));
@@ -492,17 +471,16 @@ namespace etw
             debug::DebugLogW(L"    - Time:     " + std::to_wstring(event.GetTimeInMs()));
             debug::DebugLogW(L"    - Address: " + std::to_wstring((size_t)sys_call_enter_event.sys_call_address));
             debug::DebugLogW(L"\n");
+			*/
         }
         return VOID();
     }
-
-    
     
     ULONG KernelConsumer::Close()
     {
         ULONG status = ERROR_SUCCESS;
 
-        debug::DebugLogW(L"[+] Total event count: " + std::to_wstring(event_count_));
+        debug::DebugLogW(L"Total event count: " + std::to_wstring(event_count_));
 
         if ((TRACEHANDLE)INVALID_HANDLE_VALUE != handle_trace_)
         {
