@@ -96,11 +96,11 @@ namespace etw
 
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
-                ProcessFileIoEvent(event);
+                //ProcessFileIoEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
             {
-                //ProcessPageFaultEvent(event);
+                ProcessPageFaultEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
@@ -116,7 +116,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), RegistryGuid))
             {
-                ProcessRegistryEvent(event);
+                //ProcessRegistryEvent(event);
             }
         }
                 

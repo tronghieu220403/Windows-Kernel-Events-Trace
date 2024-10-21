@@ -44,8 +44,12 @@ namespace manager {
 			return false;
 		}
 
+		// TODO: Accecpt allocation from a parent process if the time of the operation is less than 0.5 second after the process creation.
+
+		/*
+		// The ancestor case is ambiguous, consider delete this case.
 		// The case for an ancestor process is only accepted if the issuing pid is still safe
-		// TODO: Check if the issuing_pid is still safe, create a safe process list
+		// TODO: Check if the issuing_pid is still safe, create a safe process list.
 		if (manager::kProcMan->IsAncestor(issuing_pid, allocated_pid))
 		{
 			return false;
@@ -66,6 +70,7 @@ namespace manager {
 			return false;
 		}
 		kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
+		*/
 		// TODO: Mark the issuing_pid and allocated_pid as unsafe
 		return true;
 	}

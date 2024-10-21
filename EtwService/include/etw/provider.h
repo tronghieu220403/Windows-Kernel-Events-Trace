@@ -23,6 +23,8 @@ namespace etw
 		KernelProvider();
 		KernelProvider(ULONG flags);
 
+		void Initialize();
+
 		void SetFlags(ULONG flags);
 
     	TRACEHANDLE GetSessionHandle() const;

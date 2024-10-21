@@ -3,7 +3,6 @@
 namespace manager
 {
     void ProcessManager::AddProcess(size_t pid, size_t ppid) {
-		const std::lock_guard<std::mutex> lock(process_map_mutex_);
         if (process_map_.find(pid) == process_map_.end()) {
             ProcessInfo process_info = { pid, ppid, L"", {} };
             process_map_[pid] = process_info;
@@ -20,8 +19,6 @@ namespace manager
 
     void ProcessManager::RemoveProcess(size_t pid) 
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
-
         if (process_map_.find(pid) == process_map_.end())
         {
             return;
@@ -58,8 +55,6 @@ namespace manager
 
     void ProcessManager::AddChild(size_t pid, size_t cpid) 
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
-
         if (process_map_.find(pid) == process_map_.end()) {
 			ProcessInfo process_info = { pid, 0, L"", {} };
 			process_map_[pid] = process_info;
@@ -74,8 +69,6 @@ namespace manager
 
     void ProcessManager::RemoveChild(size_t pid, size_t cpid) 
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
-
         if (process_map_.find(pid) != process_map_.end()) {
             process_map_[pid].cpid_list.erase(cpid);
         }
@@ -83,7 +76,6 @@ namespace manager
 
     bool ProcessManager::IsAncestor(size_t ancestor_pid, size_t descendant_pid) 
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
         while (process_map_.find(descendant_pid) != process_map_.end()) {
             if (process_map_[descendant_pid].ppid == ancestor_pid) {
                 return true;
@@ -98,7 +90,6 @@ namespace manager
 
     void ProcessManager::UpdateImageFileName(size_t pid, const std::wstring& image_file_name)
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
 		if (process_map_.find(pid) != process_map_.end())
 		{
 			process_map_[pid].image_file_name = image_file_name;
@@ -110,8 +101,8 @@ namespace manager
         }
     }
 
-    std::wstring ProcessManager::GetImageFileName(size_t pid) {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
+    std::wstring ProcessManager::GetImageFileName(size_t pid) 
+    {
         if (process_map_.find(pid) != process_map_.end())
         {
 		    return process_map_[pid].image_file_name;
@@ -275,7 +266,7 @@ namespace manager
 
     ProcessInfo ProcessManager::GetProcessInfo(size_t pid)
     {
-        const std::lock_guard<std::mutex> lock(process_map_mutex_);
+        
         if (process_map_.find(pid) != process_map_.end())
         {
             return { 0, 0, L"", {} };

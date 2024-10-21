@@ -51,7 +51,6 @@ namespace manager {
 
     private:
         std::unordered_map<size_t, ProcessInfo> process_map_;
-		std::mutex process_map_mutex_;
 		std::vector<size_t> pending_remove_;
 		std::mutex pending_remove_mutex_;
     };
