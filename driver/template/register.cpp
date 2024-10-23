@@ -16,7 +16,6 @@ namespace reg
 		kDrvFuncVector = new Vector<void*>();
 
 		ioctl::DrvRegister(driver_object, registry_path);
-		ransom::DrvRegister(driver_object);
 		return;
 	}
 
@@ -26,7 +25,6 @@ namespace reg
 		DebugMessage("DriverUnloadRegistered");
 
 		ioctl::DrvUnload(driver_object);
-		ransom::DrvUnload();
 		delete kDrvFuncVector;
 		kDrvFuncVector = nullptr;
 
@@ -40,8 +38,6 @@ namespace reg
 
 		kFltFuncVector = new Vector<IrpMjFunc>();
 		
-		ransom::FltRegister();
-
 		com::kComPort = new com::ComPort();
 
 		return;

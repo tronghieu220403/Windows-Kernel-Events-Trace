@@ -13,12 +13,37 @@
 //
 // Define the I/O status information return values for NtCreateFile/NtOpenFile
 //
-constexpr auto FILE_SUPERSEDED = 0x00000000;
-constexpr auto FILE_OPENED = 0x00000001;
-constexpr auto FILE_CREATED = 0x00000002;
-constexpr auto FILE_OVERWRITTEN = 0x00000003;
-constexpr auto FILE_EXISTS = 0x00000004;
-constexpr auto FILE_DOES_NOT_EXIST = 0x00000005;
+#define FILE_SUPERSEDED							0x00000000
+#define FILE_OPENED								0x00000001
+#define FILE_CREATED							0x00000002
+#define FILE_OVERWRITTEN						0x00000003
+#define FILE_EXISTS								0x00000004
+#define FILE_DOES_NOT_EXIST						0x00000005
+
+
+//
+// Define the create/open option flags
+//
+
+#define FILE_DIRECTORY_FILE                     0x00000001
+#define FILE_WRITE_THROUGH                      0x00000002
+#define FILE_SEQUENTIAL_ONLY                    0x00000004
+#define FILE_NO_INTERMEDIATE_BUFFERING          0x00000008
+
+#define FILE_SYNCHRONOUS_IO_ALERT               0x00000010
+#define FILE_SYNCHRONOUS_IO_NONALERT            0x00000020
+#define FILE_NON_DIRECTORY_FILE                 0x00000040
+#define FILE_CREATE_TREE_CONNECTION             0x00000080
+
+#define FILE_COMPLETE_IF_OPLOCKED               0x00000100
+#define FILE_NO_EA_KNOWLEDGE                    0x00000200
+#define FILE_OPEN_REMOTE_INSTANCE               0x00000400
+#define FILE_RANDOM_ACCESS                      0x00000800
+
+#define FILE_DELETE_ON_CLOSE                    0x00001000
+#define FILE_OPEN_BY_FILE_ID                    0x00002000
+#define FILE_OPEN_FOR_BACKUP_INTENT             0x00004000
+#define FILE_NO_COMPRESSION                     0x00008000
 
 //
 // Define the file information class values
@@ -188,9 +213,9 @@ namespace etw
 	struct FileIoCreateEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
+		size_t file_object = 0;
 		size_t create_options = NULL;
 		size_t file_attributes = NULL;
 		size_t share_access = NULL;
@@ -249,10 +274,10 @@ namespace etw
 	struct FileIoDirEnumEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t length = NULL;
 		PVOID info_class = nullptr;
 		size_t file_index = NULL;
@@ -313,10 +338,10 @@ namespace etw
 	struct FileIoInfoEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t extra_info = NULL;
 		PVOID info_class = nullptr;
 
@@ -387,7 +412,7 @@ namespace etw
 	struct FileIoNameEventMember
 	{
 	public:
-		PVOID file_object = nullptr;
+		size_t file_object = 0;
 		wchar_t* file_name = nullptr;
 
 		FileIoNameEventMember() = default;
@@ -452,7 +477,7 @@ namespace etw
 	struct FileIoOpEndEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t extra_info = NULL;
 		size_t nt_status = NULL;
 
@@ -507,10 +532,10 @@ namespace etw
 	{
 	public:
 		uint64_t offset = 0;
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 		size_t io_size = NULL;
 		size_t io_flags = NULL;
 
@@ -563,10 +588,10 @@ namespace etw
 	struct FileIoSimpleOpEventMember
 	{
 	public:
-		PVOID irp_ptr = nullptr;
+		size_t irp_ptr = 0;
 		size_t ttid = NULL;
-		PVOID file_object = nullptr;
-		PVOID file_key = nullptr;
+		size_t file_object = 0;
+		size_t file_key = 0;
 
 		FileIoSimpleOpEventMember() = default;
 		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* event_offset);

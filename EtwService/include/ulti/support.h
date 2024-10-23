@@ -49,6 +49,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <queue>
+#include <list>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
@@ -58,6 +59,8 @@
 #pragma comment(lib,"Advapi32.lib")
 
 typedef unsigned int uint32;
+
+#define FlagOn(_Flag, _Bit)  (((_Flag) & (_Bit)) != 0)
 
 #define ZeroMem(data,size) ZeroMemory(data,size)
 

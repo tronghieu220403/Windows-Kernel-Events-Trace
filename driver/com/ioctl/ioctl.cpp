@@ -52,7 +52,9 @@ NTSTATUS ioctl::HandleIoctl(PDEVICE_OBJECT device_object, PIRP irp)
 
 	IOCTL_CMD* cmd = (IOCTL_CMD*)irp->AssociatedIrp.SystemBuffer;
 
-	bool test_start_reply = false;
+	// TODO: Check size of the system buffer
+
+	bool status_reply = false;
 
 	if (stack_loc->Parameters.DeviceIoControl.IoControlCode != IOCTL_HIEU)
 	{
@@ -63,27 +65,28 @@ NTSTATUS ioctl::HandleIoctl(PDEVICE_OBJECT device_object, PIRP irp)
 	// TODO: Build a function to handle each type
 	String<WCHAR> str;
 	int pid;
+	String<WCHAR> image_path;
 	switch (type)
 	{
-	case IOCTL_CMD_CLASS::kQueryProcPath:
+	case IOCTL_CMD_CLASS::kGetImageFromPid:
 
-		pid = cmd->ParseQueryProcPath().pid;
+		pid = cmd->ParseGetImageFromPid().pid;
 		// TODO: Get process path by pid
-		break;
+		query::kPidMapMutex->Lock();
+		image_path = query::kPidToImageName->Find(pid)->second_;
+		query::kPidMapMutex->Unlock();
 
-	case IOCTL_CMD_CLASS::kQueryFileCreation:
-
-		str = cmd->ParseQueryFileCreation().file_path;
+		WriteIoctlCmd(cmd, type, image_path);
 
 		break;
 
 	case IOCTL_CMD_CLASS::kEnableSelfDefense:
-		test_start_reply = true;
-		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &test_start_reply, sizeof(bool));
+		status_reply = true;
+		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &status_reply, sizeof(bool));
 		break;
 	case IOCTL_CMD_CLASS::kDisableSelfDefense:
-		test_start_reply = true;
-		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &test_start_reply, sizeof(bool));
+		status_reply = true;
+		RtlCopyMemory(irp->AssociatedIrp.SystemBuffer, &status_reply, sizeof(bool));
 		break;
 	default:
 		break;

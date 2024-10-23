@@ -8,6 +8,8 @@
 enum IOCTL_CMD_CLASS
 {
 	kGetImageFromPid = 0x80002000,
+	kEnableSelfDefense = 0x80002001,
+	kDisableSelfDefense = 0x80002002,
 };
 
 struct IOCTL_CMD
@@ -29,7 +31,7 @@ public:
 
 	void Cleanup();
 
-	std::wstring GetProcessImageFromPid(int pid);
+	const std::wstring& GetProcessImageFromPid(int pid);
 
 private:
 	HANDLE device;
@@ -37,5 +39,7 @@ private:
 
 	std::vector<UCHAR> SendCommand(IOCTL_CMD_CLASS cmdClass, const size_t number);
 };
+
+inline DriverComm* kDriverComm = nullptr;
 
 #endif // DRIVERCOMM_H

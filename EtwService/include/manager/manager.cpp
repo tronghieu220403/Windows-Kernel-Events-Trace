@@ -8,17 +8,19 @@ namespace manager {
 		kFileMan = new FileManager();
 		kProcMan = new ProcessManager();
 		kDriverComm = new DriverComm();
+		kPageFaultEventCache = new Cache<std::pair<size_t, size_t>>(30000, [] (std::pair<size_t, size_t> element){
+			return element.first * element.second;
+			});
 	}
 
 	void Cleanup()
 	{
 		debug::DebugLogW(L"Manager cleaned up");
+		delete kPageFaultEventCache;
 		delete kDriverComm;
 		delete kProcMan;
 		delete kFileMan;
 	}
-
-	std::set<std::pair<size_t, size_t>> kPageFaultEventCache;
 
 	bool OverallEventFilter(size_t issuing_pid)
 	{
@@ -29,7 +31,7 @@ namespace manager {
 		return true;
 	}
 
-	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid)
+	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid, size_t time_ms)
 	{
 		if (issuing_pid == 0 || allocated_pid == 0)
 		{
@@ -44,21 +46,24 @@ namespace manager {
 			return false;
 		}
 
-		// TODO: Accecpt allocation from a parent process if the time of the operation is less than 0.5 second after the process creation.
+		// TODO: Check if the issing_pid has been terminated, if so, remove the pid from the cache.
+		if (kPageFaultEventCache->Query({ issuing_pid, allocated_pid }) == true)
+		{
+			return false;
+		}
 
-		/*
-		// The ancestor case is ambiguous, consider delete this case.
+		// Accecpt allocation from an ancestor process if the time of the operation is less than 0.5 second after the process creation.
 		// The case for an ancestor process is only accepted if the issuing pid is still safe
 		// TODO: Check if the issuing_pid is still safe, create a safe process list.
 		if (manager::kProcMan->IsAncestor(issuing_pid, allocated_pid))
 		{
-			return false;
+			if (time_ms - manager::kProcMan->GetProcessInfo(allocated_pid).creation_time < 400)
+			{
+				return false;
+			}
 		}
 
-		if (kPageFaultEventCache.find({issuing_pid, allocated_pid}) != kPageFaultEventCache.end())
-		{
-			return false;
-		}
+		/*
 		std::wstring issuing_image = manager::kProcMan->GetImageFileName(issuing_pid);
 		std::wstring allocated_image = manager::kProcMan->GetImageFileName(allocated_pid);
 		if (issuing_image.empty() || allocated_image.empty())
@@ -69,9 +74,9 @@ namespace manager {
 		{
 			return false;
 		}
-		kPageFaultEventCache.insert({ issuing_pid, allocated_pid });
 		*/
-		// TODO: Mark the issuing_pid and allocated_pid as unsafe
+		kPageFaultEventCache->Push({ issuing_pid, allocated_pid });
+
 		return true;
 	}
 	bool RegistryEventFilter(size_t status, size_t handle)

@@ -9,23 +9,16 @@ namespace ioctl
 {
 	enum IOCTL_CMD_CLASS
 	{
-		kQueryProcPath = 0x80002000,
-		kQueryFileCreation = 0x80002001,
-		kEnableSelfDefense = 0x80002002,
-		kDisableSelfDefense = 0x80002003,
+		kGetImageFromPid = 0x80002000,
+		kEnableSelfDefense = 0x80002001,
+		kDisableSelfDefense = 0x80002002,
 	};
 
-	struct IOCTL_CMD_QUERY_FILE_CREATION
-	{
-		String<WCHAR> file_path;
-	};
-	typedef struct IOCTL_CMD_QUERY_FILE_CREATION* PIOCTL_CMD_QUERY_FILE_CREATION;
-
-	struct IOCTL_CMD_QUERY_PROC_PATH
+	struct IOCTL_CMD_GET_IMAGE_FROM_PID
 	{
 		ULONG pid;
 	};
-	typedef struct IOCTL_CMD_QUERY_PROC_PATH* PIOCTL_CMD_QUERY_PROC_PATH;
+	typedef struct IOCTL_CMD_GET_IMAGE_FROM_PID* PIOCTL_CMD_GET_IMAGE_FROM_PID;
 
 	struct IOCTL_CMD_ENABLE_SELF_DEFENSE
 	{
@@ -43,25 +36,14 @@ namespace ioctl
 		size_t data_len;
 		char data[1];
 
-		IOCTL_CMD_QUERY_PROC_PATH ParseQueryProcPath()
+		IOCTL_CMD_GET_IMAGE_FROM_PID ParseGetImageFromPid()
 		{
-			if (cmd_class != IOCTL_CMD_CLASS::kQueryProcPath)
+			if (cmd_class != IOCTL_CMD_CLASS::kGetImageFromPid)
 			{
-				return IOCTL_CMD_QUERY_PROC_PATH();
+				return IOCTL_CMD_GET_IMAGE_FROM_PID();
 			}
 			ULONG pid = *(ULONG*)data;
-			return IOCTL_CMD_QUERY_PROC_PATH{ pid };
-		}
-
-		IOCTL_CMD_QUERY_FILE_CREATION ParseQueryFileCreation()
-		{
-			if (cmd_class != IOCTL_CMD_CLASS::kQueryFileCreation)
-			{
-				return IOCTL_CMD_QUERY_FILE_CREATION();
-			}
-			String<WCHAR> file_path(data_len);
-			::MemCopy(&file_path[0], (WCHAR*)data, data_len);
-			return IOCTL_CMD_QUERY_FILE_CREATION{ file_path };
+			return IOCTL_CMD_GET_IMAGE_FROM_PID{ pid };
 		}
 	};
 
@@ -77,5 +59,12 @@ namespace ioctl
 		ioctl_cmd->data_len = str.Size() * sizeof(WCHAR);
 		::MemCopy((char*)ioctl_cmd->data, (char*)str.Data(), ioctl_cmd->data_len);
 		return ioctl_cmd;
+	}
+
+	inline void WriteIoctlCmd(IOCTL_CMD* ioctl_cmd, IOCTL_CMD_CLASS query_class, const String<WCHAR>& str)
+	{
+		ioctl_cmd->cmd_class = query_class;
+		ioctl_cmd->data_len = str.Size() * sizeof(WCHAR);
+		::MemCopy((char*)ioctl_cmd->data, (char*)str.Data(), ioctl_cmd->data_len);
 	}
 }

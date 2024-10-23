@@ -4,12 +4,14 @@
 #include "../ulti/support.h"
 #include "../ulti/debug.h"
 #include "file_manager.h"
+#include "com/driver_comm.h"
 
 namespace manager {
 
     struct ProcessInfo {
         size_t pid = 0;
         size_t ppid = 0;
+		size_t creation_time = 0;
         std::wstring image_file_name;
         std::set<size_t> cpid_list;
         bool pending_remove = false;
@@ -44,10 +46,17 @@ namespace manager {
         // Get image file name of a process
         std::wstring GetImageFileName(size_t pid);
         
-		ProcessInfo GetProcessInfo(size_t pid);
+		void UpdateProcessCreationTime(size_t pid, size_t creation_time);
 
-		// Add or remove a file I/O event from a process
-		void PushFileIoEventToProcess(size_t pid, size_t file_object, etw::FileIoEventType file_io_event_type);
+        const ProcessInfo& GetProcessInfo(size_t pid);
+
+		void PushCreateFileEventToProcess(size_t pid, const std::wstring& file_path);
+
+		void PushDeleteFileEventToProcess(size_t pid, const std::wstring& file_path);
+
+		void PushRenameFileEventToProcess(size_t pid, const std::wstring& old_file_path, const std::wstring& new_file_path);
+
+		void PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path);
 
     private:
         std::unordered_map<size_t, ProcessInfo> process_map_;

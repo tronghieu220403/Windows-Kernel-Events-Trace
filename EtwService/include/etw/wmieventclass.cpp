@@ -655,7 +655,7 @@ namespace etw
                         BYTE buffer[SECURITY_MAX_SID_SIZE];
                         SID* psid;
                         DWORD status = 0;
-                        for (int i = 0; i < array_size; i++)
+                        for (ULONG i = 0; i < array_size; i++)
                         {
                             CopyMemory(&temp, p_event_data, sizeof(ULONG));
                             if (temp > 0)
@@ -663,9 +663,9 @@ namespace etw
                                 USHORT bytes_to_sid = pointer_size_ * 2;
                                 data_size += bytes_to_sid;
                                 p_event_data = (PVOID)((size_t)p_event_data + bytes_to_sid);
-                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > SECURITY_MAX_SID_SIZE) ?
+                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > (size_t)SECURITY_MAX_SID_SIZE) ?
                                     SECURITY_MAX_SID_SIZE :
-                                    ((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
+                                    (USHORT)((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
                                 CopyMemory(&buffer, p_event_data, copy_length);
                                 psid = (SID*)&buffer;
                                 data_size += SeLengthSid(psid);

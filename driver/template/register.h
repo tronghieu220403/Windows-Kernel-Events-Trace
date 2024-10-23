@@ -4,9 +4,6 @@
 #include <fltKernel.h>
 
 #include "../std/vector/vector.h"
-
-#include "../function/ransom/ransom-flt.h"
-#include "../process/ps-monitor.h"
 #include "../com/ioctl/ioctl.h"
 #include "../com/comport/comport.h"
 #include "debug.h"

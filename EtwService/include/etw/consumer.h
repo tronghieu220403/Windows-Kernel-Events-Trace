@@ -6,7 +6,6 @@
 #define ETWSERVICE_ETW_COMSUMER_H_
 
 #define INITGUID
-
 #include "ulti/support.h"
 #include "ulti/collections.h"
 #include "../ulti/debug.h"

@@ -7,3 +7,6 @@ EtwService/EtwService.vcxproj.user
 EtwService/EtwService.vcxproj
 EtwService/EtwService.vcxproj
 /driver/.vs
+/driver/x64
+/EtwService/packages
+EtwService/packages.config

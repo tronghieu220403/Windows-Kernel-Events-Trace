@@ -4,12 +4,16 @@ namespace manager
 {
     void ProcessManager::AddProcess(size_t pid, size_t ppid) {
         if (process_map_.find(pid) == process_map_.end()) {
-            ProcessInfo process_info = { pid, ppid, L"", {} };
+            ProcessInfo process_info;
+			process_info.pid = pid;
+			process_info.ppid = ppid;
             process_map_[pid] = process_info;
         }
         if (ppid != 0) {
 			if (process_map_.find(ppid) == process_map_.end()) {
-				ProcessInfo process_info = { ppid, 0, L"", {} };
+                ProcessInfo process_info;
+				process_info.pid = ppid;
+				process_info.ppid = 0;
 				process_map_[ppid] = process_info;
 			}
             process_map_[ppid].cpid_list.insert(pid);
@@ -56,11 +60,14 @@ namespace manager
     void ProcessManager::AddChild(size_t pid, size_t cpid) 
     {
         if (process_map_.find(pid) == process_map_.end()) {
-			ProcessInfo process_info = { pid, 0, L"", {} };
+			ProcessInfo process_info;
+			process_info.pid = pid;
 			process_map_[pid] = process_info;
         }
         if (process_map_.find(cpid) == process_map_.end()) {
-			ProcessInfo process_info = { cpid, pid, L"", {} };
+			ProcessInfo process_info;
+			process_info.ppid = pid;
+			process_info.pid = cpid;
 			process_map_[cpid] = process_info;
         }
         process_map_[pid].cpid_list.insert(cpid);
@@ -96,22 +103,26 @@ namespace manager
 		}
         else
         {
-            ProcessInfo process_info = { pid, 0, image_file_name, {} };
+            ProcessInfo process_info;
+			process_info.image_file_name = image_file_name;
             process_map_[pid] = process_info;
         }
     }
 
     std::wstring ProcessManager::GetImageFileName(size_t pid) 
     {
+        // TODO: Always ask drivers.
         if (process_map_.find(pid) != process_map_.end())
         {
 		    return process_map_[pid].image_file_name;
         }
-        HANDLE hProcess = nullptr;
+        
+        /*
+        DWORD error = 0;
         std::wstring image_file_name_w;
+        HANDLE hProcess = nullptr;
         std::string image_file_name_a;
         size_t size_tmp = 0;
-        DWORD error = 0;
         image_file_name_w.resize(MAX_PATH);
         image_file_name_a.resize(MAX_PATH);
 
@@ -253,24 +264,61 @@ namespace manager
                 debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + debug::GetErrorMessage(error));
             }
         }
+        */
 
 		// TODO: Ask driver from DriverComm to get image file name and set error to ERROR_SUCCESS
-
-        if (error == ERROR_SUCCESS)
+        std::wstring image_file_name_w(kDriverComm->GetProcessImageFromPid(pid));
+        if (image_file_name_w.size() > 0)
         {
 			UpdateImageFileName(pid, image_file_name_w);
-			return image_file_name_w;
         }
-        return L"";
+        return image_file_name_w;
     }
 
-    ProcessInfo ProcessManager::GetProcessInfo(size_t pid)
+    void ProcessManager::UpdateProcessCreationTime(size_t pid, size_t creation_time)
     {
-        
+		auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+			it->second.creation_time = creation_time;
+        }
+    }
+
+    const ProcessInfo& ProcessManager::GetProcessInfo(size_t pid)
+    {
         if (process_map_.find(pid) != process_map_.end())
         {
-            return { 0, 0, L"", {} };
+            return ProcessInfo();
         }
 		return process_map_[pid];
+    }
+
+    void ProcessManager::PushCreateFileEventToProcess(size_t pid, const std::wstring& file_path)
+    {
+        std::wstring wstr;
+        wstr.resize(2000);
+        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Create event, pid %llu, file %ws\n", pid, file_path.data()));
+        debug::DebugLogW(wstr);
+    }
+
+    void ProcessManager::PushDeleteFileEventToProcess(size_t pid, const std::wstring& file_path)
+    {
+        std::wstring wstr;
+        wstr.resize(2000);
+        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, file_path.data()));
+        debug::DebugLogW(wstr);
+    }
+
+    void ProcessManager::PushRenameFileEventToProcess(size_t pid, const std::wstring& old_file_path, const std::wstring& new_file_path)
+    {
+        std::wstring wstr;
+        wstr.resize(2000);
+        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, old_file_path.data(), new_file_path.data()));
+        debug::DebugLogW(wstr);
+    }
+
+    void ProcessManager::PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path)
+    {
+
     }
 }

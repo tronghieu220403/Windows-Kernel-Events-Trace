@@ -1,6 +1,16 @@
 #pragma once
 
-#include "../process/ps-monitor.h"
+
+#include "../std/vector/vector.h"
+#include "../std/string/string.h"
+#include "../std/sync/mutex.h"
+#include "../std/map/map.h"
+#include "../std/memory/pair.h"
+#include "../template/debug.h"
+
+#include <wdm.h>
+#include <Ntstrsafe.h>
+#include <fltKernel.h>
 
 #define offsetof(st, m) ((size_t)(&((st *)0)->m))
 

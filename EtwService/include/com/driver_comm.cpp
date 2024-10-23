@@ -22,7 +22,7 @@ void DriverComm::Cleanup() {
     }
 }
 
-std::wstring DriverComm::GetProcessImageFromPid(int pid)
+const std::wstring& DriverComm::GetProcessImageFromPid(int pid)
 {
 	std::vector<UCHAR> reply = SendCommand(kGetImageFromPid, pid);
     if (reply.size() > 0) {
@@ -33,7 +33,7 @@ std::wstring DriverComm::GetProcessImageFromPid(int pid)
 
 std::vector<UCHAR> DriverComm::SendCommand(IOCTL_CMD_CLASS cmdClass, size_t number) {
     DWORD bytes_returned = 0;
-    std::vector<UCHAR> reply(1028, 0);
+    std::vector<UCHAR> reply(4096, 0);
 
     std::vector<char> in_buffer(sizeof(IOCTL_CMD) + sizeof(number));
 

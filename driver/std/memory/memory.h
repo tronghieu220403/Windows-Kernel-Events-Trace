@@ -5,7 +5,7 @@ typedef unsigned long long size_t;
 #include <ntifs.h>
 #include <ntdef.h>
 #include <wdm.h>
-
+#include "../ulti/def.h"
 #include "../../template/debug.h"
 
 #pragma warning(disable:4100)
@@ -28,22 +28,6 @@ void MemCopy(T* dst, T* src, size_t len);
 template <class T>
 void ZeroMemory(T* dst, size_t len);
 
-template <typename T>
-struct Less {
-public:
-    bool operator()(const T& lhs, const T& rhs) const {
-        return lhs < rhs;
-    }
-};
-
-template <typename T>
-struct Greater {
-public:
-    bool operator()(const T& lhs, const T& rhs) const {
-        return lhs > rhs;
-    }
-};
-
 size_t Rand();
 
 namespace krnl_std
@@ -51,7 +35,6 @@ namespace krnl_std
     void* Alloc(size_t n);
 
     void Free(void* p);
-
 }
 
 template <class T>

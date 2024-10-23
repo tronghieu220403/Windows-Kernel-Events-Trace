@@ -23,14 +23,14 @@ void SetUpProvider()
     ULONG status;
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
-        | EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
-        | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO
+        //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO 
+        | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
-        //| EVENT_TRACE_FLAG_PROCESS
+        | EVENT_TRACE_FLAG_PROCESS
 		//| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
-        //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
+        | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
         );
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -101,6 +101,8 @@ void ServiceMainWorker()
 {
     debug::InitDebugLog();
 	debug::DebugLogW(L"ServiceMainWorker");
+	kDriverComm = new DriverComm();
+	kDriverComm->Initialize(HIEU_DEVICE_LINK);
     manager::Init();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
