@@ -123,6 +123,8 @@ namespace etw
         return;
     }
 
+	std::unordered_set<size_t> file_object_read;
+	std::unordered_set<size_t> file_object_write;
 	std::unordered_map<size_t, std::pair<size_t, size_t>> irp_ptr_to_file_object_map_; // irp_ptr -> <pid, file_object>
 	std::unordered_map<size_t, size_t> file_key_to_pid_map_; // file_key -> <pid>
     std::unordered_map<size_t, std::pair<std::wstring, std::wstring>> file_rename_map_; // file_key -> <old_name, new_name>
@@ -139,15 +141,13 @@ namespace etw
             FileIoCreateEvent file_create_event(event);
 			file_path = file_create_event.open_path;
 
-			manager::kFileMan->AddFile(file_create_event.file_object, file_path);
+			manager::kFileMan->AddFileObject(file_create_event.file_object, file_path);
             int pid = static_cast<int>(event.GetProcessId());
             
-            /*
             std::wstring wstr;
             wstr.resize(2000);
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Create event, path %ws, IrpPtr 0x%llx, file object 0x%llx, create options 0x%llx, file attributes 0x%llx, pid %d, image path %ws\n", file_create_event.open_path, file_create_event.irp_ptr, file_create_event.file_object, file_create_event.create_options, file_create_event.file_attributes, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
-            */
 
             // Handle for create event
 			irp_ptr_to_file_object_map_[file_create_event.irp_ptr] = std::make_pair(pid, file_create_event.file_object);
@@ -171,6 +171,9 @@ namespace etw
         else if (type == FileIoEventType::kSetInfo)
         {
             FileIoSetInfoEvent set_info_event(event);
+            int pid = static_cast<int>(event.GetProcessId());
+            file_path = manager::kFileMan->GetFilePath(set_info_event.file_object);
+
             /*
             std::wstring wstr;
             wstr.resize(2000);
@@ -179,6 +182,8 @@ namespace etw
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, SetInfo event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), set_info_event.file_object, set_info_event.irp_ptr, set_info_event.file_key, set_info_event.extra_info, set_info_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
+
+            manager::kProcMan->PushSetInfoFileEventToProcess(pid, file_path);
         }
         else if (type == FileIoEventType::kDelete)
         {
@@ -203,6 +208,7 @@ namespace etw
 			FileIoRenameEvent rename_event(event);
             int pid = static_cast<int>(event.GetProcessId());
             file_path = manager::kFileMan->GetFilePath(rename_event.file_object);
+            
             /*
             std::wstring wstr;
             wstr.resize(2000);
@@ -264,7 +270,7 @@ namespace etw
                 const std::pair<std::wstring, std::wstring> pss = file_rename_map_[file_create_event.file_object];
 				manager::kProcMan->PushRenameFileEventToProcess(issue_pid, pss.first, pss.second);
                 file_rename_map_.erase(file_create_event.file_object);
-            }            
+            }
 		}
 		else if (type == FileIoEventType::kFileDelete)
 		{
@@ -311,10 +317,26 @@ namespace etw
 		else if (type == FileIoEventType::kRead)
 		{
 			FileIoReadEvent read_event(event);
+			int pid = static_cast<int>(event.GetProcessId());
+			auto it = file_object_read.find(read_event.file_object);
+			if (it == file_object_read.end())
+			{
+				file_object_read.insert(read_event.file_object);
+                file_path = manager::kFileMan->GetFilePath(read_event.file_object);
+                manager::kProcMan->PushReadFileEventToProcess(pid, file_path);
+			}
 		}
 		else if (type == FileIoEventType::kWrite)
 		{
 			FileIoWriteEvent write_event(event);
+			int pid = static_cast<int>(event.GetProcessId());
+			auto it = file_object_write.find(write_event.file_object);
+            if (it == file_object_write.end())
+            {
+                file_object_write.insert(write_event.file_object);
+                file_path = manager::kFileMan->GetFilePath(write_event.file_object);
+                manager::kProcMan->PushWriteFileEventToProcess(pid, file_path);
+            }
 		}
         // EventTypeName{ "Cleanup", "Close", "Flush" }
         else if (type == FileIoEventType::kCleanup)
@@ -326,12 +348,12 @@ namespace etw
             FileIoSimpleOpCloseEvent close_event(event);
             int pid = static_cast<int>(event.GetProcessId());
             file_path = manager::kFileMan->GetFilePath(close_event.file_object);
-            /*
+
             std::wstring wstr;
             wstr.resize(2000);
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Close event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, pid %d, image path %ws\n", file_path.data(), close_event.file_object, close_event.irp_ptr, close_event.file_key, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
-            */
+
 			// Handle for delete on close event
             if (file_delete_on_close_set_.find(close_event.file_object) != file_delete_on_close_set_.end())
             {
@@ -339,13 +361,16 @@ namespace etw
             }
 
             // Clean up
-            manager::kFileMan->RemoveFile(close_event.file_object);
+            manager::kFileMan->RemoveFileObject(close_event.file_object);
 			file_rename_map_.erase(close_event.file_key);
             file_delete_on_close_set_.erase(close_event.file_object);
 			file_key_to_pid_map_.erase(close_event.file_key);
+			file_object_read.erase(close_event.file_object);
+			file_object_write.erase(close_event.file_object);
 		}
 		else if (type == FileIoEventType::kFlush)
 		{
+
 		}
         return VOID();
     }
@@ -362,7 +387,7 @@ namespace etw
 			std::string image = process_start_event.image_file_name;
 			std::wstring w_image(image.begin(), image.end());
             const std::wstring image_path = manager::kProcMan->GetImageFileName(pid);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, Create event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line));
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line));
             debug::DebugLogW(wstr);
 
             manager::kProcMan->AddProcess(process_start_event.pid, event.GetProcessId());
@@ -383,6 +408,19 @@ namespace etw
         } 
         else if (type == ProcessEventType::kProcessDCStart)
         {
+            /*
+            ProcessDCStartEvent process_dc_start_event(event);
+            std::wstring wstr;
+            wstr.resize(2000);
+            int pid = static_cast<int>(event.GetProcessId());
+            std::string image = process_dc_start_event.image_file_name;
+            std::wstring w_image(image.begin(), image.end());
+            const std::wstring image_path = manager::kProcMan->GetImageFileName(pid);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, DC Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_dc_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_dc_start_event.command_line));
+            debug::DebugLogW(wstr);
+            */
+            //manager::kProcMan->AddProcess(process_dc_start_event.pid, event.GetProcessId());
+            //manager::kProcMan->UpdateProcessCreationTime(process_dc_start_event.pid, event.GetTimeInMs());
 
         }
         else if (type == ProcessEventType::kProcessDCEnd)

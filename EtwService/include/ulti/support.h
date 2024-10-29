@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #define _CRT_SECURE_NO_DEPRECATE
 
 #ifndef ETWSERVICE_ULTI_SUPPORT_H_
@@ -50,6 +50,11 @@
 #include <unordered_set>
 #include <queue>
 #include <list>
+#include <regex>
+#include <array>
+#include <locale>
+#include <cctype>
+#include <codecvt>
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "iphlpapi.lib")
@@ -73,15 +78,162 @@ namespace ulti
         return std::wstring(str.begin(), str.end());
     }
 
-    inline std::string CharVectorToString(std::vector<char> v)
+    inline std::string CharVectorToString(const std::vector<char>& v)
     {
         return std::string(v.begin(), v.end());
     }
 
-    inline std::vector<char> StringToVectorChar(std::string s)
+    inline std::vector<char> StringToVectorChar(const std::string& s)
     {
         return std::vector<char>(s.begin(), s.end());
     }
+
+	inline std::vector<unsigned char> StringToVectorUChar(const std::string& s)
+	{
+		return std::vector<unsigned char>(s.begin(), s.end());
+	}
+
+	inline std::string WstrToStr(const std::wstring& wstr)
+	{
+        std::string str;
+        str.resize(wstr.size());
+		for (size_t i = 0; i < wstr.size(); i++)
+		{
+			str[i] = (char)wstr[i];
+		}
+		return str;
+	}
+
+    // Kiểm tra ký tự in được cho UTF-16
+    inline bool CheckPrintableUTF16(const std::vector<unsigned char>& buffer) {
+        std::streamsize printable_chars = 0;
+        std::streamsize total_chars = 0;
+
+        // UTF-16 đọc từng cặp 2 byte
+        for (std::size_t i = 0; i + 1 < buffer.size(); i += 2) {
+            wchar_t wchar = buffer[i] | (buffer[i + 1] << 8);
+            total_chars++;
+            if (iswprint(wchar) || iswspace(wchar)) {
+                printable_chars++;
+            }
+        }
+
+        if (total_chars == 0) {
+            return true; // Nếu không có ký tự nào, mặc định trả về true
+        }
+
+        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
+    }
+
+	inline bool CheckPrintableUTF16(const std::wstring& wstr)
+	{
+		return CheckPrintableUTF16(StringToVectorUChar(WstrToStr(wstr)));
+	}
+
+    // Kiểm tra ký tự in được cho UTF-8
+    inline bool CheckPrintableUTF8(const std::vector<unsigned char>& buffer) {
+        std::streamsize printable_chars = 0;
+        std::streamsize total_chars = 0;
+        std::size_t i = 0;
+        while (i < buffer.size()) {
+            unsigned char c = buffer[i];
+            if (c < 0x80) { // 1-byte ASCII (7-bit)
+                total_chars++;
+                if (isprint(c) || isspace(c)) {
+                    printable_chars++;
+                }
+                i++;
+            }
+            else if ((c & 0xE0) == 0xC0) { // 2-byte UTF-8
+                if (i + 1 < buffer.size()) {
+                    wchar_t wchar = ((c & 0x1F) << 6) | (buffer[i + 1] & 0x3F);
+                    total_chars++;
+                    if (iswprint(wchar) || iswspace(wchar)) {
+                        printable_chars++;
+                    }
+                }
+                i += 2;
+            }
+            else if ((c & 0xF0) == 0xE0) { // 3-byte UTF-8
+                if (i + 2 < buffer.size()) {
+                    wchar_t wchar = ((c & 0x0F) << 12) | ((buffer[i + 1] & 0x3F) << 6) | (buffer[i + 2] & 0x3F);
+                    total_chars++;
+                    if (iswprint(wchar) || iswspace(wchar)) {
+                        printable_chars++;
+                    }
+                }
+                i += 3;
+            }
+            else if ((c & 0xF8) == 0xF0) { // 4-byte UTF-8
+                if (i + 3 < buffer.size()) {
+                    wchar_t wchar = ((c & 0x07) << 18) | ((buffer[i + 1] & 0x3F) << 12) | ((buffer[i + 2] & 0x3F) << 6) | (buffer[i + 3] & 0x3F);
+                    total_chars++;
+                    if (iswprint(wchar) || iswspace(wchar)) {
+                        printable_chars++;
+                    }
+                }
+                i += 4;
+            }
+            else {
+                i++; // Bỏ qua các byte không hợp lệ
+            }
+        }
+
+        if (total_chars == 0) {
+            return true; // Nếu không có ký tự nào, mặc định trả về true
+        }
+
+        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
+    }
+
+	inline bool CheckPrintableUTF8(const std::wstring& wstr)
+	{
+		return CheckPrintableUTF8(StringToVectorUChar(WstrToStr(wstr)));
+	}
+
+    // Kiểm tra ký tự in được cho ANSI (ASCII 1-byte)
+    inline bool CheckPrintableANSI(const std::vector<unsigned char>& buffer) {
+        std::streamsize printable_chars = 0;
+        std::streamsize total_chars = 0;
+
+        for (unsigned char c : buffer) {
+            total_chars++;
+            if (isprint(c) || isspace(c)) {
+                printable_chars++;
+            }
+        }
+
+        if (total_chars == 0) {
+            return true; // Nếu không có ký tự nào, mặc định trả về true
+        }
+
+        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
+    }
+
+    inline bool CheckPrintableANSI(const std::wstring& wstr)
+    {
+		return CheckPrintableANSI(StringToVectorUChar(WstrToStr(wstr)));
+    }
+
+    // Hàm thực thi command và trả về output dưới dạng một chuỗi
+    inline std::wstring ExecCommand(const std::wstring& cmd) {
+        std::array<wchar_t, 4096> buffer; // Buffer để lưu từng dòng output của command
+        std::wstring result; // Chuỗi lưu toàn bộ output của command
+        // Dùng _wpopen để mở pipe và chạy command, _pclose để đóng pipe sau khi xong
+        std::unique_ptr<FILE, decltype(&_pclose)> pipe(_wpopen(cmd.c_str(), L"r"), _pclose);
+        result.reserve(20 * 1024 * 1024); // Dự trữ 20MB cho chuỗi result (tùy theo kích thước output của command
+        if (!pipe) {
+            std::wcerr << L"Failed to run command." << std::endl; // Lỗi nếu không chạy được command
+            result.clear();
+            return result;
+        }
+        // Đọc từng dòng từ pipe và lưu vào result
+        while (fgetws(buffer.data(), (int)buffer.size(), pipe.get()) != nullptr) {
+            result += buffer.data();
+        }
+        return result; // Trả về toàn bộ output của command
+    }
+
 
 }
 

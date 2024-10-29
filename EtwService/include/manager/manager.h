@@ -17,6 +17,8 @@ namespace manager {
 	void Init();
 	void Cleanup();
 
+	void EvaluateProcess();
+
 	bool OverallEventFilter(size_t issuing_pid);
 	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid, size_t time_ms);
 	bool RegistryEventFilter(size_t status, size_t handle);

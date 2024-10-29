@@ -16,12 +16,20 @@ namespace manager {
         std::set<size_t> cpid_list;
         bool pending_remove = false;
 
-        // TODO: Chuyển sang class riêng để đánh giá cho ransomware
-        std::unordered_map<size_t, FileIoManager> file_io;
-		size_t overwrite_count = 0;
-		size_t smash_and_rewrite_count = 0;
-		size_t delete_and_rewrite_count = 0;
+		bool is_evaluated = false;
 
+        // TODO: Chuyển sang class riêng để đánh giá cho ransomware
+		std::unordered_map<size_t, FileIoManager> file_io; // Current: file_path_hash -> file_path
+        /*
+        1) Ghi đè file A
+        2) Đọc file A, tạo + viết file B, xóa file A (vẫn còn nội dung ở disk)
+        3) Đọc file A, tạo + viết file B (rewrite), ghi đè file A (xóa nội dung khỏi disk - smash)
+        4) Ghi đè file A, đổi tên thành file B
+        */
+		size_t overwrite_count = 0;
+		size_t delete_and_rewrite_count = 0;
+        size_t smash_and_rewrite_count = 0;
+		size_t overwrite_and_rename_count = 0;
     };
 
     class ProcessManager {
@@ -29,7 +37,7 @@ namespace manager {
         // Add or remove a process by its PID
         void AddProcess(size_t pid, size_t ppid);
         void RemoveProcess(size_t pid);
-        void PendingRemoveProcess(size_t pid);
+        void AddPendingRemoveProcess(size_t pid);
 		void RemovePendingProcesses();
 
         // Add or remove a child PID from a process
@@ -58,8 +66,16 @@ namespace manager {
 
 		void PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path);
 
+		void PushReadFileEventToProcess(size_t pid, const std::wstring& file_path);
+
+		void PushSetInfoFileEventToProcess(size_t pid, const std::wstring& file_path);
+
+		const std::unordered_map<size_t, ProcessInfo>& GetProcessMap();
+
+		void UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized);
+
     private:
-        std::unordered_map<size_t, ProcessInfo> process_map_;
+		std::unordered_map<size_t, ProcessInfo> process_map_; // PID -> ProcessInfo
 		std::vector<size_t> pending_remove_;
 		std::mutex pending_remove_mutex_;
     };

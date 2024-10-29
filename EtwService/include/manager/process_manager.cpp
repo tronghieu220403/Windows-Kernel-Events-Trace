@@ -23,25 +23,26 @@ namespace manager
 
     void ProcessManager::RemoveProcess(size_t pid) 
     {
-        if (process_map_.find(pid) == process_map_.end())
+		auto it = process_map_.find(pid);
+        if (it == process_map_.end())
         {
             return;
         }
 
-        size_t ppid = process_map_[pid].ppid;
+        size_t ppid = it->second.ppid;
         if (ppid != 0) {
 			RemoveChild(ppid, pid);
         }
 
         // Reassign children to PID 0
-        for (size_t child_pid : process_map_[pid].cpid_list) {
+        for (size_t child_pid : it->second.cpid_list) {
             process_map_[child_pid].ppid = 0;
         }
 
-        process_map_.erase(pid);
+        process_map_.erase(it);
     }
 
-    void ProcessManager::PendingRemoveProcess(size_t pid)
+    void ProcessManager::AddPendingRemoveProcess(size_t pid)
     {
 		const std::lock_guard<std::mutex> lock(pending_remove_mutex_);
         pending_remove_.push_back(pid);
@@ -105,6 +106,7 @@ namespace manager
         {
             ProcessInfo process_info;
 			process_info.image_file_name = image_file_name;
+			process_info.pid = pid;
             process_map_[pid] = process_info;
         }
     }
@@ -112,12 +114,11 @@ namespace manager
     std::wstring ProcessManager::GetImageFileName(size_t pid) 
     {
         // TODO: Always ask drivers.
-        if (process_map_.find(pid) != process_map_.end())
+        if (process_map_.find(pid) != process_map_.end() && process_map_[pid].image_file_name.size() > 0)
         {
 		    return process_map_[pid].image_file_name;
         }
         
-        /*
         DWORD error = 0;
         std::wstring image_file_name_w;
         HANDLE hProcess = nullptr;
@@ -264,10 +265,11 @@ namespace manager
                 debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + debug::GetErrorMessage(error));
             }
         }
-        */
+        
 
 		// TODO: Ask driver from DriverComm to get image file name and set error to ERROR_SUCCESS
-        std::wstring image_file_name_w(kDriverComm->GetProcessImageFromPid(pid));
+        //std::wstring image_file_name_w(kDriverComm->GetProcessImageFromPid(pid));
+
         if (image_file_name_w.size() > 0)
         {
 			UpdateImageFileName(pid, image_file_name_w);
@@ -286,10 +288,6 @@ namespace manager
 
     const ProcessInfo& ProcessManager::GetProcessInfo(size_t pid)
     {
-        if (process_map_.find(pid) != process_map_.end())
-        {
-            return ProcessInfo();
-        }
 		return process_map_[pid];
     }
 
@@ -299,6 +297,22 @@ namespace manager
         wstr.resize(2000);
         wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Create event, pid %llu, file %ws\n", pid, file_path.data()));
         debug::DebugLogW(wstr);
+
+		auto it = process_map_.find(pid);
+		if (it != process_map_.end())
+		{
+			size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            auto file_io_it = it->second.file_io.find(file_name_hash);
+            if (file_io_it == it->second.file_io.end())
+            {
+                it->second.file_io.insert({ file_name_hash, {} });
+                file_io_it = it->second.file_io.find(file_name_hash);
+            }
+            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.evaluation_needed = true;
+            file_io_it->second.is_recognized = false;
+			file_io_it->second.featured_access_flags |= CREATE_FLAG;
+		}
     }
 
     void ProcessManager::PushDeleteFileEventToProcess(size_t pid, const std::wstring& file_path)
@@ -307,6 +321,22 @@ namespace manager
         wstr.resize(2000);
         wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, file_path.data()));
         debug::DebugLogW(wstr);
+
+        auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            auto file_io_it = it->second.file_io.find(file_name_hash);
+            if (file_io_it == it->second.file_io.end())
+            {
+                it->second.file_io.insert({ file_name_hash, {} });
+                file_io_it = it->second.file_io.find(file_name_hash);
+            }
+            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.evaluation_needed = true;
+            file_io_it->second.is_recognized = false;
+            file_io_it->second.featured_access_flags |= DELETE_FLAG;
+        }
     }
 
     void ProcessManager::PushRenameFileEventToProcess(size_t pid, const std::wstring& old_file_path, const std::wstring& new_file_path)
@@ -315,10 +345,112 @@ namespace manager
         wstr.resize(2000);
         wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, old_file_path.data(), new_file_path.data()));
         debug::DebugLogW(wstr);
+
+        auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+            size_t old_file_name_hash = std::hash<std::wstring>{}(old_file_path);
+			auto old_file_io_it = it->second.file_io.find(old_file_name_hash);
+            if (old_file_io_it != it->second.file_io.end())
+            {
+				size_t new_file_name_hash = std::hash<std::wstring>{}(new_file_path);
+                it->second.file_io.insert({ new_file_name_hash, {} });
+				auto new_file_io_it = it->second.file_io.find(new_file_name_hash);
+                new_file_io_it->second.featured_access_flags = old_file_io_it->second.featured_access_flags | RENAME_FLAG;
+                new_file_io_it->second.old_file_path = old_file_path;
+                new_file_io_it->second.evaluation_needed = true;
+                new_file_io_it->second.is_recognized = false;
+
+				it->second.file_io.erase(old_file_io_it);
+            }
+
+        }
     }
 
     void ProcessManager::PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path)
     {
+        /*
+		std::wstring wstr;
+		wstr.resize(2000);
+		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data()));
+		debug::DebugLogW(wstr);
+        */
 
+		auto it = process_map_.find(pid);
+		if (it != process_map_.end())
+		{
+            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            auto file_io_it = it->second.file_io.find(file_name_hash);
+            if (file_io_it == it->second.file_io.end())
+            {
+                it->second.file_io.insert({ file_name_hash, {} });
+                file_io_it = it->second.file_io.find(file_name_hash);
+            }
+            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.evaluation_needed = true;
+            file_io_it->second.is_recognized = false;
+            file_io_it->second.featured_access_flags |= WRITE_FLAG;
+		}   
+    }
+    void ProcessManager::PushReadFileEventToProcess(size_t pid, const std::wstring& file_path)
+    {
+		/*
+		std::wstring wstr;
+		wstr.resize(2000);
+		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, file_path.data()));
+		debug::DebugLogW(wstr);
+		*/
+
+		auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            auto file_io_it = it->second.file_io.find(file_name_hash);
+            if (file_io_it == it->second.file_io.end())
+            {
+                it->second.file_io.insert({ file_name_hash, {} });
+                file_io_it = it->second.file_io.find(file_name_hash);
+            }
+            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.evaluation_needed = true;
+            file_io_it->second.is_recognized = false;
+            file_io_it->second.featured_access_flags |= READ_FLAG;
+        }
+    }
+    void ProcessManager::PushSetInfoFileEventToProcess(size_t pid, const std::wstring& file_path)
+    {
+		auto it = process_map_.find(pid);
+		if (it != process_map_.end())
+		{
+            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+			auto file_io_it = it->second.file_io.find(file_name_hash);
+			if (file_io_it == it->second.file_io.end())
+			{
+				it->second.file_io.insert({ file_name_hash, {} });
+				file_io_it = it->second.file_io.find(file_name_hash);
+			}
+            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.evaluation_needed = true;
+            file_io_it->second.is_recognized = false;
+		}
+    }
+
+    const std::unordered_map<size_t, ProcessInfo>& ProcessManager::GetProcessMap()
+    {
+		return process_map_;
+    }
+
+    void ProcessManager::UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized)
+    {
+		auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+			auto file_io_it = it->second.file_io.find(file_hash);
+            if (file_io_it != it->second.file_io.end())
+            {
+				file_io_it->second.evaluation_needed = evaluation_needed;
+				file_io_it->second.is_recognized = is_regconized;
+            }
+        }
     }
 }
