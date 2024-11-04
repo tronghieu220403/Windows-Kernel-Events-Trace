@@ -15,8 +15,10 @@ C/C++ -> General -> Additional Include Dir -> $(ProjectDir)include
 #include "service/service.h"
 #include "manager/manager.h"
 
-bool provider_oke = false;
-bool comsumer_oke = false;
+bool provider_started = false;
+bool comsumer_started = false;
+bool provider_end = false;
+bool comsumer_end = false;
 
 void SetUpProvider()
 {
@@ -38,25 +40,27 @@ void SetUpProvider()
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
     {
         debug::DebugLogW(L"Provider run failed\n");
+        ExitProcess(0);
         return;
     }
-    provider_oke = true;
+    provider_started = true;
 
-    Sleep(30000);
+    debug::DebugLogW(L"Provider is running");
+    Sleep(3000000);
     debug::DebugLogW(L"Provider is closing");
     kp->CloseTrace();
+	provider_end = true;
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
     debug::DebugLogW(L"Provider is closed after " + std::to_wstring(duration) + L" seconds");
     std::cout << "Provider is closed after " << duration << " seconds" << std::endl;
-
 
 	return;
 }
 
 void SetUpComsumer()
 {
-    while (provider_oke == false)
+    while (provider_started == false)
     {
         Sleep(50);
     }
@@ -70,7 +74,7 @@ void SetUpComsumer()
 
     debug::DebugLogW(L"Consummer is opened");
 
-    comsumer_oke = true;
+    comsumer_started = true;
     auto start_time = std::chrono::high_resolution_clock::now();
     while (etw::Init() != S_OK)
     {
@@ -89,6 +93,7 @@ void SetUpComsumer()
     }
 
     kc->Close();
+	comsumer_end = true;
 	etw::CleanUp();
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
@@ -106,8 +111,23 @@ void ServiceMainWorker()
     manager::Init();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
-    provider_thread.join();
+	std::jthread manager_thread([]() {
+        while (provider_started == false || comsumer_started == false)
+        {
+            Sleep(100);
+        }
+        while (provider_end == false || comsumer_end == false)
+        {
+			auto start_time = std::chrono::high_resolution_clock::now();
+            manager::EvaluateProcess();
+			auto end_time = std::chrono::high_resolution_clock::now();
+			DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+			Sleep(10000 - duration);
+        }
+        });
+	manager_thread.join();
     comsumer_thread.join();
+    provider_thread.join();
 	debug::CleanupDebugLog();
 }
 

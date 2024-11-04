@@ -134,6 +134,7 @@ namespace etw
     {
         int type = event.GetType();
 		std::wstring file_path;
+        const std::lock_guard<std::mutex> pm_lock(manager::kProcMan->process_map_mutex_);
 
         // EventTypeName{"Create"}
         if (type == FileIoEventType::kCreate)
@@ -182,7 +183,6 @@ namespace etw
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, SetInfo event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), set_info_event.file_object, set_info_event.irp_ptr, set_info_event.file_key, set_info_event.extra_info, set_info_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
-
             manager::kProcMan->PushSetInfoFileEventToProcess(pid, file_path);
         }
         else if (type == FileIoEventType::kDelete)
@@ -201,7 +201,6 @@ namespace etw
 
 			// Directly delete event
             manager::kProcMan->PushDeleteFileEventToProcess(pid, file_path);
-
 		}
 		else if (type == FileIoEventType::kRename)
 		{
@@ -378,6 +377,7 @@ namespace etw
     VOID __stdcall KernelConsumer::ProcessProcessEvent(Event event)
     {
         int type = event.GetType();
+        const std::lock_guard<std::mutex> pm_lock(manager::kProcMan->process_map_mutex_);
         if (type == ProcessEventType::kProcessStart)
         {
             ProcessStartEvent process_start_event(event);

@@ -42,22 +42,6 @@ namespace manager
         process_map_.erase(it);
     }
 
-    void ProcessManager::AddPendingRemoveProcess(size_t pid)
-    {
-		const std::lock_guard<std::mutex> lock(pending_remove_mutex_);
-        pending_remove_.push_back(pid);
-    }
-
-    void ProcessManager::RemovePendingProcesses()
-    {
-        const std::lock_guard<std::mutex> lock(pending_remove_mutex_);
-        for (size_t pid : pending_remove_)
-        {
-            RemoveProcess(pid);
-        }
-		pending_remove_.clear();
-    }
-
     void ProcessManager::AddChild(size_t pid, size_t cpid) 
     {
         if (process_map_.find(pid) == process_map_.end()) {
@@ -116,7 +100,8 @@ namespace manager
         // TODO: Always ask drivers.
         if (process_map_.find(pid) != process_map_.end() && process_map_[pid].image_file_name.size() > 0)
         {
-		    return process_map_[pid].image_file_name;
+            std::wstring file_name = process_map_[pid].image_file_name;
+		    return file_name;
         }
         
         DWORD error = 0;
@@ -301,6 +286,7 @@ namespace manager
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
 		{
+            it->second.is_evaluated = false;
 			size_t file_name_hash = std::hash<std::wstring>{}(file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
@@ -325,6 +311,7 @@ namespace manager
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
+            it->second.is_evaluated = false;
             size_t file_name_hash = std::hash<std::wstring>{}(file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
@@ -349,6 +336,7 @@ namespace manager
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
+            it->second.is_evaluated = false;
             size_t old_file_name_hash = std::hash<std::wstring>{}(old_file_path);
 			auto old_file_io_it = it->second.file_io.find(old_file_name_hash);
             if (old_file_io_it != it->second.file_io.end())
@@ -379,6 +367,7 @@ namespace manager
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
 		{
+            it->second.is_evaluated = false;
             size_t file_name_hash = std::hash<std::wstring>{}(file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
@@ -404,6 +393,7 @@ namespace manager
 		auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
+            it->second.is_evaluated = false;
             size_t file_name_hash = std::hash<std::wstring>{}(file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
@@ -422,6 +412,7 @@ namespace manager
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
 		{
+            it->second.is_evaluated = false;
             size_t file_name_hash = std::hash<std::wstring>{}(file_path);
 			auto file_io_it = it->second.file_io.find(file_name_hash);
 			if (file_io_it == it->second.file_io.end())
@@ -440,6 +431,7 @@ namespace manager
 		return process_map_;
     }
 
+
     void ProcessManager::UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized)
     {
 		auto it = process_map_.find(pid);
@@ -451,6 +443,14 @@ namespace manager
 				file_io_it->second.evaluation_needed = evaluation_needed;
 				file_io_it->second.is_recognized = is_regconized;
             }
+        }
+    }
+    void ProcessManager::UpdateEvaluationStatus(size_t pid, bool is_evaluated)
+    {
+		auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+            it->second.is_evaluated = is_evaluated;
         }
     }
 }

@@ -14,7 +14,6 @@ namespace manager {
 		size_t creation_time = 0;
         std::wstring image_file_name;
         std::set<size_t> cpid_list;
-        bool pending_remove = false;
 
 		bool is_evaluated = false;
 
@@ -37,8 +36,8 @@ namespace manager {
         // Add or remove a process by its PID
         void AddProcess(size_t pid, size_t ppid);
         void RemoveProcess(size_t pid);
-        void AddPendingRemoveProcess(size_t pid);
-		void RemovePendingProcesses();
+
+        const std::unordered_map<size_t, ProcessInfo>& GetProcessMap();
 
         // Add or remove a child PID from a process
         void AddChild(size_t pid, size_t cpid);
@@ -70,14 +69,14 @@ namespace manager {
 
 		void PushSetInfoFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		const std::unordered_map<size_t, ProcessInfo>& GetProcessMap();
-
 		void UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized);
+        
+		void UpdateEvaluationStatus(size_t pid, bool is_evaluated);
 
     private:
 		std::unordered_map<size_t, ProcessInfo> process_map_; // PID -> ProcessInfo
-		std::vector<size_t> pending_remove_;
-		std::mutex pending_remove_mutex_;
+    public:
+		std::mutex process_map_mutex_;
     };
 }
 #endif  // PROCESS_MANAGER_H_

@@ -104,7 +104,14 @@ namespace manager
 		std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
 		for (const auto& entry : std::filesystem::directory_iterator(tmp_dir))
 		{
-			std::filesystem::remove(entry.path());
+            try
+            {
+                std::filesystem::remove(entry.path());
+            }
+            catch (const std::exception& e)
+            {
+
+            }
 		}
 	}
 
