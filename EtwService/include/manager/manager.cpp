@@ -27,7 +27,7 @@ namespace manager {
 		debug::DebugLogW(L"Evaluating processes");
 		std::lock_guard<std::mutex> lock(manager::kProcMan->process_map_mutex_);
 		std::vector<std::pair<size_t, std::vector<std::pair<int, std::wstring>>>> file_list_for_processes; // pid -> (file_size, file_path)
-		std::map<std::wstring, bool> file_check_results; // native_file_hash -> is_recognized
+		std::vector<std::pair<std::pair<std::wstring, int>, bool>> file_check_results; // <native_file_path, pid>, is_recognized
 		size_t total_size = 0;
 
 		std::vector<std::pair<size_t, ProcessInfo>> process_list; // <pid, process_info>
@@ -71,6 +71,10 @@ namespace manager {
 						file_list.push_back({ file_size, win32_file_path });
 					}
 				}
+				else
+				{
+					// TODO: Thống kê số false và true để cuối hàm sẽ tính hoặc in ra.
+				}
 				
 				// Đếm số truy cập đặc trưng
 				if (file.second.featured_access_flags == OVERWRITE_FLAG)
@@ -91,11 +95,13 @@ namespace manager {
 				}
 			}
 
+			/*
 			std::wstring wstr;
 			wstr.resize(2000);
 			wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process %d, %lld files, %lld overwrite, %lld delete and rewrite, %lld smash and rewrite, %lld overwrite and rename, %lld read and delete, %lld create and write", pid, file_list.size(), overwrite_count, min(read_delete_count, create_write_count), min(overwrite_count, read_delete_count), overwrite_rename_count, read_delete_count, create_write_count));
 			debug::DebugLogW(wstr);
 			std::wcout << wstr << std::endl;
+			*/
 
 			if (file_list.size() == 0)
 			{
@@ -175,8 +181,6 @@ namespace manager {
 			file_list_for_processes.push_back({ pid, selected_files });
 		}
 		
-		debug::DebugLogW(L"Check files and store results");
-
 		// Check files and store results
 		for (const auto& [pid, files] : file_list_for_processes)
 		{
@@ -187,14 +191,21 @@ namespace manager {
 			}
 
 			auto check_results = manager::CheckFileList(paths);
-			file_check_results.insert(check_results.begin(), check_results.end());
+			for (auto& [path, is_recognized] : check_results)
+			{
+				size_t native_file_hash = std::hash<std::wstring>{}(path);
+				manager::kProcMan->UpdateFileEvaluationInProcess(pid, native_file_hash, false, is_recognized);
+				file_check_results.push_back({ { path, pid }, is_recognized });
+			}
 		}
 		
 		// Clear temporary files
 		manager::ClearTempFiles();
 
-		// TODO: (Debug first) In kết quả ra để đánh giá
-
+		for (const auto& [p, is_recognized] : file_check_results)
+		{
+			std::wcout << (is_recognized == true ? "true" : "false") << L" " << p.second << L" " << p.first << std::endl;
+		}
 	}
 
 	bool OverallEventFilter(size_t issuing_pid)

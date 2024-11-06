@@ -341,14 +341,6 @@ namespace etw
                 {
                     return;
                 }
-                if (native_file_path.find(L"tempfile_") != std::wstring::npos) {
-                    int x = 0;
-                }
-                std::wstring wstr;
-                wstr.resize(2000);
-                wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Read event, IrpPtr 0x%llx, pid %d, image path %ws\n", read_event.irp_ptr, pid, manager::kProcMan->GetImageNativeFileName(pid).data()));
-                debug::DebugLogW(wstr);
-
                 manager::kProcMan->PushReadFileEventToProcess(pid, native_file_path);
 			}
 		}
@@ -420,12 +412,6 @@ namespace etw
             int pid = static_cast<int>(event.GetProcessId());
 			std::string image = process_start_event.image_file_name;
 			std::wstring w_image(image.begin(), image.end());
-
-            if (image == "5.exe")
-            {
-                int x = 0;
-            }
-
             const std::wstring image_path = manager::kProcMan->GetImageNativeFileName(process_start_event.pid);
 
             std::wstring wstr;

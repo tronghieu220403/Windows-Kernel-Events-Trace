@@ -269,12 +269,10 @@ namespace manager
 
     void ProcessManager::PushWriteFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
-        /*
 		std::wstring wstr;
 		wstr.resize(2000);
 		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, native_file_path.data()));
 		debug::DebugLogW(wstr);
-        */
 
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
@@ -296,12 +294,10 @@ namespace manager
     }
     void ProcessManager::PushReadFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
-		/*
 		std::wstring wstr;
 		wstr.resize(2000);
 		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, native_file_path.data()));
 		debug::DebugLogW(wstr);
-		*/
 
 		auto it = process_map_.find(pid);
         if (it != process_map_.end())
