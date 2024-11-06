@@ -53,20 +53,20 @@ namespace manager
         return device_name + win32_path.substr(win32_path.find_first_of('\\'));
     }
 
-    std::wstring GetWin32Path(const std::wstring& native_path) {
+    std::wstring GetWin32Path(const std::wstring& path) {
 
         // If the path is empty or it does not start with "\\" (not a device path), return as-is
-        if (native_path.empty() || native_path[0] != L'\\') {
-            return native_path;
+        if (path.empty() || path[0] != L'\\') {
+            return path;
         }
 
         // Remove Win32 Device Namespace or File Namespace prefix if present
-        std::wstring clean_path = native_path;
+        std::wstring clean_path = path;
         if (clean_path.find(L"\\\\?\\") == 0 || clean_path.find(L"\\\\.\\") == 0) {
             return clean_path.substr(4); // Remove "\\?\" or "\\.\"
         }
 
-        std::wstring device_name = native_path.substr(0, native_path.find(L'\\', sizeof("\\Device\\") - 1)); // Extract device name
+        std::wstring device_name = path.substr(0, path.find(L'\\', sizeof("\\Device\\") - 1)); // Extract device name
         auto it = kWin32Path.find(device_name);
         if (it != kWin32Path.end()) {
             return it->second + clean_path.substr(device_name.length());
@@ -169,20 +169,45 @@ namespace manager
     }
 
 	// Hàm xóa các file tạm
-	void ClearTempFiles() {
-		std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
-		for (const auto& entry : std::filesystem::directory_iterator(tmp_dir))
-		{
-            try
-            {
-                std::filesystem::remove(entry.path());
-            }
-            catch (const std::exception& e)
-            {
+    void ClearTempFiles() {
+        // Lấy đường dẫn thư mục tạm bằng std::filesystem
+        std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
 
+        // Chuyển đổi đường dẫn sang kiểu wstring để dùng với Windows API
+        std::wstring temp_path = tmp_dir.wstring() + L"\\";
+
+        // Thiết lập bộ lọc để lấy tất cả các file và thư mục trong thư mục tạm
+        std::wstring search_path = temp_path + L"*";
+        WIN32_FIND_DATAW find_file_data;
+        HANDLE h_find = FindFirstFileW(search_path.c_str(), &find_file_data);
+
+        if (h_find == INVALID_HANDLE_VALUE) {
+            return;  // Không thể mở thư mục tạm
+        }
+
+        do {
+            // Bỏ qua các file và thư mục đặc biệt "." và ".."
+            if (wcscmp(find_file_data.cFileName, L".") == 0 || wcscmp(find_file_data.cFileName, L"..") == 0) {
+                continue;
             }
-		}
-	}
+
+            // Tạo đường dẫn đầy đủ đến file hoặc thư mục
+            std::wstring full_path = temp_path + find_file_data.cFileName;
+
+            // Kiểm tra và xóa file hoặc thư mục
+            if (find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                // Nếu là thư mục, xóa thư mục (không đệ quy)
+                RemoveDirectoryW(full_path.c_str());
+            }
+            else {
+                // Nếu là file, xóa file
+                DeleteFileW(full_path.c_str());
+            }
+        } while (FindNextFileW(h_find, &find_file_data) != 0);
+
+        // Đóng handle tìm kiếm
+        FindClose(h_find);
+    }
 
     // Hàm kiểm tra xem file có chủ yếu chứa ký tự in được hay không (kiểm tra cả UTF-8, UTF-16 và ANSI)
     bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size) {

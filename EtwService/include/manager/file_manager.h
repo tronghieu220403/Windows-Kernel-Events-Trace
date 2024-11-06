@@ -33,7 +33,7 @@ namespace manager {
 	std::wstring GetNativePath(const std::wstring& win32_path);
 
 	// Hàm lấy đường dẫn Win32
-	std::wstring GetWin32Path(const std::wstring& native_path);
+	std::wstring GetWin32Path(const std::wstring& path);
 
 	// Hàm lấy kích thước file
 	size_t GetFileSize(const std::wstring& file_path);
@@ -72,8 +72,8 @@ namespace manager {
 
 	struct FileIoManager {
 		size_t featured_access_flags = 0;
-		std::wstring current_native_file_path;
-		std::wstring old_native_file_path;
+		std::wstring current_path;
+		std::wstring old_path;
 		bool evaluation_needed = false; // TODO: Đổi thành true nếu có thay đổi file
 		bool is_recognized = false; // File nhận diện được (không phải bị mã hóa)
 	};

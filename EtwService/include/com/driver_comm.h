@@ -31,7 +31,7 @@ public:
 
 	void Cleanup();
 
-	const std::wstring& GetProcessImageFromPid(int pid);
+	std::wstring GetProcessImageFromPid(int pid);
 
 private:
 	HANDLE device;

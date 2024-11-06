@@ -22,7 +22,7 @@ void DriverComm::Cleanup() {
     }
 }
 
-const std::wstring& DriverComm::GetProcessImageFromPid(int pid)
+std::wstring DriverComm::GetProcessImageFromPid(int pid)
 {
 	std::vector<UCHAR> reply = SendCommand(kGetImageFromPid, pid);
     if (reply.size() > 0) {

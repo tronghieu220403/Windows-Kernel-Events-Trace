@@ -12,13 +12,13 @@ namespace manager {
         size_t pid = 0;
         size_t ppid = 0;
 		size_t creation_time = 0;
-        std::wstring image_native_file_name;
+        std::wstring image_file_name;
         std::set<size_t> cpid_list;
 
 		bool is_evaluated = false;
 
         // TODO: Chuyển sang class riêng để đánh giá cho ransomware
-		std::unordered_map<size_t, FileIoManager> file_io; // Current: native_file_path_hash -> native_file_path
+		std::unordered_map<size_t, FileIoManager> file_io; // Current: file_path_hash -> file_path
         /*
         1) Ghi đè file A
         2) Đọc file A, tạo + viết file B, xóa file A (vẫn còn nội dung ở disk)
@@ -51,25 +51,25 @@ namespace manager {
 		void UpdateImageFileName(size_t pid, const std::wstring& image_file_name);
 
         // Get image file name of a process
-        std::wstring GetImageNativeFileName(size_t pid);
+        std::wstring GetImageFileName(size_t pid);
         
 		void UpdateProcessCreationTime(size_t pid, size_t creation_time);
 
         const ProcessInfo& GetProcessInfo(size_t pid);
 
-		void PushCreateFileEventToProcess(size_t pid, const std::wstring& native_file_path);
+		void PushCreateFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		void PushDeleteFileEventToProcess(size_t pid, const std::wstring& native_file_path);
+		void PushDeleteFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		void PushRenameFileEventToProcess(size_t pid, const std::wstring& old_native_file_path, const std::wstring& new_native_file_path);
+		void PushRenameFileEventToProcess(size_t pid, const std::wstring& old_file_path, const std::wstring& new_file_path);
 
-		void PushWriteFileEventToProcess(size_t pid, const std::wstring& native_file_path);
+		void PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		void PushReadFileEventToProcess(size_t pid, const std::wstring& native_file_path);
+		void PushReadFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		void PushSetInfoFileEventToProcess(size_t pid, const std::wstring& native_file_path);
+		void PushSetInfoFileEventToProcess(size_t pid, const std::wstring& file_path);
 
-		void UpdateFileEvaluationInProcess(size_t pid, size_t native_file_hash, bool evaluation_needed, bool is_regconized);
+		void UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized);
         
 		void UpdateEvaluationStatus(size_t pid, bool is_evaluated);
 
