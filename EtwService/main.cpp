@@ -40,7 +40,6 @@ void SetUpProvider()
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
     {
         debug::DebugLogW(L"Provider run failed\n");
-        ExitProcess(0);
         return;
     }
     provider_started = true;

@@ -27,17 +27,18 @@ namespace manager
         return it->second;
     }
 
-    std::wstring GetDosPath(const std::wstring* wstr)
+    std::wstring GetNativePath(const std::wstring& win32_path)
     {
-        std::wstring device_name = wstr->substr(0, wstr->find_first_of('\\'));
-        if (kDosPath.find(device_name) != kDosPath.end())
+        std::wstring drive_name = win32_path.substr(0, win32_path.find_first_of('\\'));
+        if (kNativePath.find(drive_name) != kNativePath.end())
         {
-			return kDosPath[device_name] + wstr->substr(wstr->find_first_of('\\'));
+			return kNativePath[drive_name] + win32_path.substr(drive_name.length());
         }
-        std::wstring dos_name;
-        dos_name.resize(MAX_PATH);
+
+        std::wstring device_name;
+        device_name.resize(MAX_PATH);
         DWORD status;
-        while (QueryDosDeviceW(device_name.data(), (WCHAR*)dos_name.data(), (DWORD)dos_name.size()) == 0)
+        while (QueryDosDeviceW(drive_name.data(), (WCHAR*)device_name.data(), (DWORD)device_name.size()) == 0)
         {
             status = GetLastError();
             if (status != ERROR_INSUFFICIENT_BUFFER)
@@ -45,26 +46,94 @@ namespace manager
                 debug::DebugLogW(L"QueryDosDevice failed: " + debug::GetErrorMessage(status));
                 return std::wstring();
             }
-            dos_name.resize(dos_name.size() * 2);
+            device_name.resize(device_name.size() * 2);
         }
-        dos_name.resize(wcslen(dos_name.data()));
-		kDosPath[device_name] = dos_name;
-        return dos_name + wstr->substr(wstr->find_first_of('\\'));
+        device_name.resize(wcslen(device_name.data()));
+		kNativePath.insert({ drive_name, device_name });
+        return device_name + win32_path.substr(win32_path.find_first_of('\\'));
+    }
+
+    std::wstring GetWin32Path(const std::wstring& native_path) {
+
+        // If the path is empty or it does not start with "\\" (not a device path), return as-is
+        if (native_path.empty() || native_path[0] != L'\\') {
+            return native_path;
+        }
+
+        // Remove Win32 Device Namespace or File Namespace prefix if present
+        std::wstring clean_path = native_path;
+        if (clean_path.find(L"\\\\?\\") == 0 || clean_path.find(L"\\\\.\\") == 0) {
+            return clean_path.substr(4); // Remove "\\?\" or "\\.\"
+        }
+
+        std::wstring device_name = native_path.substr(0, native_path.find(L'\\', sizeof("\\Device\\") - 1)); // Extract device name
+        auto it = kWin32Path.find(device_name);
+        if (it != kWin32Path.end()) {
+            return it->second + clean_path.substr(device_name.length());
+        }
+
+        // Prepare UNICODE_STRING for the native path
+        UNICODE_STRING unicode_path = { (USHORT)(clean_path.length() * sizeof(wchar_t)), (USHORT)(clean_path.length() * sizeof(wchar_t)), (PWSTR)clean_path.c_str() };
+
+        OBJECT_ATTRIBUTES obj_attr;
+        InitializeObjectAttributes(&obj_attr, &unicode_path, OBJ_CASE_INSENSITIVE, NULL, NULL);
+
+        HANDLE file_handle;
+        IO_STATUS_BLOCK io_status;
+
+        // Attempt to open the file or device
+        NTSTATUS status = NtCreateFile(&file_handle, FILE_READ_ATTRIBUTES, &obj_attr, &io_status, NULL, FILE_ATTRIBUTE_READONLY, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, NULL, 0);
+
+        if (!NT_SUCCESS(status)) {
+            return L"";
+        }
+
+        // Get full path using the handle
+        WCHAR buffer[MAX_PATH];
+        DWORD result = GetFinalPathNameByHandleW(file_handle, buffer, MAX_PATH, FILE_NAME_NORMALIZED);
+        CloseHandle(file_handle);
+
+        std::wstring win_api_path;
+        if (result != 0 && result < MAX_PATH) {
+            win_api_path = std::wstring(buffer);
+            if (win_api_path.find(L"\\\\?\\") == 0 || win_api_path.find(L"\\\\.\\") == 0) {
+                win_api_path = win_api_path.substr(4); // Remove "\\?\" or "\\.\"
+            }
+            // Extract and cache the device prefix
+            const std::wstring device_prefix = clean_path.substr(0, clean_path.find(L'\\', sizeof("\\Device\\") - 1));
+            const std::wstring drive_prefix = win_api_path.substr(0, win_api_path.find_first_of(L'\\')); // Get the drive letter part (e.g., "C:")
+            kWin32Path.insert({ device_name, drive_prefix }); // Cache the prefix mapping
+        }
+        else {
+            win_api_path = L""; // Fallback to original path if conversion fails
+        }
+
+        return win_api_path;
     }
 
 	// Hàm lấy kích thước file
     size_t GetFileSize(const std::wstring& file_path)
     {
-        size_t file_size = 0;
-        try
-        {
-            file_size = std::filesystem::file_size(file_path);
+        // Open the file
+		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+
+        if (file_handle == INVALID_HANDLE_VALUE) {
+            std::wcerr << L"Failed to open file: " << file_path << std::endl;
+            return 0;
         }
-        catch (...)
+
+        // Get the file size
+        LARGE_INTEGER file_size;
+        if (GetFileSizeEx(file_handle, &file_size) == 0)
         {
-            file_size = 0;
+            file_size.QuadPart = 0;
         }
-        return file_size;
+
+        // Close the handle
+        CloseHandle(file_handle);
+
+        return file_size.QuadPart;
+
     }
 
     // Hàm lấy đuôi file
@@ -119,11 +188,11 @@ namespace manager
     bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size) {
         std::ifstream file(file_path, std::ios::binary); // Mở file dưới dạng nhị phân
         if (!file.is_open()) {
-            std::wcerr << L"Failed to open file: " << file_path << std::endl;
+            //std::wcerr << L"Failed to open file: " << file_path << std::endl;
             return false; // Trả về false nếu không mở được file
         }
 
-        // Xác định kích thước file để đọc (lấy 10MB đầu tiên hoặc kích thước file, tùy cái nào nhỏ hơn)
+        // Xác định kích thước file để đọc (lấy FILE_MAX_SIZE_CHECK đầu tiên hoặc kích thước file, tùy cái nào nhỏ hơn)
         std::streamsize file_size = std::min<std::streamsize>(max_size, static_cast<std::streamsize>(file.seekg(0, std::ios::end).tellg()));
         file.seekg(0, std::ios::beg); // Đưa con trỏ file về đầu
 
@@ -183,6 +252,9 @@ namespace manager
             }
             else if (line.empty())
             {
+				if (current_file.empty()) {
+					continue;
+				}
                 std::wstring actual_extension = GetFileExtension(current_file);
                 bool extension_matched = std::any_of(found_extensions.begin(), found_extensions.end(),
                     [&](const std::wstring& ext) {
@@ -219,7 +291,12 @@ namespace manager
             cmd += L"\"" + file + L"\" "; // Nối các file vào command
         }
 
-        std::wstring output = ulti::ExecCommand(cmd); // Chạy command và lấy output
+        std::wstring output(ulti::ExecCommand(cmd)); // Chạy command và lấy output
+        std::vector<std::pair<std::wstring, bool>> trid_output;
+		if (output.empty()) {
+			debug::DebugLogW(L"TrID failed to run.");
+			return trid_output;
+		}
         if (output[output.size() - 1] != L'\n')
         {
             output += L"\n";
@@ -230,7 +307,7 @@ namespace manager
         }
 
         // Phân tích output
-        std::vector<std::pair<std::wstring, bool>> trid_output = AnalyzeTridOutput(output);
+        trid_output = std::move(AnalyzeTridOutput(output));
         return trid_output;
     }
 }

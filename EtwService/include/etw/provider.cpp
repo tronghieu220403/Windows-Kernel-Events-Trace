@@ -18,6 +18,7 @@ namespace etw
 
     void KernelProvider::Initialize()
     {
+        session_handle_ = 0;
         if (session_properties_ == nullptr)
         {
             session_properties_ = (EVENT_TRACE_PROPERTIES*)(new char[buffer_size_]);
@@ -58,13 +59,13 @@ namespace etw
         ULONG status = ERROR_SUCCESS;
 
         Initialize();
-        status = StartTrace((PTRACEHANDLE)0, KERNEL_LOGGER_NAME, session_properties_);
+        status = StartTrace((PTRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_);
 
         if (status == ERROR_ALREADY_EXISTS)
         {
-            ControlTrace((TRACEHANDLE)0, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
+            ControlTrace((TRACEHANDLE)session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
             Initialize();
-            status = StartTrace((PTRACEHANDLE)NULL, KERNEL_LOGGER_NAME, session_properties_);
+            status = StartTrace((PTRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_);
         }
 
         return status;
@@ -74,7 +75,7 @@ namespace etw
     ULONG KernelProvider::CloseTrace()
 	{
         ULONG status = ERROR_SUCCESS;
-        status = ControlTrace((TRACEHANDLE)0, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
+        status = ControlTrace((TRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
 
         return status;
 	}

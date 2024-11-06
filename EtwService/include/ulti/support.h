@@ -28,6 +28,7 @@
 #include <comutil.h>
 #include <wbemidl.h>
 #include <aclapi.h>    
+#include <winternl.h>
 
 #include <memory>
 #include <iostream>
@@ -60,8 +61,9 @@
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "Shell32.lib") 
 #pragma comment(lib, "comsupp.lib")
-#pragma comment(lib,"Pdh.lib")
-#pragma comment(lib,"Advapi32.lib")
+#pragma comment(lib, "Pdh.lib")
+#pragma comment(lib, "Advapi32.lib")
+#pragma comment(lib, "ntdll.lib")
 
 typedef unsigned int uint32;
 
@@ -221,7 +223,16 @@ namespace ulti
         std::wstring result; // Chuỗi lưu toàn bộ output của command
         // Dùng _wpopen để mở pipe và chạy command, _pclose để đóng pipe sau khi xong
         std::unique_ptr<FILE, decltype(&_pclose)> pipe(_wpopen(cmd.c_str(), L"r"), _pclose);
-        result.reserve(20 * 1024 * 1024); // Dự trữ 20MB cho chuỗi result (tùy theo kích thước output của command
+        try
+        {
+            result.reserve(cmd.size() * 10); // Dự trữ cho chuỗi result (tùy theo kích thước output của command)
+        }
+		catch (const std::exception& e)
+		{
+			std::cerr << "[" << __FILE__ << ":" << __LINE__ << "] " << e.what() << std::endl;
+			result.clear();
+			return result;
+		}
         if (!pipe) {
             std::wcerr << L"Failed to run command." << std::endl; // Lỗi nếu không chạy được command
             result.clear();

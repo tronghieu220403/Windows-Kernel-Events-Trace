@@ -84,24 +84,23 @@ namespace manager
     {
 		if (process_map_.find(pid) != process_map_.end())
 		{
-			process_map_[pid].image_file_name = image_file_name;
+			process_map_[pid].image_native_file_name = image_file_name;
 		}
         else
         {
             ProcessInfo process_info;
-			process_info.image_file_name = image_file_name;
+			process_info.image_native_file_name = image_file_name;
 			process_info.pid = pid;
             process_map_[pid] = process_info;
         }
     }
 
-    std::wstring ProcessManager::GetImageFileName(size_t pid) 
+    std::wstring ProcessManager::GetImageNativeFileName(size_t pid)
     {
-        // TODO: Always ask drivers.
-        if (process_map_.find(pid) != process_map_.end() && process_map_[pid].image_file_name.size() > 0)
+		auto it = process_map_.find(pid);
+        if (it != process_map_.end() && it->second.image_native_file_name.size() > 0)
         {
-            std::wstring file_name = process_map_[pid].image_file_name;
-		    return file_name;
+		    return it->second.image_native_file_name;
         }
         
         DWORD error = 0;
@@ -109,8 +108,8 @@ namespace manager
         HANDLE hProcess = nullptr;
         std::string image_file_name_a;
         size_t size_tmp = 0;
-        image_file_name_w.resize(MAX_PATH);
-        image_file_name_a.resize(MAX_PATH);
+        image_file_name_w.resize(MAX_PATH * 4);
+        image_file_name_a.resize(MAX_PATH * 4);
 
         hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
         if (hProcess) 
@@ -154,92 +153,7 @@ namespace manager
                     }
                 }
             }
-
-            // Try QueryFullProcessImageNameW if previous methods failed
-            if (error != ERROR_SUCCESS) {
-                while (true) {
-                    size_tmp = image_file_name_w.size();
-                    if (QueryFullProcessImageNameW(hProcess, PROCESS_NAME_NATIVE, image_file_name_w.data(), (LPDWORD)&size_tmp)) {
-                        error = ERROR_SUCCESS;
-                        image_file_name_w.resize(size_tmp);
-                        break;
-                    }
-                    else {
-                        error = GetLastError();
-                        if (error == ERROR_INSUFFICIENT_BUFFER) {
-                            image_file_name_w.resize(image_file_name_w.size() * 2);
-                        }
-                        else {
-                            break; // Move to the next step on any other error
-                        }
-                    }
-                }
-
-                // Try QueryFullProcessImageNameA if QueryFullProcessImageNameW failed
-                if (error != ERROR_SUCCESS) {
-                    size_tmp = image_file_name_a.size();
-                    while (true) {
-                        if (QueryFullProcessImageNameA(hProcess, PROCESS_NAME_NATIVE, image_file_name_a.data(), (LPDWORD)&size_tmp)) {
-                            error = ERROR_SUCCESS;
-                            image_file_name_a.resize(size_tmp);
-                            image_file_name_w = std::wstring(image_file_name_a.begin(), image_file_name_a.end());
-                            break;
-                        }
-                        else {
-                            error = GetLastError();
-                            if (error == ERROR_INSUFFICIENT_BUFFER) {
-                                image_file_name_a.resize(image_file_name_a.size() * 2);
-                            }
-                            else {
-                                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" QueryFullProcessImageName failed: " + debug::GetErrorMessage(error));
-                                break; // Log and stop on any other error
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (error != ERROR_SUCCESS) {
-                while (true) {
-                    if (size_tmp = GetModuleFileNameExW(hProcess, nullptr, image_file_name_w.data(), (DWORD)image_file_name_w.size())) {
-                        error = ERROR_SUCCESS;
-                        image_file_name_w.resize(size_tmp);
-                        image_file_name_w = GetDosPath(&image_file_name_w);
-                        break;
-                    }
-                    else {
-                        error = GetLastError();
-                        if (error == ERROR_INSUFFICIENT_BUFFER) {
-                            image_file_name_w.resize(image_file_name_w.size() * 2);
-                        }
-                        else {
-                            break; // Move to the next step on any other error
-                        }
-                    }
-                }
-
-                if (error != ERROR_SUCCESS) {
-                    while (true) {
-                        if (size_tmp = GetModuleFileNameExA(hProcess, nullptr, image_file_name_a.data(), (DWORD)image_file_name_a.size())) {
-                            error = ERROR_SUCCESS;
-                            image_file_name_a.resize(size_tmp);
-                            image_file_name_w = std::wstring(image_file_name_a.begin(), image_file_name_a.end());
-                            image_file_name_w = GetDosPath(&image_file_name_w);
-                            break;
-                        }
-                        else {
-                            error = GetLastError();
-                            if (error == ERROR_INSUFFICIENT_BUFFER) {
-                                image_file_name_a.resize(image_file_name_a.size() * 2);
-                            }
-                            else {
-                                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" GetModuleFileNameEx failed: " + debug::GetErrorMessage(error));
-                                break; // Log and stop on any other error
-                            }
-                        }
-                    }
-                }
-            }
+       
             CloseHandle(hProcess);
         }
         else
@@ -247,13 +161,9 @@ namespace manager
             error = GetLastError();
             if (error != ERROR_INVALID_PARAMETER)
             {
-                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed: " + debug::GetErrorMessage(error));
+                debug::DebugLogW(L"[+] PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed, status : " + debug::GetErrorMessage(error));
             }
         }
-        
-
-		// TODO: Ask driver from DriverComm to get image file name and set error to ERROR_SUCCESS
-        //std::wstring image_file_name_w(kDriverComm->GetProcessImageFromPid(pid));
 
         if (image_file_name_w.size() > 0)
         {
@@ -276,50 +186,52 @@ namespace manager
 		return process_map_[pid];
     }
 
-    void ProcessManager::PushCreateFileEventToProcess(size_t pid, const std::wstring& file_path)
+    void ProcessManager::PushCreateFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
+        /*
         std::wstring wstr;
         wstr.resize(2000);
-        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Create event, pid %llu, file %ws\n", pid, file_path.data()));
+        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Create event, pid %llu, file %ws\n", pid, native_file_path.data()));
         debug::DebugLogW(wstr);
+        */
 
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
 		{
             it->second.is_evaluated = false;
-			size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+			size_t file_name_hash = std::hash<std::wstring>{}(native_file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
             {
                 it->second.file_io.insert({ file_name_hash, {} });
                 file_io_it = it->second.file_io.find(file_name_hash);
+                file_io_it->second.current_native_file_path = native_file_path;
             }
-            file_io_it->second.current_file_path = file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
 			file_io_it->second.featured_access_flags |= CREATE_FLAG;
 		}
     }
 
-    void ProcessManager::PushDeleteFileEventToProcess(size_t pid, const std::wstring& file_path)
+    void ProcessManager::PushDeleteFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
         std::wstring wstr;
         wstr.resize(2000);
-        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, file_path.data()));
+        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, native_file_path.data()));
         debug::DebugLogW(wstr);
 
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
             it->second.is_evaluated = false;
-            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            size_t file_name_hash = std::hash<std::wstring>{}(native_file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
             {
                 it->second.file_io.insert({ file_name_hash, {} });
                 file_io_it = it->second.file_io.find(file_name_hash);
+                file_io_it->second.current_native_file_path = native_file_path;
             }
-            file_io_it->second.current_file_path = file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
             file_io_it->second.featured_access_flags |= DELETE_FLAG;
@@ -345,7 +257,7 @@ namespace manager
                 it->second.file_io.insert({ new_file_name_hash, {} });
 				auto new_file_io_it = it->second.file_io.find(new_file_name_hash);
                 new_file_io_it->second.featured_access_flags = old_file_io_it->second.featured_access_flags | RENAME_FLAG;
-                new_file_io_it->second.old_file_path = old_file_path;
+                new_file_io_it->second.old_native_file_path = old_file_path;
                 new_file_io_it->second.evaluation_needed = true;
                 new_file_io_it->second.is_recognized = false;
 
@@ -355,12 +267,12 @@ namespace manager
         }
     }
 
-    void ProcessManager::PushWriteFileEventToProcess(size_t pid, const std::wstring& file_path)
+    void ProcessManager::PushWriteFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
         /*
 		std::wstring wstr;
 		wstr.resize(2000);
-		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data()));
+		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, native_file_path.data()));
 		debug::DebugLogW(wstr);
         */
 
@@ -368,25 +280,26 @@ namespace manager
 		if (it != process_map_.end())
 		{
             it->second.is_evaluated = false;
-            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            size_t file_name_hash = std::hash<std::wstring>{}(native_file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
             {
                 it->second.file_io.insert({ file_name_hash, {} });
                 file_io_it = it->second.file_io.find(file_name_hash);
+                file_io_it->second.current_native_file_path = native_file_path;
             }
-            file_io_it->second.current_file_path = file_path;
+            file_io_it->second.current_native_file_path = native_file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
             file_io_it->second.featured_access_flags |= WRITE_FLAG;
 		}   
     }
-    void ProcessManager::PushReadFileEventToProcess(size_t pid, const std::wstring& file_path)
+    void ProcessManager::PushReadFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
 		/*
 		std::wstring wstr;
 		wstr.resize(2000);
-		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, file_path.data()));
+		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, native_file_path.data()));
 		debug::DebugLogW(wstr);
 		*/
 
@@ -394,33 +307,33 @@ namespace manager
         if (it != process_map_.end())
         {
             it->second.is_evaluated = false;
-            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            size_t file_name_hash = std::hash<std::wstring>{}(native_file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
             {
                 it->second.file_io.insert({ file_name_hash, {} });
                 file_io_it = it->second.file_io.find(file_name_hash);
+                file_io_it->second.current_native_file_path = native_file_path;
             }
-            file_io_it->second.current_file_path = file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
             file_io_it->second.featured_access_flags |= READ_FLAG;
         }
     }
-    void ProcessManager::PushSetInfoFileEventToProcess(size_t pid, const std::wstring& file_path)
+    void ProcessManager::PushSetInfoFileEventToProcess(size_t pid, const std::wstring& native_file_path)
     {
 		auto it = process_map_.find(pid);
 		if (it != process_map_.end())
 		{
             it->second.is_evaluated = false;
-            size_t file_name_hash = std::hash<std::wstring>{}(file_path);
+            size_t file_name_hash = std::hash<std::wstring>{}(native_file_path);
 			auto file_io_it = it->second.file_io.find(file_name_hash);
 			if (file_io_it == it->second.file_io.end())
 			{
 				it->second.file_io.insert({ file_name_hash, {} });
 				file_io_it = it->second.file_io.find(file_name_hash);
+                file_io_it->second.current_native_file_path = native_file_path;
 			}
-            file_io_it->second.current_file_path = file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
 		}
@@ -432,12 +345,12 @@ namespace manager
     }
 
 
-    void ProcessManager::UpdateFileEvaluationInProcess(size_t pid, size_t file_hash, bool evaluation_needed, bool is_regconized)
+    void ProcessManager::UpdateFileEvaluationInProcess(size_t pid, size_t native_file_hash, bool evaluation_needed, bool is_regconized)
     {
 		auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
-			auto file_io_it = it->second.file_io.find(file_hash);
+			auto file_io_it = it->second.file_io.find(native_file_hash);
             if (file_io_it != it->second.file_io.end())
             {
 				file_io_it->second.evaluation_needed = evaluation_needed;

@@ -133,22 +133,24 @@ namespace etw
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
         int type = event.GetType();
-		std::wstring file_path;
+		std::wstring native_file_path;
         const std::lock_guard<std::mutex> pm_lock(manager::kProcMan->process_map_mutex_);
 
         // EventTypeName{"Create"}
         if (type == FileIoEventType::kCreate)
         {
             FileIoCreateEvent file_create_event(event);
-			file_path = file_create_event.open_path;
+			native_file_path = file_create_event.open_path;
 
-			manager::kFileMan->AddFileObject(file_create_event.file_object, file_path);
+			manager::kFileMan->AddFileObject(file_create_event.file_object, native_file_path);
             int pid = static_cast<int>(event.GetProcessId());
             
+            /*
             std::wstring wstr;
             wstr.resize(2000);
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Create event, path %ws, IrpPtr 0x%llx, file object 0x%llx, create options 0x%llx, file attributes 0x%llx, pid %d, image path %ws\n", file_create_event.open_path, file_create_event.irp_ptr, file_create_event.file_object, file_create_event.create_options, file_create_event.file_attributes, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
+            */
 
             // Handle for create event
 			irp_ptr_to_file_object_map_[file_create_event.irp_ptr] = std::make_pair(pid, file_create_event.file_object);
@@ -173,51 +175,60 @@ namespace etw
         {
             FileIoSetInfoEvent set_info_event(event);
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(set_info_event.file_object);
-
+            native_file_path = manager::kFileMan->GetFilePath(set_info_event.file_object);
+			if (native_file_path.empty())
+			{
+				return;
+			}
             /*
             std::wstring wstr;
             wstr.resize(2000);
 			int pid = static_cast<int>(event.GetProcessId());
-			file_path = manager::kFileMan->GetFilePath(set_info_event.file_object);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, SetInfo event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), set_info_event.file_object, set_info_event.irp_ptr, set_info_event.file_key, set_info_event.extra_info, set_info_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+			native_file_path = manager::kFileMan->GetFilePath(set_info_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, SetInfo event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", native_file_path.data(), set_info_event.file_object, set_info_event.irp_ptr, set_info_event.file_key, set_info_event.extra_info, set_info_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
-            manager::kProcMan->PushSetInfoFileEventToProcess(pid, file_path);
+            manager::kProcMan->PushSetInfoFileEventToProcess(pid, native_file_path);
         }
         else if (type == FileIoEventType::kDelete)
         {
             FileIoDeleteEvent delete_event(event);
             
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(delete_event.file_object);
-            
+            native_file_path = manager::kFileMan->GetFilePath(delete_event.file_object);
+			if (native_file_path.empty())
+			{
+				return;
+			}
             /*
             std::wstring wstr;
             wstr.resize(2000);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Delete event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), delete_event.file_object, delete_event.irp_ptr, delete_event.file_key, delete_event.extra_info, delete_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Delete event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", native_file_path.data(), delete_event.file_object, delete_event.irp_ptr, delete_event.file_key, delete_event.extra_info, delete_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
 
 			// Directly delete event
-            manager::kProcMan->PushDeleteFileEventToProcess(pid, file_path);
+            manager::kProcMan->PushDeleteFileEventToProcess(pid, native_file_path);
 		}
 		else if (type == FileIoEventType::kRename)
 		{
 			FileIoRenameEvent rename_event(event);
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(rename_event.file_object);
-            
+            native_file_path = manager::kFileMan->GetFilePath(rename_event.file_object);
+            if (native_file_path.empty())
+            {
+				return;
+            }
             /*
             std::wstring wstr;
             wstr.resize(2000);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Rename event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), rename_event.file_object, rename_event.irp_ptr, rename_event.file_key, rename_event.extra_info, rename_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Rename event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", native_file_path.data(), rename_event.file_object, rename_event.irp_ptr, rename_event.file_key, rename_event.extra_info, rename_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
 
             // Rename event
 			file_key_to_pid_map_[rename_event.file_key] = pid;
-			file_rename_map_[rename_event.file_key] = std::make_pair(file_path, L"");
+			file_rename_map_[rename_event.file_key] = std::make_pair(native_file_path, L"");
         }
 		else if (type == FileIoEventType::kQueryInfo)
 		{
@@ -230,8 +241,8 @@ namespace etw
             std::wstring wstr;
             wstr.resize(2000);
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(fs_control_event.file_object);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FSControl event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", file_path.data(), fs_control_event.file_object, fs_control_event.irp_ptr, fs_control_event.file_key, fs_control_event.extra_info, fs_control_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            native_file_path = manager::kFileMan->GetFilePath(fs_control_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FSControl event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, extra info 0x%llx, info class 0x%p, pid %d, image path %ws\n", native_file_path.data(), fs_control_event.file_object, fs_control_event.irp_ptr, fs_control_event.file_key, fs_control_event.extra_info, fs_control_event.info_class, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
         }
@@ -243,19 +254,19 @@ namespace etw
             std::wstring wstr;
             wstr.resize(2000);
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(name_event.file_object);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Name event, path %ws, file object 0x%llx, file name %ws, pid %d, image path %ws\n", file_path.data(), name_event.file_object, name_event.file_name, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            native_file_path = manager::kFileMan->GetFilePath(name_event.file_object);
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Name event, path %ws, file object 0x%llx, file name %ws, pid %d, image path %ws\n", native_file_path.data(), name_event.file_object, name_event.file_name, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
             */
 		}
 		else if (type == FileIoEventType::kFileCreate)
 		{
 			FileIoFileCreateEvent file_create_event(event);
+            int pid = static_cast<int>(event.GetProcessId());
 
+            /*
             std::wstring wstr;
             wstr.resize(2000);
-            int pid = static_cast<int>(event.GetProcessId());
-            /*
             // To determine the file name, match the value of this file_object property to the file_key property of a previous event.
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, FileCreate event, file key 0x%llx, file name %ws, pid %d, image path %ws\n", file_create_event.file_object, file_create_event.file_name, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
@@ -307,6 +318,10 @@ namespace etw
                 if (operation_end_event.extra_info == FILE_CREATED)
                 {
                     const std::wstring create_path = manager::kFileMan->GetFilePath(file_create_it->second.second);
+                    if (create_path.empty())
+                    {
+                        return;
+                    }
 					manager::kProcMan->PushCreateFileEventToProcess(file_create_it->second.first, create_path);
                 }
 				irp_ptr_to_file_object_map_.erase(file_create_it);
@@ -321,8 +336,20 @@ namespace etw
 			if (it == file_object_read.end())
 			{
 				file_object_read.insert(read_event.file_object);
-                file_path = manager::kFileMan->GetFilePath(read_event.file_object);
-                manager::kProcMan->PushReadFileEventToProcess(pid, file_path);
+                native_file_path = manager::kFileMan->GetFilePath(read_event.file_object);
+                if (native_file_path.empty())
+                {
+                    return;
+                }
+                if (native_file_path.find(L"tempfile_") != std::wstring::npos) {
+                    int x = 0;
+                }
+                std::wstring wstr;
+                wstr.resize(2000);
+                wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Read event, IrpPtr 0x%llx, pid %d, image path %ws\n", read_event.irp_ptr, pid, manager::kProcMan->GetImageNativeFileName(pid).data()));
+                debug::DebugLogW(wstr);
+
+                manager::kProcMan->PushReadFileEventToProcess(pid, native_file_path);
 			}
 		}
 		else if (type == FileIoEventType::kWrite)
@@ -333,8 +360,12 @@ namespace etw
             if (it == file_object_write.end())
             {
                 file_object_write.insert(write_event.file_object);
-                file_path = manager::kFileMan->GetFilePath(write_event.file_object);
-                manager::kProcMan->PushWriteFileEventToProcess(pid, file_path);
+                native_file_path = manager::kFileMan->GetFilePath(write_event.file_object);
+                if (native_file_path.empty())
+                {
+                    return;
+                }
+                manager::kProcMan->PushWriteFileEventToProcess(pid, native_file_path);
             }
 		}
         // EventTypeName{ "Cleanup", "Close", "Flush" }
@@ -346,17 +377,22 @@ namespace etw
 		{
             FileIoSimpleOpCloseEvent close_event(event);
             int pid = static_cast<int>(event.GetProcessId());
-            file_path = manager::kFileMan->GetFilePath(close_event.file_object);
-
+            /*
             std::wstring wstr;
             wstr.resize(2000);
-            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Close event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, pid %d, image path %ws\n", file_path.data(), close_event.file_object, close_event.irp_ptr, close_event.file_key, pid, manager::kProcMan->GetImageFileName(pid).data()));
+            wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, Close event, path %ws, file object 0x%llx, IrpPtr 0x%llx, file key 0x%llx, pid %d, image path %ws\n", native_file_path.data(), close_event.file_object, close_event.irp_ptr, close_event.file_key, pid, manager::kProcMan->GetImageFileName(pid).data()));
             debug::DebugLogW(wstr);
+            */
 
 			// Handle for delete on close event
             if (file_delete_on_close_set_.find(close_event.file_object) != file_delete_on_close_set_.end())
             {
-                manager::kProcMan->PushDeleteFileEventToProcess(pid, file_path);
+                native_file_path = manager::kFileMan->GetFilePath(close_event.file_object);
+                if (native_file_path.empty())
+                {
+                    return;
+                }
+                manager::kProcMan->PushDeleteFileEventToProcess(pid, native_file_path);
             }
 
             // Clean up
@@ -381,12 +417,19 @@ namespace etw
         if (type == ProcessEventType::kProcessStart)
         {
             ProcessStartEvent process_start_event(event);
-            std::wstring wstr;
-            wstr.resize(2000);
             int pid = static_cast<int>(event.GetProcessId());
 			std::string image = process_start_event.image_file_name;
 			std::wstring w_image(image.begin(), image.end());
-            const std::wstring image_path = manager::kProcMan->GetImageFileName(pid);
+
+            if (image == "5.exe")
+            {
+                int x = 0;
+            }
+
+            const std::wstring image_path = manager::kProcMan->GetImageNativeFileName(process_start_event.pid);
+
+            std::wstring wstr;
+            wstr.resize(2000);
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line));
             debug::DebugLogW(wstr);
 
@@ -396,14 +439,16 @@ namespace etw
         if (type == ProcessEventType::kProcessEnd)
         {
             ProcessEndEvent process_end_event(event);
-            std::wstring wstr;
-            wstr.resize(2000);
-            const std::wstring image_path = manager::kProcMan->GetImageFileName(process_end_event.pid);
-            const std::wstring issued_image_path = manager::kProcMan->GetImageFileName(event.GetProcessId());
+            const std::wstring image_path = manager::kProcMan->GetImageNativeFileName(process_end_event.pid);
+            const std::wstring issued_image_path = manager::kProcMan->GetImageNativeFileName(event.GetProcessId());
             std::string image = process_end_event.image_file_name;
             std::wstring w_image(image.begin(), image.end());
+
+            std::wstring wstr;
+            wstr.resize(2000);
             wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process Operation, End event, pid %lld, issued pid %lld, image %s, image path %ws, issued image path %ws, commandline %ws", process_end_event.pid, event.GetProcessId(), image_path.data(), image_path.data(), issued_image_path.data(), process_end_event.command_line));
             debug::DebugLogW(wstr);
+
             manager::kProcMan->RemoveProcess(process_end_event.pid);
         } 
         else if (type == ProcessEventType::kProcessDCStart)
@@ -462,8 +507,8 @@ namespace etw
 			{
                 std::wstring wstr;
                 wstr.resize(2000);
-                const std::wstring issued_image_path = manager::kProcMan->GetImageFileName(issued_pid);
-                const std::wstring allocated_image_path = manager::kProcMan->GetImageFileName(allocated_pid);
+                const std::wstring issued_image_path = manager::kProcMan->GetImageNativeFileName(issued_pid);
+                const std::wstring allocated_image_path = manager::kProcMan->GetImageNativeFileName(allocated_pid);
                 wstr.resize(swprintf(wstr.data(), wstr.size(), L"Page Fault, VirtualAlloc event, allocated pid %lld, issued pid %lld, size 0x%llx, allocated image path %ws, issued image path %ws", issued_pid, allocated_pid, alloc_event.region_size, issued_image_path.data(), allocated_image_path.data()));
                 debug::DebugLogW(wstr);
 			}

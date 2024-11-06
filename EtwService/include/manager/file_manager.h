@@ -24,12 +24,16 @@
 
 namespace manager {
 
-	inline std::map<std::wstring, std::wstring> kDosPath;
-    
+	inline std::unordered_map<std::wstring, const std::wstring> kNativePath;
+	inline std::unordered_map<std::wstring, const std::wstring> kWin32Path;
+
 	/*_________________FUNCTIONS_________________*/
 
 	// Hàm lấy đường dẫn DOS
-	std::wstring GetDosPath(const std::wstring* wstr);
+	std::wstring GetNativePath(const std::wstring& win32_path);
+
+	// Hàm lấy đường dẫn Win32
+	std::wstring GetWin32Path(const std::wstring& native_path);
 
 	// Hàm lấy kích thước file
 	size_t GetFileSize(const std::wstring& file_path);
@@ -68,8 +72,8 @@ namespace manager {
 
 	struct FileIoManager {
 		size_t featured_access_flags = 0;
-		std::wstring current_file_path;
-		std::wstring old_file_path;
+		std::wstring current_native_file_path;
+		std::wstring old_native_file_path;
 		bool evaluation_needed = false; // TODO: Đổi thành true nếu có thay đổi file
 		bool is_recognized = false; // File nhận diện được (không phải bị mã hóa)
 	};

@@ -27,7 +27,7 @@ namespace manager {
 		debug::DebugLogW(L"Evaluating processes");
 		std::lock_guard<std::mutex> lock(manager::kProcMan->process_map_mutex_);
 		std::vector<std::pair<size_t, std::vector<std::pair<int, std::wstring>>>> file_list_for_processes; // pid -> (file_size, file_path)
-		std::map<std::wstring, bool> file_check_results; // file_hash -> is_recognized
+		std::map<std::wstring, bool> file_check_results; // native_file_hash -> is_recognized
 		size_t total_size = 0;
 
 		std::vector<std::pair<size_t, ProcessInfo>> process_list; // <pid, process_info>
@@ -56,34 +56,36 @@ namespace manager {
 
 			for (auto& file : process.second.file_io)
 			{
-				if (file.second.evaluation_needed == false)
+				if (file.second.evaluation_needed == true)
 				{
-					continue;
-				}
-				// Filter based on the flags
-				if (FlagOn(file.second.featured_access_flags, OVERWRITE_FLAG) ||
-					FlagOn(file.second.featured_access_flags, CREATE_WRITE_FLAG) ||
-					FlagOn(file.second.featured_access_flags, OVERWRITE_RENAME))
-				{
-					const std::wstring file_path = file.second.current_file_path;
-					size_t file_size = manager::GetFileSize(file_path);
-					file_list.push_back({ file_size, file_path });
+					if (file.second.featured_access_flags == OVERWRITE_FLAG ||
+						file.second.featured_access_flags == CREATE_WRITE_FLAG ||
+						file.second.featured_access_flags == OVERWRITE_RENAME_FLAG)
+					{
+						const std::wstring win32_file_path = manager::GetWin32Path(file.second.current_native_file_path);
+						size_t file_size = manager::GetFileSize(win32_file_path);
+						if (file_size > FILE_MAX_SIZE_CHECK || file_size == 0)
+						{
+							continue;
+						}
+						file_list.push_back({ file_size, win32_file_path });
+					}
 				}
 				
 				// Đếm số truy cập đặc trưng
-				if (FlagOn(file.second.featured_access_flags, OVERWRITE_FLAG))
+				if (file.second.featured_access_flags == OVERWRITE_FLAG)
 				{
 					overwrite_count += 1;
 				}
-				else if (FlagOn(file.second.featured_access_flags, CREATE_WRITE_FLAG))
+				else if (file.second.featured_access_flags == CREATE_WRITE_FLAG)
 				{
 					create_write_count += 1;
 				}
-				else if (FlagOn(file.second.featured_access_flags, READ_DELETE_FLAG))
+				else if (file.second.featured_access_flags == READ_DELETE_FLAG)
 				{
 					read_delete_count += 1;
 				}
-				else if (FlagOn(file.second.featured_access_flags, OVERWRITE_RENAME_FLAG))
+				else if (file.second.featured_access_flags == OVERWRITE_RENAME_FLAG)
 				{
 					overwrite_rename_count += 1;
 				}
@@ -94,6 +96,11 @@ namespace manager {
 			wstr.resize(swprintf(wstr.data(), wstr.size(), L"Process %d, %lld files, %lld overwrite, %lld delete and rewrite, %lld smash and rewrite, %lld overwrite and rename, %lld read and delete, %lld create and write", pid, file_list.size(), overwrite_count, min(read_delete_count, create_write_count), min(overwrite_count, read_delete_count), overwrite_rename_count, read_delete_count, create_write_count));
 			debug::DebugLogW(wstr);
 			std::wcout << wstr << std::endl;
+
+			if (file_list.size() == 0)
+			{
+				continue;
+			}
 
 			// Sort files by size in ascending order
 			std::sort(file_list.begin(), file_list.end());
@@ -109,8 +116,8 @@ namespace manager {
 					if (!manager::IsExecutableFile(path) && ulti::CheckPrintableANSI(path))
 					{
 						selected_files.push_back({ size, path });
-						size_t file_hash = std::hash<std::wstring>{}(path);
-						manager::kProcMan->UpdateFileEvaluationInProcess(pid, file_hash, false, false);
+						size_t native_file_hash = std::hash<std::wstring>{}(path);
+						manager::kProcMan->UpdateFileEvaluationInProcess(pid, native_file_hash, false, false);
 						total_size += size;
 
 						if (selected_files.size() == 5) break;
@@ -133,8 +140,8 @@ namespace manager {
 						{
 							std::wstring new_path = CopyToTmp(path, size);
 							selected_files.push_back({ size, new_path });
-							size_t file_hash = std::hash<std::wstring>{}(path);
-							manager::kProcMan->UpdateFileEvaluationInProcess(pid, file_hash, false, false);
+							size_t native_file_hash = std::hash<std::wstring>{}(path);
+							manager::kProcMan->UpdateFileEvaluationInProcess(pid, native_file_hash, false, false);
 							total_size += size;
 
 							if (selected_files.size() == 5) break;
@@ -148,7 +155,6 @@ namespace manager {
 			}
 
 			// If still fewer than 5 files, copy the first 3MB of larger files
-			debug::DebugLogW(L"Begin copy the first 3MB of larger files");
 			if (selected_files.size() < 5)
 			{
 				for (auto& [size, path] : file_list)
@@ -157,14 +163,13 @@ namespace manager {
 					{
 						std::wstring new_path = CopyToTmp(path);
 						selected_files.push_back({ FILE_MAX_SIZE_CHECK, new_path });
-						size_t file_hash = std::hash<std::wstring>{}(path);
-						manager::kProcMan->UpdateFileEvaluationInProcess(pid, file_hash, false, false);
+						size_t native_file_hash = std::hash<std::wstring>{}(path);
+						manager::kProcMan->UpdateFileEvaluationInProcess(pid, native_file_hash, false, false);
 						total_size += FILE_MAX_SIZE_CHECK;
 						if (selected_files.size() == 5) break;
 					}
 				}
 			}
-			debug::DebugLogW(L"End copy the first 3MB of larger files");
 
 			// Add to global list if it meets criteria
 			file_list_for_processes.push_back({ pid, selected_files });
