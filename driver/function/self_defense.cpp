@@ -137,10 +137,21 @@ namespace self_defense {
     // Kiểm tra quyền truy cập file
     FLT_PREOP_CALLBACK_STATUS PreCreateFile(PFLT_CALLBACK_DATA data, PCFLT_RELATED_OBJECTS flt_objects, PVOID* completion_context)
     {
+        if (kEnableProtectFile == false)
+        {
+            return FLT_PREOP_SUCCESS_NO_CALLBACK;
+        }
         if (IsProtectedProcess(PsGetCurrentProcessId()))
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
+
+		String<WCHAR> file_path(flt::GetFileFullPathName(data));
+		if (IsInProtectedDirectory(file_path) == false)
+		{
+			return FLT_PREOP_SUCCESS_NO_CALLBACK;
+		}
+
         data->Iopb->Parameters.Create.SecurityContext->DesiredAccess &= (FILE_GENERIC_READ | FILE_GENERIC_EXECUTE);
         return FLT_PREOP_SUCCESS_NO_CALLBACK;
     }
@@ -148,7 +159,18 @@ namespace self_defense {
     // Kiểm tra các quyền SetInformationFile
     FLT_PREOP_CALLBACK_STATUS PreSetInformationFile(PFLT_CALLBACK_DATA data, PCFLT_RELATED_OBJECTS flt_objects, PVOID* completion_context)
     {
+        if (kEnableProtectFile == false)
+        {
+            return FLT_PREOP_SUCCESS_NO_CALLBACK;
+        }
+
         if (IsProtectedProcess(PsGetCurrentProcessId()))
+        {
+            return FLT_PREOP_SUCCESS_NO_CALLBACK;
+        }
+
+        String<WCHAR> file_path(flt::GetFileFullPathName(data));
+        if (IsInProtectedDirectory(file_path) == false)
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
@@ -295,7 +317,12 @@ namespace self_defense {
         }
         else
         {
-            is_protected = false;
+            // Process không có trong cache, lấy thông tin mới
+            String<WCHAR> process_path = GetProcessImageName(pid);
+            is_protected = IsInProtectedDirectory(process_path);
+
+            // Lưu vào cache
+            kProcessMap->Insert(pid, { pid, process_path, is_protected, 0 });
         }
         kProcessMapMutex.Unlock();
 
