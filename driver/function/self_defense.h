@@ -34,7 +34,9 @@ namespace self_defense {
     bool IsInProtectedDirectory(const String<WCHAR>& path);
     bool IsProtectedProcess(HANDLE pid);
 
-	const String<WCHAR>& GetProcessImageName(HANDLE pid);
+    String<WCHAR> GetProcessImageName(HANDLE pid);
+    String<WCHAR> GetDefaultProtectedDir();
+
     NTSTATUS ResolveSymbolicLink(PUNICODE_STRING Link, PUNICODE_STRING Resolved);
 	NTSTATUS NormalizeDevicePath(PCUNICODE_STRING Path, PUNICODE_STRING Normalized);
 } // namespace self_defense

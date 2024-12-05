@@ -22,19 +22,13 @@ namespace self_defense {
     // Đăng ký các callback bảo vệ process và thread
     void DrvRegister()
     {
+        kDirMutex.Create();
+        kProcessMapMutex.Create();
+
         kProtectedDirList = new Vector<String<WCHAR>>();
-		UNICODE_STRING protected_dir;
-		RtlInitUnicodeString(&protected_dir, L"\\??\\C:\\hieunt210330");
-		UNICODE_STRING protected_dir_device_path;
-		protected_dir_device_path.Length = 0;
-		protected_dir_device_path.MaximumLength = 1024 * sizeof(WCHAR);
-		protected_dir_device_path.Buffer = new WCHAR[1024];
-		NormalizeDevicePath(&protected_dir, &protected_dir_device_path);
-		kProtectedDirList->PushBack(protected_dir_device_path);
-		delete protected_dir_device_path.Buffer;
+        kProtectedDirList->PushBack(GetDefaultProtectedDir());
 
         kProcessMap = new Map<HANDLE, ProcessInfo>(); // thay đổi kiểu dữ liệu của map
-        kProcessMapMutex.Create();
         NTSTATUS status;
 
         // Register process creation and termination callback
@@ -43,6 +37,10 @@ namespace self_defense {
         {
             DebugMessage("Fail to register process notify callback: %x", status);
         }
+		else
+		{
+			DebugMessage("Process notify callback registered");
+		}
 
         OB_CALLBACK_REGISTRATION ob_registration = { 0 };
         OB_OPERATION_REGISTRATION op_registration[2] = {};
@@ -69,6 +67,10 @@ namespace self_defense {
         {
             DebugMessage("Fail to register ObRegisterCallbacks: %x", status);
         }
+        else 
+		{
+			DebugMessage("ObRegisterCallbacks success");
+		}
     }
 
     // Huỷ đăng ký các callback bảo vệ process và thread
@@ -80,14 +82,15 @@ namespace self_defense {
         kProcessMapMutex.Lock();
         delete kProcessMap;
         kProcessMapMutex.Unlock();
+		kDirMutex.Lock();
+        delete kProtectedDirList;
+		kDirMutex.Unlock();
     }
 
     // Đăng ký các bộ lọc bảo vệ file
     void FltRegister()
     {
         kEnableProtectFile = true;
-        kProtectedDirList = new Vector<String<WCHAR>>();
-        kDirMutex.Create();
 
         reg::kFltFuncVector->PushBack({ IRP_MJ_SET_INFORMATION, PreSetInformationFile, nullptr });
         reg::kFltFuncVector->PushBack({ IRP_MJ_CREATE, PreCreateFile, nullptr });
@@ -99,7 +102,7 @@ namespace self_defense {
     // Huỷ đăng ký các bộ lọc bảo vệ file
     void FltUnload()
     {
-        delete kProtectedDirList;
+
     }
 
     // Process notification callback
@@ -113,6 +116,7 @@ namespace self_defense {
         {
             // Process is being created
             const String<WCHAR>& process_path = GetProcessImageName(pid);
+			DebugMessage("%ws: creation, pid %d, path %ws", __FUNCTIONW__, (int)pid, process_path.Data());
             bool is_protected = IsInProtectedDirectory(process_path); // kiểm tra xem có cần bảo vệ không
 			LARGE_INTEGER start_time;
 			KeQuerySystemTime(&start_time);
@@ -124,6 +128,7 @@ namespace self_defense {
         {
             // Process kết thúc, xóa khỏi cache
             kProcessMapMutex.Lock();
+            DebugMessage("%ws: termination, pid %d, path %ws", __FUNCTIONW__, (int)pid, GetProcessImageName(pid).Data());
             kProcessMap->Erase(pid);
             kProcessMapMutex.Unlock();
         }
@@ -290,19 +295,14 @@ namespace self_defense {
         }
         else
         {
-            // Process không có trong cache, lấy thông tin mới
-            const String<WCHAR> process_path = GetProcessImageName(pid);
-            is_protected = IsInProtectedDirectory(process_path);
-
-            // Lưu vào cache
-            kProcessMap->Insert(pid, { pid, process_path, is_protected, 0 });
+            is_protected = false;
         }
         kProcessMapMutex.Unlock();
 
         return is_protected;
     }
 
-    const String<WCHAR>& GetProcessImageName(HANDLE pid)
+    String<WCHAR> GetProcessImageName(HANDLE pid)
     {
         auto it = kProcessMap->Find(pid);
         if (it != kProcessMap->End())
@@ -316,6 +316,7 @@ namespace self_defense {
         status = PsLookupProcessByProcessId((HANDLE)pid, &eproc);
         if (!NT_SUCCESS(status))
         {
+			DebugMessage("PsLookupProcessByProcessId Failed: %08x\n", status);
             return String<WCHAR>();
         }
 
@@ -380,7 +381,7 @@ namespace self_defense {
             buffer.Data(),
             returned_length,
             &returned_length);
-        process_image_name = (PUNICODE_STRING)buffer.Data();
+        process_image_name = (PUNICODE_STRING)(buffer.Data());
 
     cleanUp:
         if (h_process != NULL)
@@ -388,7 +389,22 @@ namespace self_defense {
             ZwClose(h_process);
         }
 
+		DebugMessage("GetProcessImageName: %ws", process_image_name.Data());
         return process_image_name;
+    }
+
+    String<WCHAR> GetDefaultProtectedDir()
+    {
+        UNICODE_STRING protected_dir;
+        RtlInitUnicodeString(&protected_dir, L"\\??\\C:\\hieunt210330");
+        UNICODE_STRING protected_dir_device_path;
+        protected_dir_device_path.Length = 0;
+        protected_dir_device_path.MaximumLength = 1024 * sizeof(WCHAR);
+        protected_dir_device_path.Buffer = new WCHAR[1024];
+        NormalizeDevicePath(&protected_dir, &protected_dir_device_path);
+        String<WCHAR> protected_dir_device_path_str(protected_dir_device_path);
+		delete protected_dir_device_path.Buffer;
+		return protected_dir_device_path_str;
     }
 
     NTSTATUS ResolveSymbolicLink(PUNICODE_STRING Link, PUNICODE_STRING Resolved)
