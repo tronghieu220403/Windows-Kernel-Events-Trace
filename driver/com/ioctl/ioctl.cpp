@@ -69,15 +69,6 @@ NTSTATUS ioctl::HandleIoctl(PDEVICE_OBJECT device_object, PIRP irp)
 	switch (type)
 	{
 	case IOCTL_CMD_CLASS::kGetImageFromPid:
-
-		pid = cmd->ParseGetImageFromPid().pid;
-		// TODO: Get process path by pid
-		query::kPidMapMutex->Lock();
-		image_path = query::kPidToImageName->Find(pid)->second_;
-		query::kPidMapMutex->Unlock();
-
-		WriteIoctlCmd(cmd, type, image_path);
-
 		break;
 
 	case IOCTL_CMD_CLASS::kEnableSelfDefense:

@@ -114,9 +114,6 @@ public:
 
 	/* ----- ELEMENT ACCESS ----- */
 
-	// Access elements with bounds checking
-	T& At(size_t n);
-
 	// Access elements with bounds checking for constant Vectors.
 	const T& At(size_t n) const;
 
@@ -488,12 +485,6 @@ inline Vector<T> Vector<T>::operator+(const Vector<T>& v)
 
 
 // Accessors
-template<class T>
-inline T & Vector<T>::At(size_t n)
-{
-	return elements_[n];
-}
-
 template<class T>
 inline const T & Vector<T>::At(size_t n) const
 {

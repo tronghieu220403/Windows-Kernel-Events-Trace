@@ -157,7 +157,7 @@ public:
 	/* -------- COMPARISON -------*/
 
 	// Check if the string is a prefix of another string
-	bool IsPrefixOf(const String<T>&);
+	bool IsPrefixOf(const String<T>&) const;
 
 	bool HasPrefix(const String<T>&);
 	
@@ -315,20 +315,15 @@ inline String<T>& String<T>::operator=(const String<T>& str)
 									// Current String has enough space, so there is no need for new allocation
 	if (str.size_ <= space_)
 	{
-		for (size_t index = 0; index < str.size_; ++index)
-		{
-			elements_[index] = str.elements_[index];
-		}
+		RtlCopyMemory(elements_, str.elements_, str.size_ * sizeof(T));
 		size_ = str.size_;
+
 		return *this;
 	}
 
 	T* p = Allocate(str.size_);
 
-	for (size_t index = 0; index < str.size_; ++index)
-	{
-		p[index] = str.elements_[index];
-	}
+	RtlCopyMemory(p, str.elements_, str.size_ * sizeof(T));
 
 	Deallocate();
 	size_ = str.size_;
@@ -615,7 +610,7 @@ inline const T* String<T>::Data() const
 }
 
 template<class T>
-inline bool String<T>::IsPrefixOf(const String<T>& str)
+inline bool String<T>::IsPrefixOf(const String<T>& str) const
 {
 	if (size_ > str.size_)
 	{

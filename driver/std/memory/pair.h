@@ -6,23 +6,23 @@
 template <class T1, class T2>
 struct Pair {
 public:
-    T1 first_;
-    T2 second_;
+    T1 first;
+    T2 second;
 
-    Pair() : first_(), second_() {}
-    Pair(const T1& first, const T2& second) : first_(first), second_(second) {}
+    Pair() : first(), second() {}
+    Pair(const T1& first, const T2& second) : first(first), second(second) {}
 
     Pair(const Pair& p) = default;
     Pair(Pair&& p) = default;
 
     Pair& operator=(const Pair& other) {
-        first_ = other.first_;
-        second_ = other.second_;
+        first = other.first;
+        second = other.second;
         return *this;
     }
 
     bool operator==(const Pair& other) const {
-        return first_ == other.first_ && second_ == other.second_;
+        return first == other.first && second == other.second;
     }
 
     bool operator!=(const Pair& other) const {
@@ -30,8 +30,8 @@ public:
     }
 
     bool operator<(const Pair& other) const {
-        return first_ < other.first_ ||
-            (!(other.first_ < first_) && second_ < other.second_);
+        return first < other.first ||
+            (!(other.first < first) && second < other.second);
     }
 
     bool operator>(const Pair& other) const {

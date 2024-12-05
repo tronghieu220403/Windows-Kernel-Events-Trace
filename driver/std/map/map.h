@@ -53,7 +53,7 @@ public:
 
     public:
         bool operator()(const value_type& lhs, const value_type& rhs) const {
-            return comp(lhs.first_, rhs.first_);
+            return comp(lhs.first, rhs.first);
         }
     };
 
@@ -307,10 +307,10 @@ T& Map<Key, T, Compare>::operator[](const Key& key) {
     Node* y = nil_;
     while (x != nil_) {
         y = x;
-        if (compare_(key, x->data.first_)) {
+        if (compare_(key, x->data.first)) {
             x = x->left;
         }
-        else if (compare_(x->data.first_, key)) {
+        else if (compare_(x->data.first, key)) {
             x = x->right;
         }
         else {
@@ -322,7 +322,7 @@ T& Map<Key, T, Compare>::operator[](const Key& key) {
     if (y == nil_) {
         root_ = z;
     }
-    else if (compare_(z->data.first_, y->data.first_)) {
+    else if (compare_(z->data.first, y->data.first)) {
         y->left = z;
     }
     else {
@@ -342,7 +342,7 @@ T& Map<Key, T, Compare>::operator[](const Key& key) {
 template <typename Key, typename T, typename Compare>
 Pair<typename Map<Key, T, Compare>::iterator, bool> Map<Key, T, Compare>::Insert(
     const value_type& val) {
-    return Insert(val.first_, val.second);
+    return Insert(val.first, val.second);
 }
 
 template <typename Key, typename T, typename Compare>
@@ -354,10 +354,10 @@ Pair<typename Map<Key, T, Compare>::iterator, bool> Map<Key, T, Compare>::Insert
 
     while (x != nil_) {
         y = x;
-        if (compare_(z->data.first_, x->data.first_)) {
+        if (compare_(z->data.first, x->data.first)) {
             x = x->left;
         }
-        else if (compare_(x->data.first_, z->data.first_)) {
+        else if (compare_(x->data.first, z->data.first)) {
             x = x->right;
         }
         else {
@@ -370,7 +370,7 @@ Pair<typename Map<Key, T, Compare>::iterator, bool> Map<Key, T, Compare>::Insert
     if (y == nil_) {
         root_ = z;
     }
-    else if (compare_(z->data.first_, y->data.first_)) {
+    else if (compare_(z->data.first, y->data.first)) {
         y->left = z;
     }
     else {
@@ -494,10 +494,10 @@ template <typename Key, typename T, typename Compare>
 typename Map<Key, T, Compare>::iterator Map<Key, T, Compare>::Find(const key_type& key) const {
     Node* current = root_;
     while (current != nil_) {
-        if (compare_(key, current->data.first_)) {
+        if (compare_(key, current->data.first)) {
             current = current->left;
         }
-        else if (compare_(current->data.first_, key)) {
+        else if (compare_(current->data.first, key)) {
             current = current->right;
         }
         else {
@@ -517,7 +517,7 @@ typename Map<Key, T, Compare>::iterator Map<Key, T, Compare>::LowerBound(const k
     Node* current = root_;
     Node* result = nil_;
     while (current != nil_) {
-        if (!compare_(current->data.first_, key)) {
+        if (!compare_(current->data.first, key)) {
             result = current;
             current = current->left;
         }
@@ -533,7 +533,7 @@ typename Map<Key, T, Compare>::iterator Map<Key, T, Compare>::UpperBound(const k
     Node* current = root_;
     Node* result = nil_;
     while (current != nil_) {
-        if (compare_(key, current->data.first_)) {
+        if (compare_(key, current->data.first)) {
             result = current;
             current = current->left;
         }
@@ -766,7 +766,7 @@ typename Map<Key, T, Compare>::Node* Map<Key, T, Compare>::Copy(Node* node, Node
     if (node == nil_) {
         return nil_;
     }
-    Node* new_node = new Node(node->data.first_, node->data.second);
+    Node* new_node = new Node(node->data.first, node->data.second);
     new_node->is_red = node->is_red;
     new_node->parent = parent;
     new_node->left = Copy(node->left, new_node);

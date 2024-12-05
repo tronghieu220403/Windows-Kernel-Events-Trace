@@ -10,3 +10,4 @@ EtwService/EtwService.vcxproj
 /driver/x64
 /EtwService/packages
 EtwService/packages.config
+/RunDriver/.vs
