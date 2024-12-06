@@ -7,6 +7,8 @@
 #include "../com/driver_comm.h"
 #include "../ulti/cache/cache.h"
 
+#define MAIN_DIR L"C:\\hieunt210330\\"
+
 namespace manager {
 	inline ProcessManager* kProcMan = nullptr;
 	inline FileManager* kFileMan = nullptr;

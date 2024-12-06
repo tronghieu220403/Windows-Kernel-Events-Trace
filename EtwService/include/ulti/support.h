@@ -73,6 +73,8 @@ typedef unsigned int uint32;
 
 #define GetCurrentDir _getcwd
 
+namespace fs = std::filesystem;
+
 namespace ulti
 {
     inline std::wstring StrToWStr(const std::string& str)
@@ -105,6 +107,30 @@ namespace ulti
 		}
 		return str;
 	}
+
+    inline bool CreateDir(const std::wstring& dir_path)
+    {
+        BOOL status = ::CreateDirectory(dir_path.c_str(), NULL);
+        if (status == TRUE || GetLastError() == ERROR_ALREADY_EXISTS)
+        {
+            return true;
+	    }
+	    else if (GetLastError() == ERROR_PATH_NOT_FOUND)
+	    {
+            try {
+			    fs::create_directories(dir_path);
+            }
+            catch (const fs::filesystem_error&) {
+                return false;
+            }
+            return true;
+	    }
+	    else {
+            return false;
+	    }
+
+        return false;
+    }
 
     // Kiểm tra ký tự in được cho UTF-16
     inline bool CheckPrintableUTF16(const std::vector<unsigned char>& buffer) {

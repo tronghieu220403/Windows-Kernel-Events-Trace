@@ -1,7 +1,6 @@
 ﻿#ifndef ETWSERVICE_ETWSERVICE_MAIN
 #define ETWSERVICE_ETWSERVICE_MAIN
 
-
 /*
 C/C++ -> General -> Additional Include Dir -> $(ProjectDir)include
 */
@@ -103,6 +102,10 @@ void SetUpComsumer()
 
 void ServiceMainWorker()
 {
+	if (ulti::CreateDir(MAIN_DIR) == false)
+	{
+		return;
+	}
     debug::InitDebugLog();
 	debug::DebugLogW(L"ServiceMainWorker");
 	kDriverComm = new DriverComm();
@@ -111,6 +114,10 @@ void ServiceMainWorker()
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
 	std::jthread manager_thread([]() {
+        if (ulti::CreateDir(TEMP_DIR) == false)
+        {
+            return;
+        }
         while (provider_started == false || comsumer_started == false)
         {
             Sleep(100);
@@ -121,7 +128,7 @@ void ServiceMainWorker()
             manager::EvaluateProcess();
 			auto end_time = std::chrono::high_resolution_clock::now();
 			DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-			Sleep(10000 - duration);
+			Sleep(duration < (DWORD)10000 ? 10000 - duration : 0);
         }
         });
 	manager_thread.join();

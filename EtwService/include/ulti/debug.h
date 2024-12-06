@@ -10,9 +10,10 @@ namespace debug
 
     inline std::wofstream outfile;
     inline int debug_cnt = 0;
+
     inline void InitDebugLog()
     {
-        outfile.open("C:\\debug.txt", std::ios_base::app);
+        outfile.open("C:\\hieunt210330\\debug.txt", std::ios_base::app);
         debug_cnt = 0;
     }
 

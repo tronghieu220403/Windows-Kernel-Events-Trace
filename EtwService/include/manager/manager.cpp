@@ -318,8 +318,10 @@ namespace manager {
         for (const auto& [p, is_recognized] : file_check_results)
         {
             const auto& [path, pid] = p;
-            std::wcout << (is_recognized == true ? "true" : "false") << L" " << pid << L" " << path << std::endl;
+            debug::DebugLogW(L"PID " + std::to_wstring(pid) + (is_recognized == true ? L", " : L", not ") + L" recognized, " + path);
         }
+
+		// TODO: Evaluate the results and take actions
     }
 
 

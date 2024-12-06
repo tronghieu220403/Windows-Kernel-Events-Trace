@@ -336,12 +336,6 @@ namespace etw
 			if (it == file_object_read.end())
 			{
 				file_object_read.insert(read_event.file_object);
-                file_path = manager::kFileMan->GetFilePath(read_event.file_object);
-                if (file_path.empty())
-                {
-                    return;
-                }
-                manager::kProcMan->PushReadFileEventToProcess(pid, file_path);
 			}
 		}
 		else if (type == FileIoEventType::kWrite)
@@ -352,12 +346,6 @@ namespace etw
             if (it == file_object_write.end())
             {
                 file_object_write.insert(write_event.file_object);
-                file_path = manager::kFileMan->GetFilePath(write_event.file_object);
-                if (file_path.empty())
-                {
-                    return;
-                }
-                manager::kProcMan->PushWriteFileEventToProcess(pid, file_path);
             }
 		}
         // EventTypeName{ "Cleanup", "Close", "Flush" }
@@ -385,6 +373,26 @@ namespace etw
                     return;
                 }
                 manager::kProcMan->PushDeleteFileEventToProcess(pid, file_path);
+            }
+
+            if (file_object_read.find(close_event.file_object) != file_object_read.end())
+            {
+                file_path = manager::kFileMan->GetFilePath(close_event.file_object);
+                if (file_path.empty())
+                {
+                    return;
+                }
+                manager::kProcMan->PushReadFileEventToProcess(pid, file_path);
+            }
+
+            if (file_object_write.find(close_event.file_object) != file_object_write.end())
+            {
+                file_path = manager::kFileMan->GetFilePath(close_event.file_object);
+                if (file_path.empty())
+                {
+                    return;
+                }
+                manager::kProcMan->PushWriteFileEventToProcess(pid, file_path);
             }
 
             // Clean up

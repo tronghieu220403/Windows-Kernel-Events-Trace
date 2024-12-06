@@ -154,7 +154,7 @@ namespace manager
     std::wstring CopyToTmp(const std::wstring& path, const size_t& copy_size) {
 
         std::filesystem::path src(path);
-        std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
+        std::filesystem::path tmp_dir = TEMP_DIR;
 		std::wstring new_file_name = std::to_wstring(std::hash<std::wstring>{}(path)) + L"." + GetFileExtension(src.filename());
         std::filesystem::path dest = tmp_dir / new_file_name;
 
@@ -170,11 +170,12 @@ namespace manager
 
 	// Hàm xóa các file tạm
     void ClearTempFiles() {
-        // Lấy đường dẫn thư mục tạm bằng std::filesystem
-        std::filesystem::path tmp_dir = std::filesystem::temp_directory_path();
-
+        std::filesystem::path tmp_dir = TEMP_DIR;
         // Chuyển đổi đường dẫn sang kiểu wstring để dùng với Windows API
-        std::wstring temp_path = tmp_dir.wstring() + L"\\";
+        std::wstring temp_path = tmp_dir.wstring();
+		if (temp_path[temp_path.size() - 1] != L'\\') {
+			temp_path += L"\\";
+		}
 
         // Thiết lập bộ lọc để lấy tất cả các file và thư mục trong thư mục tạm
         std::wstring search_path = temp_path + L"*";
@@ -311,7 +312,7 @@ namespace manager
     std::vector<std::pair<std::wstring, bool>> CheckFileList(const std::vector<std::wstring>& file_list) {
         //std::wstring cmd = L"dir E:\\Download /b /s | E:\\Code\\TrID\\trid.exe -@ -n:5"; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
 
-        std::wstring cmd = L"E:\\Code\\TrID\\trid.exe -n:5 "; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
+        std::wstring cmd = L"C:\\hieunt210330\\TrID\\trid.exe -n:5 "; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
         for (const auto& file : file_list) {
             cmd += L"\"" + file + L"\" "; // Nối các file vào command
         }

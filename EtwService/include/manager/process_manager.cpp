@@ -217,7 +217,7 @@ namespace manager
     {
         std::wstring wstr;
         wstr.resize(2000);
-        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, file_path.data()));
+        //wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Delete event, pid %llu, file %ws\n", pid, file_path.data()));
         debug::DebugLogW(wstr);
 
         auto it = process_map_.find(pid);
@@ -242,7 +242,7 @@ namespace manager
     {
         std::wstring wstr;
         wstr.resize(2000);
-        wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, old_file_path.data(), new_file_path.data()));
+        //wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, old_file_path.data(), new_file_path.data()));
         debug::DebugLogW(wstr);
 
         auto it = process_map_.find(pid);
@@ -256,6 +256,7 @@ namespace manager
 				size_t new_file_name_hash = std::hash<std::wstring>{}(new_file_path);
                 it->second.file_io.insert({ new_file_name_hash, {} });
 				auto new_file_io_it = it->second.file_io.find(new_file_name_hash);
+				new_file_io_it->second.current_path = new_file_path;
                 new_file_io_it->second.featured_access_flags = old_file_io_it->second.featured_access_flags | RENAME_FLAG;
                 new_file_io_it->second.old_path = old_file_path;
                 new_file_io_it->second.evaluation_needed = true;
@@ -271,7 +272,7 @@ namespace manager
     {
 		std::wstring wstr;
 		wstr.resize(2000);
-		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data()));
+		//wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data()));
 		debug::DebugLogW(wstr);
 
 		auto it = process_map_.find(pid);
@@ -286,7 +287,6 @@ namespace manager
                 file_io_it = it->second.file_io.find(file_name_hash);
                 file_io_it->second.current_path = file_path;
             }
-            file_io_it->second.current_path = file_path;
             file_io_it->second.evaluation_needed = true;
             file_io_it->second.is_recognized = false;
             file_io_it->second.featured_access_flags |= WRITE_FLAG;
@@ -296,13 +296,13 @@ namespace manager
     {
 		std::wstring wstr;
 		wstr.resize(2000);
-		wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, file_path.data()));
+		//wstr.resize(swprintf(wstr.data(), wstr.size(), L"File I/O, custom Read event, pid %llu, file %ws\n", pid, file_path.data()));
 		debug::DebugLogW(wstr);
 
 		auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
-            it->second.is_evaluated = false;
+            //it->second.is_evaluated = false;
             size_t file_name_hash = std::hash<std::wstring>{}(file_path);
             auto file_io_it = it->second.file_io.find(file_name_hash);
             if (file_io_it == it->second.file_io.end())
@@ -311,8 +311,8 @@ namespace manager
                 file_io_it = it->second.file_io.find(file_name_hash);
                 file_io_it->second.current_path = file_path;
             }
-            file_io_it->second.evaluation_needed = true;
-            file_io_it->second.is_recognized = false;
+            //file_io_it->second.evaluation_needed = true;
+            //file_io_it->second.is_recognized = false;
             file_io_it->second.featured_access_flags |= READ_FLAG;
         }
     }

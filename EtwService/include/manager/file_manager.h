@@ -22,6 +22,8 @@
 #define MAX_TOTAL_SIZE_CHECK (150 * 1024 * 1024) // 150MB
 #define FILE_MAX_SIZE_CHECK (3 * 1024 * 1024) // 3MB
 
+#define TEMP_DIR L"C:\\hieunt210330\\temp\\"
+
 namespace manager {
 
 	inline std::unordered_map<std::wstring, const std::wstring> kNativePath;
