@@ -65,9 +65,12 @@ namespace manager {
             {
                 if (file.second.evaluation_needed == true)
                 {
+                    /*
                     if (file.second.featured_access_flags == OVERWRITE_FLAG ||
                         file.second.featured_access_flags == CREATE_WRITE_FLAG ||
                         file.second.featured_access_flags == OVERWRITE_RENAME_FLAG)
+                    */
+                    if (FlagOn(file.second.featured_access_flags, WRITE_FLAG))
                     {
                         const std::wstring path = file.second.current_path;
                         size_t file_size = manager::GetFileSize(path);
@@ -321,7 +324,33 @@ namespace manager {
             debug::DebugLogW(L"PID " + std::to_wstring(pid) + (is_recognized == true ? L", " : L", not ") + L" recognized, " + path);
         }
 
-		// TODO: Evaluate the results and take actions
+        // TODO: Evaluate the results and take actions
+		std::unordered_map<size_t, std::pair<size_t, size_t>> process_stats; // pid -> <recognized, total>
+		for (const auto& [p, is_recognized] : file_check_results)
+		{
+			const auto& [path, pid] = p;
+			auto it = process_stats.find(pid);
+			if (it == process_stats.end())
+			{
+				process_stats[pid] = { 0, 0 };
+				it = process_stats.find(pid);
+			}
+			it->second.second += 1;
+			if (is_recognized == true)
+			{
+                it->second.first += 1;
+			}
+		}
+
+        for (const auto& [pid, stats] : process_stats)
+        {
+            size_t recognized = stats.first;
+            size_t total = stats.second;
+            if (total > 20 && recognized * 100 <= total * 80)
+            {
+                debug::DebugLogW(L"PID " + std::to_wstring(pid) + L" is ransomware.");
+            }
+        }
     }
 
 

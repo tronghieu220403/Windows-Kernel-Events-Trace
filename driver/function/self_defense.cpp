@@ -166,6 +166,8 @@ namespace self_defense {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
 
+        DebugMessage("Create file: %ws", file_path.Data());
+
         data->Iopb->Parameters.Create.SecurityContext->DesiredAccess &= (FILE_GENERIC_READ | FILE_GENERIC_EXECUTE);
 
         UINT8 create_disposition = data->Iopb->Parameters.Create.Options >> 24;

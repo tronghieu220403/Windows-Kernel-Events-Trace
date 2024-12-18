@@ -383,6 +383,7 @@ namespace etw
                     return;
                 }
                 manager::kProcMan->PushReadFileEventToProcess(pid, file_path);
+				file_object_read.erase(close_event.file_object);
             }
 
             if (file_object_write.find(close_event.file_object) != file_object_write.end())
@@ -393,6 +394,7 @@ namespace etw
                     return;
                 }
                 manager::kProcMan->PushWriteFileEventToProcess(pid, file_path);
+				file_object_write.erase(close_event.file_object);
             }
 
             // Clean up
@@ -507,11 +509,6 @@ namespace etw
                 debug::DebugLogW(wstr);
 			}
         }
-        else if (type == ThreadEventType::kThreadEnd)
-        {
-            //PageFaultVirtualFreeEvent free_event(event);
-        }
-
         return VOID();
     }
 
