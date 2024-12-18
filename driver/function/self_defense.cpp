@@ -2,13 +2,13 @@
 
 namespace self_defense {
 
-	struct ProcessInfo
-	{
-		HANDLE pid = 0;
-		String<WCHAR> process_path;
-		bool is_protected = false;
+    struct ProcessInfo
+    {
+        HANDLE pid = 0;
+        String<WCHAR> process_path;
+        bool is_protected = false;
         LARGE_INTEGER start_time;
-	};
+    };
 
     // Map PID với process full path, trạng thái bảo vệ, thời điểm bắt đầu của process
     static Map<HANDLE, ProcessInfo>* kProcessMap;
@@ -37,10 +37,10 @@ namespace self_defense {
         {
             DebugMessage("Fail to register process notify callback: %x", status);
         }
-		else
-		{
-			DebugMessage("Process notify callback registered");
-		}
+        else
+        {
+            DebugMessage("Process notify callback registered");
+        }
 
         OB_CALLBACK_REGISTRATION ob_registration = { 0 };
         OB_OPERATION_REGISTRATION op_registration[2] = {};
@@ -67,10 +67,10 @@ namespace self_defense {
         {
             DebugMessage("Fail to register ObRegisterCallbacks: %x", status);
         }
-        else 
-		{
-			DebugMessage("ObRegisterCallbacks success");
-		}
+        else
+        {
+            DebugMessage("ObRegisterCallbacks success");
+        }
     }
 
     // Huỷ đăng ký các callback bảo vệ process và thread
@@ -82,9 +82,9 @@ namespace self_defense {
         kProcessMapMutex.Lock();
         delete kProcessMap;
         kProcessMapMutex.Unlock();
-		kDirMutex.Lock();
+        kDirMutex.Lock();
         delete kProtectedDirList;
-		kDirMutex.Unlock();
+        kDirMutex.Unlock();
     }
 
     // Đăng ký các bộ lọc bảo vệ file
@@ -116,10 +116,24 @@ namespace self_defense {
         {
             // Process is being created
             const String<WCHAR>& process_path = GetProcessImageName(pid);
-			DebugMessage("%ws: creation, pid %d, path %ws", __FUNCTIONW__, (int)pid, process_path.Data());
+            DebugMessage("%ws: creation, pid %d, path %ws", __FUNCTIONW__, (int)pid, process_path.Data());
             bool is_protected = IsInProtectedDirectory(process_path); // kiểm tra xem có cần bảo vệ không
-			LARGE_INTEGER start_time;
-			KeQuerySystemTime(&start_time);
+            if (is_protected == false)
+            {
+                // If parent process is protected, then child process is also protected
+                kProcessMapMutex.Lock();
+                auto it = kProcessMap->Find(PsGetCurrentProcessId());
+                if (it != kProcessMap->End())
+                {
+                    if (it->second.is_protected == true)
+                    {
+                        is_protected = true;
+                    }
+                }
+                kProcessMapMutex.Unlock();
+            }
+            LARGE_INTEGER start_time;
+            KeQuerySystemTime(&start_time);
             kProcessMapMutex.Lock();
             kProcessMap->Insert(pid, { pid, process_path, is_protected, start_time }); // lưu vào cache với trạng thái bảo vệ
             kProcessMapMutex.Unlock();
@@ -146,13 +160,21 @@ namespace self_defense {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
 
-		String<WCHAR> file_path(flt::GetFileFullPathName(data));
-		if (IsInProtectedDirectory(file_path) == false)
-		{
-			return FLT_PREOP_SUCCESS_NO_CALLBACK;
-		}
+        String<WCHAR> file_path(flt::GetFileFullPathName(data));
+        if (IsInProtectedDirectory(file_path) == false)
+        {
+            return FLT_PREOP_SUCCESS_NO_CALLBACK;
+        }
 
         data->Iopb->Parameters.Create.SecurityContext->DesiredAccess &= (FILE_GENERIC_READ | FILE_GENERIC_EXECUTE);
+
+        UINT8 create_disposition = data->Iopb->Parameters.Create.Options >> 24;
+        create_disposition = FILE_OPEN;
+        DWORD create_options = data->Iopb->Parameters.Create.Options & 0x00FFFFFF;
+        create_options &= ~FILE_DELETE_ON_CLOSE;
+
+        data->Iopb->Parameters.Create.Options = create_disposition << 24 | create_options;
+        FltSetCallbackDataDirty(data);
         return FLT_PREOP_SUCCESS_NO_CALLBACK;
     }
 
@@ -181,8 +203,10 @@ namespace self_defense {
         if (data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileAllocationInformation ||
             data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileDispositionInformation ||
             data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileEndOfFileInformation ||
-            data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileShortNameInformation) {
-			data->IoStatus.Status = STATUS_ACCESS_DENIED;
+            data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileShortNameInformation)
+        {
+            data->IoStatus.Status = STATUS_ACCESS_DENIED;
+            FltSetCallbackDataDirty(data);
             return FLT_PREOP_COMPLETE;
         }
 
@@ -206,7 +230,8 @@ namespace self_defense {
                 //DebugMessage("Rename file: %wZ", name_info->Name);
                 if (IsInProtectedDirectory(String<WCHAR>(name_info->Name))) {
                     FltReleaseFileNameInformation(name_info);
-					data->IoStatus.Status = STATUS_ACCESS_DENIED;
+                    data->IoStatus.Status = STATUS_ACCESS_DENIED;
+                    FltSetCallbackDataDirty(data);
                     return FLT_PREOP_COMPLETE;
                 }
             }
@@ -239,7 +264,7 @@ namespace self_defense {
             return OB_PREOP_SUCCESS;
         }
 
-		auto it = kProcessMap->Find(target_pid);
+        auto it = kProcessMap->Find(target_pid);
         if (it != kProcessMap->End())
         {
             // Lấy thời gian bắt đầu
@@ -312,7 +337,7 @@ namespace self_defense {
             is_protected = it->second.is_protected; // lấy trạng thái bảo vệ từ cache
             if (is_protected == false)
             {
-				is_protected = IsInProtectedDirectory(it->second.process_path);
+                is_protected = IsInProtectedDirectory(it->second.process_path);
             }
         }
         else
@@ -343,7 +368,7 @@ namespace self_defense {
         status = PsLookupProcessByProcessId((HANDLE)pid, &eproc);
         if (!NT_SUCCESS(status))
         {
-			DebugMessage("PsLookupProcessByProcessId Failed: %08x\n", status);
+            DebugMessage("PsLookupProcessByProcessId Failed: %08x\n", status);
             return String<WCHAR>();
         }
 
@@ -416,7 +441,7 @@ namespace self_defense {
             ZwClose(h_process);
         }
 
-		DebugMessage("GetProcessImageName: %ws", process_image_name.Data());
+        DebugMessage("GetProcessImageName: %ws", process_image_name.Data());
         return process_image_name;
     }
 
@@ -430,8 +455,8 @@ namespace self_defense {
         protected_dir_device_path.Buffer = new WCHAR[1024];
         NormalizeDevicePath(&protected_dir, &protected_dir_device_path);
         String<WCHAR> protected_dir_device_path_str(protected_dir_device_path);
-		delete protected_dir_device_path.Buffer;
-		return protected_dir_device_path_str;
+        delete protected_dir_device_path.Buffer;
+        return protected_dir_device_path_str;
     }
 
     NTSTATUS ResolveSymbolicLink(PUNICODE_STRING Link, PUNICODE_STRING Resolved)
