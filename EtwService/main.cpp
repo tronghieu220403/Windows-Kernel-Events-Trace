@@ -102,14 +102,18 @@ void SetUpComsumer()
     return;
 }
 
-void ServiceMainWorker()
+void ServiceMain()
 {
-	if (ulti::CreateDir(MAIN_DIR) == false)
+
+    debug::DebugPrintW(L"ServiceMain");
+    srv::InitServiceCtrlHandler(SERVICE_NAME);
+
+    if (ulti::CreateDir(MAIN_DIR) == false)
 	{
+		debug::DebugPrintW(L"Create main dir %ws failed", MAIN_DIR);
 		return;
 	}
-    debug::InitDebugLog();
-	debug::DebugPrintW(L"ServiceMainWorker");
+
 	kDriverComm = new DriverComm();
 	kDriverComm->Initialize(HIEU_DEVICE_LINK);
     manager::Init();
@@ -153,12 +157,23 @@ void RunService()
         auto status = service.Create(w_srv_path, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START);
         if (status == ERROR_SUCCESS || status == ERROR_DUPLICATE_SERVICE_NAME || status == ERROR_SERVICE_EXISTS)
         {
-            service.Run();
+			auto status = service.Run();
+            if (status != ERROR_SUCCESS)
+            {
+				debug::DebugPrintW(L"Service run failed %d", status);
+			}
         }
 	}
     else
     {
-		ServiceMainWorker();
+        SERVICE_TABLE_ENTRYW service_table[] = {
+            { (LPWSTR)SERVICE_NAME, (LPSERVICE_MAIN_FUNCTIONW)ServiceMain },
+            { nullptr, nullptr }
+        };
+
+        if (!StartServiceCtrlDispatcher(service_table)) {
+			debug::DebugPrintW(L"StartServiceCtrlDispatcher failed");
+        }
     }
     
 }
@@ -166,7 +181,8 @@ void RunService()
 void RunProgram()
 {
 #ifdef _DEBUG
-    ServiceMainWorker();
+    //ServiceMainWorker();
+    RunService();
 #else
 	RunService();
 #endif // _DEBUG

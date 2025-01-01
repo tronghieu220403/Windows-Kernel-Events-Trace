@@ -13,33 +13,55 @@ namespace debug
 
     inline void InitDebugLog()
     {
-        outfile.open(LOG_PATH, std::ios_base::app);
-        debug_cnt = 0;
+        try
+        {
+			if (outfile.is_open())
+			{
+				outfile.close();
+			}
+			outfile.open(LOG_PATH, std::ios_base::app);
+			debug_cnt = 0;
+		}
+		catch (...)
+		{
+        }
     }
 
     inline void CleanupDebugLog()
     {
-        outfile.close();
+        try
+        {
+            outfile.close();
+        }
+        catch (...)
+        {
+
+        }
     }
 
     inline void WriteDebugToFileW(const std::wstring& s)
     {
         mt.lock();
-		if (outfile.is_open() == false)
-		{
-			InitDebugLog();
-		}
-        debug_cnt++;
-        if (s.at(s.length() - 1) == L'\n')
-            outfile << s;
-        else
-            outfile << s << "\n";
-        outfile.flush();
-        if (debug_cnt >= DEBUG_LOG_THRESHOLD)
-        {
-            CleanupDebugLog();
-            InitDebugLog();
+        try {
+            if (outfile.is_open() == false)
+            {
+                InitDebugLog();
+            }
+            debug_cnt++;
+            if (s.at(s.length() - 1) == L'\n')
+                outfile << s;
+            else
+                outfile << s << "\n";
+            outfile.flush();
+            if (debug_cnt >= DEBUG_LOG_THRESHOLD)
+            {
+                CleanupDebugLog();
+                InitDebugLog();
+            }
         }
+		catch (...)
+		{
+		}
         mt.unlock();
     }
 

@@ -6,6 +6,8 @@
 #include "ulti/debug.h"
 #include "ulti/collections.h"
 
+#define SERVICE_CONTROL_START 128
+
 namespace srv
 {
 	class Service
@@ -31,6 +33,8 @@ namespace srv
 		~Service();
 	};
 
+	void ServiceCtrlHandler(DWORD ctrl_code);
+	void InitServiceCtrlHandler(const wchar_t* service_name);
 }
 
 #endif
