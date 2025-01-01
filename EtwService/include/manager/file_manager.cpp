@@ -211,25 +211,33 @@ namespace manager
         return std::regex_match(file_path, exe_pattern);
     }
 
-    std::wstring CopyToTmp(const std::wstring& path, const size_t& copy_size) {
-
-        std::filesystem::path src(path);
-        std::filesystem::path tmp_dir = TEMP_DIR;
-		std::wstring new_file_name = std::to_wstring(std::hash<std::wstring>{}(path)) + L"." + GetFileExtension(src.filename());
-        std::filesystem::path dest = tmp_dir / new_file_name;
-
-        std::ifstream infile(path, std::ios::binary);
-        std::ofstream outfile(dest, std::ios::binary);
-
-		std::vector<char> buffer(copy_size);
-        infile.read(buffer.data(), copy_size);
-        outfile.write(buffer.data(), infile.gcount());
-
-        return dest.wstring();
+    std::wstring CopyToTmp(const std::wstring& path, size_t copy_size) {
+        std::wstring dest = TEMP_DIR + std::to_wstring(std::hash<std::wstring>{}(path)) + L"." + path.substr(path.find_last_of(L".") + 1);
+        HANDLE h_src = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (h_src == INVALID_HANDLE_VALUE)
+        {
+            return L"";
+        }
+        HANDLE h_dest = CreateFileW(dest.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (h_dest == INVALID_HANDLE_VALUE) 
+        {
+            CloseHandle(h_src); 
+            return L""; 
+        }
+        char* buf = new char[copy_size];
+        DWORD r = 0, w = 0;
+        if (ReadFile(h_src, buf, (DWORD)copy_size, &r, NULL))
+        {
+            WriteFile(h_dest, buf, r, &w, NULL);
+        }
+        delete[] buf; 
+        CloseHandle(h_src); 
+        CloseHandle(h_dest);
+        return dest;
     }
 
 	// Hàm xóa các file tạm
-    void ClearTempFiles() {
+    void ClearTmpFiles() {
         std::filesystem::path tmp_dir = TEMP_DIR;
         // Chuyển đổi đường dẫn sang kiểu wstring để dùng với Windows API
         std::wstring temp_path = tmp_dir.wstring();
@@ -312,13 +320,52 @@ namespace manager
             {
                 line.resize(line.size() - 1);
             }
-            if (line.find(L"ile: ") != std::wstring::npos) { // Nếu là dòng thông tin file
+#ifdef _DEBUG
+            debug::DebugPrintW(L"[%ws] TrID text: %ws", __FUNCTIONW__, line.c_str());
+#endif // _DEBUG
+
+            if (line.empty())
+            {
+                if (current_file.empty()) {
+                    continue;
+                }
+                std::wstring actual_extension = GetFileExtension(current_file);
+                bool extension_matched = std::any_of(found_extensions.begin(), found_extensions.end(),
+                    [&](const std::wstring& ext) {
+                        return ext == actual_extension;
+                    });
+
+                if (!extension_matched) {
+                    if (IsPrintableFile(current_file)) 
+                    {
+#ifdef _DEBUG
+                        debug::DebugPrintW(L"[%ws] IsPrintableFile: %ws", __FUNCTIONW__, current_file.c_str());
+#endif // _DEBUG
+                        results.push_back({ current_file, true });
+                    }
+                    else {
+                        results.push_back({ current_file, false });
+                    }
+                }
+                else {
+#ifdef _DEBUG
+                    debug::DebugPrintW(L"[%ws] extension_matched: %ws", __FUNCTIONW__, current_file.c_str());
+#endif // _DEBUG
+                    results.push_back({ current_file, true });
+                }
+                current_file.resize(0);
+            }
+            else if (line.find(L"Collecting data from file: ") == 0 ||
+                line.find(L"File: ") == 0)
+            { // Nếu là dòng thông tin file
                 current_file = line.substr(line.find(L"ile: ") + sizeof(L"ile: ") / sizeof(WCHAR) - 1);
-                //std::wcout << L"\nChecking file: " << current_file << std::endl;
+#ifdef _DEBUG
+                debug::DebugPrintW(L"[%ws] Checking file: %ws", __FUNCTIONW__, current_file.c_str());
+#endif // _DEBUG
                 cnt++;
                 found_extensions.clear(); // Reset danh sách đuôi file tìm thấy
             }
-            if (!line.empty() && line.find(L"% (.") != std::wstring::npos) { // Nếu là dòng chứa phần trăm tỉ lệ của đuôi file
+            else if (line.find(L"% (.") != std::wstring::npos) { // Nếu là dòng chứa phần trăm tỉ lệ của đuôi file
                 size_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Vị trí bắt đầu của đuôi file
                 size_t end_pos = line.find(L")", start_pos);
                 if (end_pos != std::wstring::npos) {
@@ -336,46 +383,19 @@ namespace manager
                     }
                 }
             }
-            else if (line.empty())
-            {
-				if (current_file.empty()) {
-					continue;
-				}
-                std::wstring actual_extension = GetFileExtension(current_file);
-                bool extension_matched = std::any_of(found_extensions.begin(), found_extensions.end(),
-                    [&](const std::wstring& ext) {
-                        return ext == actual_extension;
-                    });
-
-                if (!extension_matched) {
-                    if (IsPrintableFile(current_file)) {
-                        results.push_back({ current_file, true });
-                        //std::wcout << L"True:  File contains mainly printable characters." << std::endl;
-                    }
-                    else {
-                        results.push_back({ current_file, false });
-                        //std::wcout << L"False: File extension mismatch!" << std::endl;
-                    }
-                }
-                else {
-                    results.push_back({ current_file, true });
-                    //std::wcout << L"True:  File extension matches one of the detected extensions." << std::endl;
-                }
-                current_file.resize(0);
-            }
         }
-        //std::cout << "Number of files: " << cnt << std::endl;
         return results;
     }
 
     // Hàm kiểm tra danh sách file
-    std::vector<std::pair<std::wstring, bool>> CheckFileList(const std::vector<std::wstring>& file_list) {
-        //std::wstring cmd = L"dir E:\\Download /b /s | E:\\Code\\TrID\\trid.exe -@ -n:5"; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
+    std::vector<std::pair<std::wstring, bool>> CheckTrID(const std::vector<std::wstring>& file_list) {
 
-        std::wstring cmd = L"\"" TRID_PATH L"\""; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
+        std::wstring cmd = TRID_PATH " -n:5 "; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
         for (const auto& file : file_list) {
             cmd += L"\"" + file + L"\" "; // Nối các file vào command
         }
+
+		debug::DebugPrintW(L"Running TrID command: %ws", cmd.c_str());
 
         std::wstring output(ulti::ExecCommand(cmd)); // Chạy command và lấy output
         std::vector<std::pair<std::wstring, bool>> trid_output;

@@ -19,8 +19,13 @@
 #define OVERWRITE_RENAME			(READ_WRITE_FLAG | RENAME_FLAG)
 #define OVERWRITE_RENAME_FLAG		OVERWRITE_RENAME
 
+#define EVALUATATION_INTERVAL_MS 5
+
 #define MAX_TOTAL_SIZE_CHECK (150 * 1024 * 1024) // 150MB
 #define FILE_MAX_SIZE_CHECK (512 * 1024) // 512KB
+#define MIN_FILE_COUNT (2 * EVALUATATION_INTERVAL_MS / 1000)
+#define THRESHOLD_PERCENTAGE 80
+#define BelowThreshold(part, total) (part <= total * THRESHOLD_PERCENTAGE / 100)
 
 namespace manager {
 
@@ -62,36 +67,29 @@ namespace manager {
 	inline std::unordered_map<std::wstring, const std::wstring> kNativePath;
 	inline std::unordered_map<std::wstring, const std::wstring> kWin32Path;
 
-
 	/*_________________FUNCTIONS_________________*/
 
-	// Hàm lấy đường dẫn DOS
+	// DOS path getter function
 	std::wstring GetNativePath(const std::wstring& win32_path);
 
-	// Hàm lấy đường dẫn Win32
+	// Win32 path getter function
 	std::wstring GetWin32Path(const std::wstring& path);
 
 	bool FileExist(const std::wstring& file_path);
 
-	// Hàm lấy kích thước file
 	size_t GetFileSize(const std::wstring& file_path);
 	
-	// Hàm lấy đuôi file
 	std::wstring GetFileExtension(const std::wstring& file_name);
 	
-	// Hàm kiểm tra file có phải là file thực thi không
 	bool IsExecutableFile(const std::wstring& file_path);
 	
-	// Hàm copy file sang thư mục tạm
-	std::wstring CopyToTmp(const std::wstring& path, const size_t& size = FILE_MAX_SIZE_CHECK);
+	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_SIZE_CHECK);
 	
-	// Hàm xóa các file tạm
-	void ClearTempFiles();
+	void ClearTmpFiles();
 
-	// Hàm kiểm tra danh sách file
-	std::vector<std::pair<std::wstring, bool>> CheckFileList(const std::vector<std::wstring>& file_list);
+	std::vector<std::pair<std::wstring, bool>> CheckTrID(const std::vector<std::wstring>& file_list);
 
-	// Hàm phân tích output của trid và trả về kết quả kiểm tra từng file
+	// Parse trid output and return test results for each file
 	std::vector<std::pair<std::wstring, bool>> AnalyzeTridOutput(const std::wstring& output);
 
 	// Hàm kiểm tra file có chứa ký tự in được không
