@@ -12,6 +12,7 @@ namespace srv
 		}
 		type_ = type;
 		start_type_ = start_type;
+		service_path_ = service_path;
 
 		SC_HANDLE handle_service = OpenServiceW(h_services_control_manager_, service_name_.c_str(), SERVICE_QUERY_STATUS);
 		if (handle_service != NULL)
@@ -19,7 +20,6 @@ namespace srv
 			return ERROR_SERVICE_EXISTS;
 		}
 
-		service_path_ = service_path;
 		handle_service = CreateServiceW(h_services_control_manager_, service_name_.c_str(), service_name_.c_str(),
 			SERVICE_ALL_ACCESS, type_,
 			start_type_, SERVICE_ERROR_NORMAL,
@@ -88,7 +88,7 @@ namespace srv
 		// Check the status of the service.
 		SERVICE_STATUS status;
 		if (!QueryServiceStatus(service_handle, &status)) {
-			debug::DebugPrintW(L"Failed to query service statu %ws: %d", service_name_.c_str(), GetLastError());
+			debug::DebugPrintW(L"Failed to query service status %ws: %d", service_name_.c_str(), GetLastError());
 			CloseServiceHandle(service_handle);
 			return GetLastError();
 		}
@@ -158,6 +158,41 @@ namespace srv
 			CloseServiceHandle(h_services_control_manager_);
 		}
 		h_services_control_manager_ = 0;
+	}
+
+	inline SERVICE_STATUS_HANDLE status_handle = NULL;
+
+	SERVICE_STATUS service_status = { 0 };
+	void ServiceCtrlHandler(DWORD ctrl_code)
+	{
+		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+		service_status.dwWin32ExitCode = NO_ERROR;
+		service_status.dwWaitHint = 0;
+		service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
+		if (ctrl_code == SERVICE_CONTROL_STOP || ctrl_code == SERVICE_CONTROL_SHUTDOWN)
+		{
+			service_status.dwCurrentState = SERVICE_STOP_PENDING;
+			SetServiceStatus(status_handle, &service_status);
+			service_status.dwCurrentState = SERVICE_STOPPED;
+			SetServiceStatus(status_handle, &service_status);
+		}
+		else if (ctrl_code == SERVICE_CONTROL_START)
+		{
+			service_status.dwCurrentState = SERVICE_RUNNING;
+			SetServiceStatus(status_handle, &service_status);
+		}
+	}
+
+	void InitServiceCtrlHandler(const wchar_t* service_name)
+	{
+		debug::DebugPrintW(__FUNCTIONW__);
+		status_handle = RegisterServiceCtrlHandlerW(service_name, ServiceCtrlHandler);
+		if (status_handle == NULL)
+		{
+			debug::DebugPrintW(L"RegisterServiceCtrlHandler failed %d", GetLastError());
+		}
+		ServiceCtrlHandler(SERVICE_CONTROL_START);
 	}
 }
 
