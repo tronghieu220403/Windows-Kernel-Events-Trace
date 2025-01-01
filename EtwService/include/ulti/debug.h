@@ -48,12 +48,26 @@ namespace debug
         if (pwsz_format == nullptr) return;
 
         std::wstring log;
-        log.resize(16384);
+        log.resize(16384 * 512);
 
         va_list args;
         va_start(args, pwsz_format);
-
-        int len = vswprintf_s(&log[0], 16384, pwsz_format, args);
+        int len = 0;
+        while (true)
+        {
+            try {
+                len = vswprintf_s(&log[0], log.size(), pwsz_format, args);
+            }
+            catch (...)
+            {
+                if (errno == ERANGE)
+                {
+                    log.resize(log.size() * 2);
+                    continue;
+                }
+            }
+            break;
+        }
         if (len > 0)
         {
             SYSTEMTIME time;

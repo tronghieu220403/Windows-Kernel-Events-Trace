@@ -130,7 +130,7 @@ void ServiceMainWorker()
             manager::EvaluateProcess();
 			auto end_time = std::chrono::high_resolution_clock::now();
 			DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-			Sleep(duration < (DWORD)10000 ? 10000 - duration : 0);
+			Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
         }
         });
 	manager_thread.join();
