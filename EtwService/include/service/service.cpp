@@ -165,11 +165,6 @@ namespace srv
 	SERVICE_STATUS service_status = { 0 };
 	void ServiceCtrlHandler(DWORD ctrl_code)
 	{
-		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-		service_status.dwWin32ExitCode = NO_ERROR;
-		service_status.dwWaitHint = 0;
-		service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
-
 		if (ctrl_code == SERVICE_CONTROL_STOP || ctrl_code == SERVICE_CONTROL_SHUTDOWN)
 		{
 			service_status.dwCurrentState = SERVICE_STOP_PENDING;
@@ -180,13 +175,19 @@ namespace srv
 		else if (ctrl_code == SERVICE_CONTROL_START)
 		{
 			service_status.dwCurrentState = SERVICE_RUNNING;
-			SetServiceStatus(status_handle, &service_status);
 		}
+		SetServiceStatus(status_handle, &service_status);
 	}
 
 	void InitServiceCtrlHandler(const wchar_t* service_name)
 	{
 		debug::DebugPrintW(__FUNCTIONW__);
+
+		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+		service_status.dwWin32ExitCode = NO_ERROR;
+		service_status.dwWaitHint = 0;
+		service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+
 		status_handle = RegisterServiceCtrlHandlerW(service_name, ServiceCtrlHandler);
 		if (status_handle == NULL)
 		{
