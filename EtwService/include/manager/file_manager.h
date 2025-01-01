@@ -24,8 +24,44 @@
 
 namespace manager {
 
+	class FileNameObjMap {
+	public:
+		void MapObjectWithPath(const size_t file_object, const std::wstring& file_path);
+		void RemoveObject(const size_t file_object);
+		const std::wstring& GetPathByObject(const size_t file_object);
+	private:
+		std::unordered_map<size_t, std::wstring> obj_to_name_map_;
+	};
+
+	struct FileIoInfo {
+		size_t featured_access_flags = 0;
+		std::wstring file_path_cur;
+		std::wstring file_path_old;
+		size_t start_time_ms = 0;
+		size_t pid = 0;
+	};
+
+	class FileIoManager {
+	private: 
+		std::mutex file_io_mutex_;
+		std::deque<FileIoInfo> file_io_queue_;
+	public:
+		void LockMutex();
+		void UnlockMutex();
+		
+		FileIoInfo PopFileIoEvent();
+		size_t GetQueueSize();
+
+		void PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& new_file_path, size_t pid, size_t start_time_ms);
+
+		void PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms);
+	};
+
+	/*___________________________________________*/
+
 	inline std::unordered_map<std::wstring, const std::wstring> kNativePath;
 	inline std::unordered_map<std::wstring, const std::wstring> kWin32Path;
+
 
 	/*_________________FUNCTIONS_________________*/
 
@@ -34,6 +70,8 @@ namespace manager {
 
 	// Hàm lấy đường dẫn Win32
 	std::wstring GetWin32Path(const std::wstring& path);
+
+	bool FileExist(const std::wstring& file_path);
 
 	// Hàm lấy kích thước file
 	size_t GetFileSize(const std::wstring& file_path);
@@ -59,23 +97,5 @@ namespace manager {
 	// Hàm kiểm tra file có chứa ký tự in được không
 	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_SIZE_CHECK);
 
-	/*___________________________________________*/
-
-	class FileManager {
-	public:
-		void AddFileObject(const size_t file_object, const std::wstring& file_path);
-		void RemoveFileObject(const size_t file_object);
-		const std::wstring& GetFilePath(const size_t file_object);
-	private:
-		std::unordered_map<size_t, std::wstring> obj_to_name_map_;
-	};
-
-	struct FileIoManager {
-		size_t featured_access_flags = 0;
-		std::wstring current_path;
-		std::wstring old_path;
-		bool evaluation_needed = false; // TODO: Đổi thành true nếu có thay đổi file
-		bool is_recognized = false; // File nhận diện được (không phải bị mã hóa)
-	};
 }
 #endif  // FILE_MANAGER_H_

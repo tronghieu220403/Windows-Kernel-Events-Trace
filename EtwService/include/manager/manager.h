@@ -5,14 +5,13 @@
 #include "file_manager.h"
 #include "process_manager.h"
 #include "../com/driver_comm.h"
-#include "../ulti/cache/cache.h"
 
 namespace manager {
 	inline ProcessManager* kProcMan = nullptr;
-	inline FileManager* kFileMan = nullptr;
+	inline FileNameObjMap* kFileNameObjMap = nullptr;
+	inline FileIoManager* kFileIoManager = nullptr;
 	inline DriverComm* kDriverComm = nullptr;
 	inline size_t kCurrentPid = 0;
-	inline Cache<std::pair<size_t, size_t>>* kPageFaultEventCache = nullptr;
 
 	void Init();
 	void Cleanup();

@@ -7,7 +7,7 @@ namespace self_defense {
         HANDLE pid = 0;
         String<WCHAR> process_path;
         bool is_protected = false;
-        LARGE_INTEGER start_time;
+        LARGE_INTEGER start_time = { 0 };
     };
 
     // Map PID với process full path, trạng thái bảo vệ, thời điểm bắt đầu của process
@@ -159,12 +159,14 @@ namespace self_defense {
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
-
+        if (data->RequestorMode == KernelMode)
+        {
+            return FLT_PREOP_SUCCESS_NO_CALLBACK;
+        }
         if (ExGetPreviousMode() == KernelMode)
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
-
 		auto pid = PsGetCurrentProcessId();
         if (IsProtectedProcess(pid))
         {
@@ -198,12 +200,14 @@ namespace self_defense {
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
-
+		if (data->RequestorMode == KernelMode)
+		{
+			return FLT_PREOP_SUCCESS_NO_CALLBACK;
+		}
         if (ExGetPreviousMode() == KernelMode)
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
-
         if (IsProtectedProcess(PsGetCurrentProcessId()))
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;

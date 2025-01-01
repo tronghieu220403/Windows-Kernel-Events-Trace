@@ -2,17 +2,17 @@
 
 namespace manager
 {
-	void FileManager::AddFileObject(const size_t file_object, const std::wstring& file_path)
+	void FileNameObjMap::MapObjectWithPath(const size_t file_object, const std::wstring& file_path)
 	{
 		obj_to_name_map_[file_object] = file_path;
 	}
 
-	void FileManager::RemoveFileObject(const size_t file_object)
+	void FileNameObjMap::RemoveObject(const size_t file_object)
 	{
 		obj_to_name_map_.erase(file_object);
 	}
 
-    const std::wstring& FileManager::GetFilePath(const size_t file_object)
+    const std::wstring& FileNameObjMap::GetPathByObject(const size_t file_object)
     {
         auto it = obj_to_name_map_.find(file_object);
         if (it == obj_to_name_map_.end())
@@ -25,6 +25,57 @@ namespace manager
             }
         }
         return it->second;
+    }
+
+	void FileIoManager::LockMutex()
+	{
+		file_io_mutex_.lock();
+	}
+
+	void FileIoManager::UnlockMutex()
+	{
+		file_io_mutex_.unlock();
+	}
+
+	FileIoInfo FileIoManager::PopFileIoEvent()
+	{
+		FileIoInfo file_io_info;
+		if (!file_io_queue_.empty())
+		{
+			file_io_info = file_io_queue_.front();
+			file_io_queue_.pop_front();
+		}
+		return file_io_info;
+	}
+
+	size_t FileIoManager::GetQueueSize()
+	{
+		return file_io_queue_.size();
+	}
+
+    void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& file_path_new, size_t pid, size_t start_time_ms)
+    {
+        debug::DebugPrintW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
+
+        FileIoInfo file_io_info;
+		file_io_info.featured_access_flags |= RENAME_FLAG;
+        file_io_info.file_path_old = file_path_old;
+        file_io_info.file_path_cur = file_path_new;
+		file_io_info.start_time_ms = start_time_ms;
+		file_io_info.pid = pid;
+		file_io_queue_.push_back(file_io_info);
+    }
+
+    void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms)
+    {
+        debug::DebugPrintW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
+
+		FileIoInfo file_io_info;
+		file_io_info.featured_access_flags |= WRITE_FLAG;
+		file_io_info.file_path_cur = file_path;
+		file_io_info.start_time_ms = start_time_ms;
+		file_io_info.pid = pid;
+		file_io_queue_.push_back(file_io_info);
     }
 
     std::wstring GetNativePath(const std::wstring& win32_path)
@@ -111,11 +162,20 @@ namespace manager
         return win_api_path;
     }
 
+    bool FileExist(const std::wstring& file_path)
+    {
+		DWORD file_attributes = GetFileAttributesW(file_path.c_str());
+		if (file_attributes == INVALID_FILE_ATTRIBUTES || FlagOn(file_attributes, FILE_ATTRIBUTE_DIRECTORY) == true) {
+			return false;
+		}
+        return true;
+    }
+
 	// Hàm lấy kích thước file
     size_t GetFileSize(const std::wstring& file_path)
     {
         // Open the file
-		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE) {
             std::wcerr << L"Failed to open file: " << file_path << std::endl;
@@ -312,7 +372,7 @@ namespace manager
     std::vector<std::pair<std::wstring, bool>> CheckFileList(const std::vector<std::wstring>& file_list) {
         //std::wstring cmd = L"dir E:\\Download /b /s | E:\\Code\\TrID\\trid.exe -@ -n:5"; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
 
-        std::wstring cmd = L"C:\\hieunt210330\\TrID\\trid.exe -n:5 "; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
+        std::wstring cmd = L"\"" TRID_PATH L"\""; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
         for (const auto& file : file_list) {
             cmd += L"\"" + file + L"\" "; // Nối các file vào command
         }
