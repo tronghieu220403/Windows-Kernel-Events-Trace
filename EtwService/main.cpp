@@ -144,6 +144,8 @@ void RunService()
 	if (ulti::IsRunningAsSystem() == false)
 	{
         srv::Service service(SERVICE_NAME);
+        service.Stop();
+		service.Delete();
         std::wstring w_srv_path;
         w_srv_path.resize(1024);
         GetModuleFileNameW(nullptr, &w_srv_path[0], 1024);
