@@ -49,10 +49,11 @@ namespace etw
 		static VOID WINAPI ProcessRegistryEvent(Event event);
 
 		// Unused events
+		/*
 		static VOID WINAPI ProcessImageLoadEvent(Event event);
 		static VOID WINAPI ProcessNetworkEvent(Event event);
 		static VOID WINAPI ProcessPerfInfoEvent(Event event);
-
+		*/
 		ULONG Close();
 
 		~KernelConsumer();

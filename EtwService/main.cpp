@@ -104,11 +104,6 @@ void SetUpComsumer()
 
 void ServiceMainWorker()
 {
-	mutex::NamedMutex mutex("HieuntEtwService");
-	if (mutex.TryLock() == false)
-	{
-		return;
-	}
 	if (ulti::CreateDir(MAIN_DIR) == false)
 	{
 		return;

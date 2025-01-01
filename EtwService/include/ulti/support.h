@@ -65,6 +65,8 @@
 #pragma comment(lib, "Advapi32.lib")
 #pragma comment(lib, "ntdll.lib")
 
+#pragma warning(disable : 26110)
+
 typedef unsigned int uint32;
 
 #define FlagOn(_Flag, _Bit)  (((_Flag) & (_Bit)) != 0)
@@ -79,6 +81,7 @@ namespace fs = std::filesystem;
 #define TEMP_DIR L"E:\\hieunt20210330\\temp\\"
 #define LOG_PATH L"E:\\hieunt20210330\\log.txt"
 #define SERVICE_NAME L"HieuntEtwService"
+#define TRID_PATH L"E:\\hieunt20210330\\Trid\\trid.exe"
 
 namespace ulti
 {
