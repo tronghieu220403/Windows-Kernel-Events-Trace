@@ -146,7 +146,7 @@ namespace self_defense {
         {
             // Process kết thúc, xóa khỏi cache
             kProcessMapMutex.Lock();
-            DebugMessage("%ws: termination, pid %d, path %ws", __FUNCTIONW__, (int)pid, GetProcessImageName(pid).Data());
+            DebugMessage("%ws: termination, pid %d, killer %d, path %ws", __FUNCTIONW__, (int)pid, (int)PsGetCurrentProcessId(), GetProcessImageName(pid).Data());
             kProcessMap->Erase(pid);
             kProcessMapMutex.Unlock();
         }
