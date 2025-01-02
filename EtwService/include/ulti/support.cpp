@@ -4,7 +4,8 @@ namespace ulti
 {
     std::wstring StrToWStr(const std::string& str)
     {
-        return std::wstring(str.begin(), str.end());
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+        return myconv.from_bytes(str);
     }
 
     std::string CharVectorToString(const std::vector<char>& v)
@@ -161,27 +162,74 @@ namespace ulti
 
 	// Execute command and return output
     std::wstring ExecCommand(const std::wstring& cmd) {
-        std::array<wchar_t, 4096> buffer;
         std::wstring result;
-		// Use _wpopen to run command and get output
-        std::unique_ptr<FILE, decltype(&_pclose)> pipe(_wpopen(cmd.c_str(), L"r"), _pclose);
-        try
-        {
-            result.reserve(cmd.size() * 10);
-        }
-        catch (...)
-        {
-            result.clear();
+        HANDLE stdout_read = nullptr;
+        HANDLE stdout_write = nullptr;
+
+        // Security attributes to allow handle inheritance
+        SECURITY_ATTRIBUTES security_attributes = {};
+        security_attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        security_attributes.bInheritHandle = TRUE;
+        security_attributes.lpSecurityDescriptor = nullptr;
+
+        // Create a pipe for the child process's standard output
+        if (!CreatePipe(&stdout_read, &stdout_write, &security_attributes, 0)) {
             return result;
         }
-        if (!pipe) {
-            result.clear();
+
+        // Ensure the read handle is not inheritable
+        if (!SetHandleInformation(stdout_read, HANDLE_FLAG_INHERIT, 0)) {
+            CloseHandle(stdout_read);
+            CloseHandle(stdout_write);
             return result;
         }
-        while (fgetws(buffer.data(), (int)buffer.size(), pipe.get()) != nullptr) {
-            result += buffer.data();
+
+        // Set up the STARTUPINFO structure
+        STARTUPINFOW startup_info = {};
+        startup_info.cb = sizeof(STARTUPINFOW);
+        startup_info.hStdOutput = stdout_write;
+        startup_info.hStdError = stdout_write;
+        startup_info.dwFlags |= STARTF_USESTDHANDLES;
+
+        PROCESS_INFORMATION process_info = {};
+
+        // Create the child process
+        if (!CreateProcessW(
+            nullptr,                            // Application name
+            const_cast<LPWSTR>(cmd.c_str()),    // Command line
+            nullptr,                            // Process security attributes
+            nullptr,                            // Thread security attributes
+            TRUE,                               // Inherit handles
+            CREATE_NO_WINDOW,                   // Create without a console window
+            nullptr,                            // Use parent's environment block
+            nullptr,                            // Use parent's starting directory
+            &startup_info,                      // Pointer to STARTUPINFO
+            &process_info))                     // Pointer to PROCESS_INFORMATION
+        {
+            CloseHandle(stdout_read);
+            CloseHandle(stdout_write);
+            return result;
         }
-        return result;
+
+
+        // Close the write end of the pipe as it is not needed
+        CloseHandle(stdout_write);
+
+        // Read the child process's output from the pipe
+		std::string result_str;
+        char buffer[4096];
+        DWORD bytes_read = 0;
+        while (ReadFile(stdout_read, buffer, sizeof(buffer) - sizeof(char), &bytes_read, nullptr) && bytes_read > 0) {
+            buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
+            result_str += buffer;
+        }
+
+        // Clean up handles
+        CloseHandle(stdout_read);
+        CloseHandle(process_info.hProcess);
+        CloseHandle(process_info.hThread);
+
+        return ulti::StrToWStr(result_str);
     }
 
     bool IsRunningAsSystem() {
