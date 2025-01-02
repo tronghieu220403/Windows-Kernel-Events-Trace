@@ -348,6 +348,9 @@ namespace manager
                         results.push_back({ current_file, true });
                     }
                     else {
+#ifdef _DEBUG
+                        debug::DebugPrintW(L"[%ws] extension_not_matched: %ws", __FUNCTIONW__, current_file.c_str());
+#endif // _DEBUG
                         results.push_back({ current_file, false });
                     }
                 }
@@ -370,6 +373,9 @@ namespace manager
                 found_extensions.clear(); // Reset danh sách đuôi file tìm thấy
             }
             else if (line.find(L"% (.") != std::wstring::npos) { // Nếu là dòng chứa phần trăm tỉ lệ của đuôi file
+                if (line.find(L"ransom") != std::wstring::npos || line.find(L"Ransom") != std::wstring::npos) {
+                    continue;
+                }
                 size_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Vị trí bắt đầu của đuôi file
                 size_t end_pos = line.find(L")", start_pos);
                 if (end_pos != std::wstring::npos) {
