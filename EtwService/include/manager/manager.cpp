@@ -64,10 +64,12 @@ namespace manager {
 				continue;
 			}
 			size_t pid = io.pid;
+#ifndef _DEBUG
 			if (pid_file_cnt[pid] < MIN_FILE_COUNT)
 			{
 				continue;
 			}
+#endif // !_DEBUG
 			unique_paths.erase(file_path_hash);
 
 			size_t size = manager::GetFileSize(file_path);
