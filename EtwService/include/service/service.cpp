@@ -7,7 +7,7 @@ namespace srv
 	DWORD Service::Create(const std::wstring& service_path, const DWORD& type, const DWORD& start_type)
 	{
 		if (h_services_control_manager_ == NULL) {
-			debug::DebugPrintW(L"Failed to open Service Control Manager");
+			PrintDebugW(L"Failed to open Service Control Manager");
 			return ERROR_INVALID_HANDLE;
 		}
 		type_ = type;
@@ -42,7 +42,7 @@ namespace srv
 	DWORD Service::Run()
 	{
 		if (h_services_control_manager_ == NULL) {
-			debug::DebugPrintW(L"Failed to open Service Control Manager");
+			PrintDebugW(L"Failed to open Service Control Manager");
 			return ERROR_INVALID_HANDLE;
 		}
 
@@ -71,7 +71,7 @@ namespace srv
 	DWORD Service::Stop()
 	{
 		if (h_services_control_manager_ == NULL) {
-			debug::DebugPrintW(L"Failed to open Service Control Manager");
+			PrintDebugW(L"Failed to open Service Control Manager");
 			return ERROR_INVALID_HANDLE;
 		}
 
@@ -81,14 +81,14 @@ namespace srv
 		// Open the service to stop and delete.
 		SC_HANDLE service_handle = OpenService(h_services_control_manager_, service_name_.c_str(), SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
 		if (service_handle == NULL) {
-			debug::DebugPrintW(L"Failed to open service %ws: %d", service_name_.c_str(), GetLastError());
+			PrintDebugW(L"Failed to open service %ws: %d", service_name_.c_str(), GetLastError());
 			return GetLastError();
 		}
 
 		// Check the status of the service.
 		SERVICE_STATUS status;
 		if (!QueryServiceStatus(service_handle, &status)) {
-			debug::DebugPrintW(L"Failed to query service status %ws: %d", service_name_.c_str(), GetLastError());
+			PrintDebugW(L"Failed to query service status %ws: %d", service_name_.c_str(), GetLastError());
 			CloseServiceHandle(service_handle);
 			return GetLastError();
 		}
@@ -96,7 +96,7 @@ namespace srv
 		// If the service is running, stop the service.
 		if (status.dwCurrentState == SERVICE_RUNNING) {
 			if (!ControlService(service_handle, SERVICE_CONTROL_STOP, &status)) {
-				debug::DebugPrintW(L"Failed to stop the service %ws: %d", service_name_.c_str(), GetLastError());
+				PrintDebugW(L"Failed to stop the service %ws: %d", service_name_.c_str(), GetLastError());
 				CloseServiceHandle(service_handle);
 				return GetLastError();
 			}
@@ -109,7 +109,7 @@ namespace srv
 	DWORD Service::Delete()
 	{
 		if (h_services_control_manager_ == NULL) {
-			debug::DebugPrintW(L"Failed to open Service Control Manager");
+			PrintDebugW(L"Failed to open Service Control Manager");
 			return ERROR_INVALID_HANDLE;
 		}
 
@@ -122,7 +122,7 @@ namespace srv
 			if (DeleteService(service) == FALSE)
 			{
 				err = GetLastError();
-				debug::DebugPrintW(L"DeleteService %ws  failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
+				PrintDebugW(L"DeleteService %ws  failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
 			}
 			else
 			{
@@ -135,7 +135,7 @@ namespace srv
 		else
 		{
 			err = GetLastError();
-			debug::DebugPrintW(L"OpenService %ws failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
+			PrintDebugW(L"OpenService %ws failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
 		}
 		std::system(delete_srv_cmd.c_str());
 		return err;
@@ -147,7 +147,7 @@ namespace srv
 	{
 		if (h_services_control_manager_ == NULL) {
 			auto err = GetLastError();
-			debug::DebugPrintW(L"Failed to open Service Control Manager: %d, %ws", err, debug::GetErrorMessage(err));
+			PrintDebugW(L"Failed to open Service Control Manager: %d, %ws", err, debug::GetErrorMessage(err));
 		}
 	}
 
@@ -165,7 +165,7 @@ namespace srv
 	SERVICE_STATUS service_status = { 0 };
 	void ServiceCtrlHandler(DWORD ctrl_code)
 	{
-		debug::DebugPrintW(L"Control code %d", ctrl_code);
+		PrintDebugW(L"Control code %d", ctrl_code);
 		if (ctrl_code == SERVICE_CONTROL_STOP || ctrl_code == SERVICE_CONTROL_SHUTDOWN)
 		{
 			service_status.dwCurrentState = SERVICE_STOP_PENDING;
@@ -182,7 +182,7 @@ namespace srv
 
 	void InitServiceCtrlHandler(const wchar_t* service_name)
 	{
-		debug::DebugPrintW(__FUNCTIONW__);
+		PrintDebugW(L"Begin");
 
 		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 		service_status.dwWin32ExitCode = NO_ERROR;
@@ -192,7 +192,7 @@ namespace srv
 		status_handle = RegisterServiceCtrlHandlerW(service_name, ServiceCtrlHandler);
 		if (status_handle == NULL)
 		{
-			debug::DebugPrintW(L"RegisterServiceCtrlHandler failed %d", GetLastError());
+			PrintDebugW(L"RegisterServiceCtrlHandler failed %d", GetLastError());
 		}
 		ServiceCtrlHandler(SERVICE_CONTROL_START);
 	}

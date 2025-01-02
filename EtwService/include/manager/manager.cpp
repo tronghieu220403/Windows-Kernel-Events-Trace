@@ -3,7 +3,7 @@
 namespace manager {
 	void Init()
 	{
-		debug::DebugPrintW(L"Manager initialized");
+		PrintDebugW(L"Manager initialized");
 		kCurrentPid = GetCurrentProcessId();
 		kProcMan = new ProcessManager();
 		kFileNameObjMap = new FileNameObjMap();
@@ -13,7 +13,7 @@ namespace manager {
 
 	void Cleanup()
 	{
-		debug::DebugPrintW(L"Manager cleaned up");
+		PrintDebugW(L"Manager cleaned up");
 		delete kDriverComm;
 		delete kFileIoManager;
 		delete kFileNameObjMap;
@@ -22,7 +22,7 @@ namespace manager {
 
     void EvaluateProcess()
     {
-        debug::DebugPrintW(L"%ws: Evaluating processes", __FUNCTIONW__);
+		PrintDebugW(L"Start evaluating processes");
 
 		std::vector<FileIoInfo> file_io_list;
 
@@ -124,7 +124,7 @@ namespace manager {
 			}
 			is_recognized = trid_map[tmp_path_hash];
 			auto pid = file_list[i].pid;
-			debug::DebugPrintW(L"%ws: PID %d%srecognized, %s", __FUNCTIONW__, pid, is_recognized ? L", " : L", not ", file_path.c_str());
+			PrintDebugW(L"PID %d%srecognized, %s", pid, is_recognized ? L", " : L", not ", file_path.c_str());
 			proc_check_results[pid].first += is_recognized;
 			proc_check_results[pid].second++;
 		}
@@ -138,11 +138,11 @@ namespace manager {
             size_t total = stats.second;
             if (total >= MIN_FILE_COUNT && BelowThreshold(num_recognized, total))
             {
-                debug::DebugPrintW(L"%ws: PID %d is ransomware.\n", __FUNCTIONW__, pid);
-            }
+				PrintDebugW(L"PID %d is ransomware.", pid);
+			}
         }
-		debug::DebugPrintW(L"%ws: Process evaluation done", __FUNCTIONW__);
-    }
+		PrintDebugW(L"Process evaluation done");
+	}
 
 	bool OverallEventFilter(size_t issuing_pid)
 	{

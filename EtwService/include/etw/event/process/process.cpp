@@ -54,12 +54,12 @@ namespace etw
 				0 == event_offset->exit_status_size ||
 				0 == event_offset->directory_table_base_size)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed", __FUNCTIONW__, __LINE__, event.GetType());
+			PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -178,12 +178,12 @@ namespace etw
 				event_offset->io_priority_size == 0 ||
 				event_offset->thread_flags_size == 0)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed", __FUNCTIONW__, __LINE__, event.GetType());
+			PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}
@@ -270,11 +270,11 @@ namespace etw
 				0 == event_offset->time_date_stamp_size ||
 				0 == event_offset->file_name_size)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_successful = false;
 				return;
 			}
-			debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed", __FUNCTIONW__, __LINE__, event.GetType());
+			PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

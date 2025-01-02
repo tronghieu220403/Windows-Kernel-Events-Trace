@@ -36,20 +36,20 @@ void SetUpProvider()
     status = kp->BeginTrace();
     if (status != ERROR_SUCCESS && status != ERROR_ALREADY_EXISTS)
     {
-        debug::DebugPrintW(L"Provider run failed");
+        PrintDebugW(L"Provider run failed");
         return;
     }
     provider_started = true;
-    debug::DebugPrintW(L"Provider is running");
+    PrintDebugW(L"Provider is running");
 
 #ifdef _DEBUG
     Sleep(3000000);
-    debug::DebugPrintW(L"Provider is closing");
+    PrintDebugW(L"Provider is closing");
     kp->CloseTrace();
     provider_end = true;
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
-    debug::DebugPrintW(L"Provider is closed after %d seconds", duration);
+    PrintDebugW(L"Provider is closed after %d seconds", duration);
 
 #endif // _DEBUG
     return;
@@ -66,28 +66,28 @@ void SetUpComsumer()
     
     if (kc->Open() != ERROR_SUCCESS)
     {
-        debug::DebugPrintW(L"Consummer can not be opened");
+        PrintDebugW(L"Consummer can not be opened");
         return;
     }
 
-    debug::DebugPrintW(L"Consummer is opened");
+    PrintDebugW(L"Consummer is opened");
 
     comsumer_started = true;
     auto start_time = std::chrono::high_resolution_clock::now();
     while (etw::Init() != S_OK)
     {
-		debug::DebugPrintW(L"ETW namespace is waiting for connection");
+		PrintDebugW(L"ETW namespace is waiting for connection");
         Sleep(1000);
     }
-	debug::DebugPrintW(L"ETW namespace is connected");
+	PrintDebugW(L"ETW namespace is connected");
 
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
-        debug::DebugPrintW(L"Consummer run failed\n");
+        PrintDebugW(L"Consummer run failed\n");
     }
     else
     {
-        debug::DebugPrintW(L"Consummer run is running");
+        PrintDebugW(L"Consummer run is running");
     }
 
 #ifdef _DEBUG
@@ -96,7 +96,7 @@ void SetUpComsumer()
     etw::CleanUp();
     auto end_time = std::chrono::high_resolution_clock::now();
     double duration = (double)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() / 1000;
-    debug::DebugPrintW(L"Consummer is closed after %d seconds", duration);
+    PrintDebugW(L"Consummer is closed after %d seconds", duration);
 #endif // _DEBUG
 
     return;
@@ -105,12 +105,14 @@ void SetUpComsumer()
 void ServiceMain()
 {
 
-    debug::DebugPrintW(L"ServiceMain");
+    PrintDebugW(L"ServiceMain");
+#ifndef _DEBUG
     srv::InitServiceCtrlHandler(SERVICE_NAME);
+#endif // _DEBUG
 
     if (ulti::CreateDir(MAIN_DIR) == false)
 	{
-		debug::DebugPrintW(L"Create main dir %ws failed", MAIN_DIR);
+		PrintDebugW(L"Create main dir %ws failed", MAIN_DIR);
 		return;
 	}
 
@@ -160,7 +162,7 @@ void RunService()
 			auto status = service.Run();
             if (status != ERROR_SUCCESS)
             {
-				debug::DebugPrintW(L"Service run failed %d", status);
+				PrintDebugW(L"Service run failed %d", status);
 			}
         }
 	}
@@ -172,7 +174,7 @@ void RunService()
         };
 
         if (!StartServiceCtrlDispatcher(service_table)) {
-			debug::DebugPrintW(L"StartServiceCtrlDispatcher failed");
+			PrintDebugW(L"StartServiceCtrlDispatcher failed");
         }
     }
     
@@ -181,8 +183,7 @@ void RunService()
 void RunProgram()
 {
 #ifdef _DEBUG
-    //ServiceMainWorker();
-    RunService();
+    ServiceMain();
 #else
 	RunService();
 #endif // _DEBUG
