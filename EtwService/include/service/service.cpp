@@ -165,6 +165,7 @@ namespace srv
 	SERVICE_STATUS service_status = { 0 };
 	void ServiceCtrlHandler(DWORD ctrl_code)
 	{
+		debug::DebugPrintW(L"Control code %d", ctrl_code);
 		if (ctrl_code == SERVICE_CONTROL_STOP || ctrl_code == SERVICE_CONTROL_SHUTDOWN)
 		{
 			service_status.dwCurrentState = SERVICE_STOP_PENDING;
