@@ -15,12 +15,12 @@ namespace etw
 
 			if (event_offset->syscall_address_size == 0)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed\n", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed", __FUNCTIONW__, __LINE__, event.GetType());
+			PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

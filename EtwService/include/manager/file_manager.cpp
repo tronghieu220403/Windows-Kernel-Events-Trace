@@ -55,7 +55,7 @@ namespace manager
 
     void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& file_path_new, size_t pid, size_t start_time_ms)
     {
-        debug::DebugPrintW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
+        PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
 
         FileIoInfo file_io_info;
 		file_io_info.featured_access_flags |= RENAME_FLAG;
@@ -68,7 +68,7 @@ namespace manager
 
     void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms)
     {
-        debug::DebugPrintW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
+        PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
 
 		FileIoInfo file_io_info;
 		file_io_info.featured_access_flags |= WRITE_FLAG;
@@ -94,7 +94,7 @@ namespace manager
             status = GetLastError();
             if (status != ERROR_INSUFFICIENT_BUFFER)
             {
-                debug::DebugPrintW(L"QueryDosDevice failed for Win32 path %ws, error %s", win32_path.c_str(), debug::GetErrorMessage(status).c_str());
+                PrintDebugW(L"QueryDosDevice failed for Win32 path %ws, error %s", win32_path.c_str(), debug::GetErrorMessage(status).c_str());
                 return std::wstring();
             }
             device_name.resize(device_name.size() * 2);
@@ -175,10 +175,10 @@ namespace manager
     size_t GetFileSize(const std::wstring& file_path)
     {
         // Open the file
-		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE) {
-            std::wcerr << L"Failed to open file: " << file_path << std::endl;
+            PrintDebugW(L"Failed to open file %ws, error %d", file_path.c_str(), GetLastError);
             return 0;
         }
 
@@ -213,7 +213,7 @@ namespace manager
 
     std::wstring CopyToTmp(const std::wstring& path, size_t copy_size) {
         std::wstring dest = TEMP_DIR + std::to_wstring(std::hash<std::wstring>{}(path)) + L"." + path.substr(path.find_last_of(L".") + 1);
-        HANDLE h_src = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE h_src = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (h_src == INVALID_HANDLE_VALUE)
         {
             return L"";
@@ -325,7 +325,7 @@ namespace manager
                 line.resize(line.size() - 1);
             }
 #ifdef _DEBUG
-            debug::DebugPrintW(L"[%ws] TrID text: %ws", __FUNCTIONW__, line.c_str());
+            PrintDebugW(L"TrID text: %ws", line.c_str());
 #endif // _DEBUG
 
             if (line.empty())
@@ -343,20 +343,20 @@ namespace manager
                     if (IsPrintableFile(current_file)) 
                     {
 #ifdef _DEBUG
-                        debug::DebugPrintW(L"[%ws] IsPrintableFile: %ws", __FUNCTIONW__, current_file.c_str());
+                        PrintDebugW(L"IsPrintableFile: %ws", current_file.c_str());
 #endif // _DEBUG
                         results.push_back({ current_file, true });
                     }
                     else {
 #ifdef _DEBUG
-                        debug::DebugPrintW(L"[%ws] extension_not_matched: %ws", __FUNCTIONW__, current_file.c_str());
+                        PrintDebugW(L"extension_not_matched: %ws", current_file.c_str());
 #endif // _DEBUG
                         results.push_back({ current_file, false });
                     }
                 }
                 else {
 #ifdef _DEBUG
-                    debug::DebugPrintW(L"[%ws] extension_matched: %ws", __FUNCTIONW__, current_file.c_str());
+                    PrintDebugW(L"extension_matched: %ws", current_file.c_str());
 #endif // _DEBUG
                     results.push_back({ current_file, true });
                 }
@@ -367,7 +367,7 @@ namespace manager
             { // Nếu là dòng thông tin file
                 current_file = line.substr(line.find(L"ile: ") + sizeof(L"ile: ") / sizeof(WCHAR) - 1);
 #ifdef _DEBUG
-                debug::DebugPrintW(L"[%ws] Checking file: %ws", __FUNCTIONW__, current_file.c_str());
+                PrintDebugW(L"Checking file: %ws", current_file.c_str());
 #endif // _DEBUG
                 cnt++;
                 found_extensions.clear(); // Reset danh sách đuôi file tìm thấy
@@ -397,27 +397,26 @@ namespace manager
         return results;
     }
 
-    // Hàm kiểm tra danh sách file
     std::vector<std::pair<std::wstring, bool>> CheckTrID(const std::vector<std::wstring>& file_list) {
 
-        std::wstring cmd = TRID_PATH " -n:5 "; // Lệnh trid với option -n:5 để lấy 5 loại đuôi phổ biến nhất
+        std::wstring cmd = L"\"" TRID_PATH L"\" -n:5 ";
         for (const auto& file : file_list) {
-            cmd += L"\"" + file + L"\" "; // Nối các file vào command
+            cmd += L"\"" + file + L"\" ";
         }
 
-		debug::DebugPrintW(L"Running TrID command: %ws", cmd.c_str());
+		PrintDebugW(L"Running TrID command: %ws", cmd.c_str());
 
         std::wstring output;
         try {
-			output = ulti::ExecCommand(cmd); // Chạy command và lấy output
+			output = ulti::ExecCommand(cmd); 
 		}
 		catch (const std::exception& e) {
-			debug::DebugPrintW(L"Failed to run TrID: %hs", e.what());
+			PrintDebugW(L"Failed to run TrID: %hs", e.what());
 			return {};
         }
         std::vector<std::pair<std::wstring, bool>> trid_output;
 		if (output.empty()) {
-			debug::DebugPrintW(L"TrID failed to run.");
+			PrintDebugW(L"TrID failed to run.");
 			return trid_output;
 		}
         if (output[output.size() - 1] != L'\n')

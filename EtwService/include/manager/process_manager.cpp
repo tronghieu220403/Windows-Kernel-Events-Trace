@@ -103,7 +103,7 @@ namespace manager
                             image_file_name_a.resize(image_file_name_a.size() * 2);
                         }
                         else {
-                            debug::DebugPrintW((L"PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + debug::GetErrorMessage(error)).c_str());
+                            PrintDebugW((L"PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + debug::GetErrorMessage(error)).c_str());
                             break; // Move to the next step on any other error
                         }
                     }
@@ -117,7 +117,7 @@ namespace manager
             error = GetLastError();
             if (error != ERROR_INVALID_PARAMETER)
             {
-                debug::DebugPrintW((L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed, status : " + debug::GetErrorMessage(error)).c_str());
+                PrintDebugW((L"PID " + std::to_wstring(pid) + L" OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) failed, status : " + debug::GetErrorMessage(error)).c_str());
             }
         }
         image_file_name_w = manager::GetWin32Path(image_file_name_w);

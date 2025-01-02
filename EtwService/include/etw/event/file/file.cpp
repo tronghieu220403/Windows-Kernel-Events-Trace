@@ -46,7 +46,7 @@ namespace etw
 				0 == event_offset->file_attributes_size ||
 				0 == event_offset->share_access_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in FileCreateEvent");
+				PrintDebugW(L"Error in GetPropertyInfo in FileCreateEvent");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -59,12 +59,12 @@ namespace etw
 				event_offset->open_path_offs > event_offset->file_attributes_offs &&
 				event_offset->open_path_offs > event_offset->share_access_offs)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_positioned = false;
 			}
 		}
@@ -131,7 +131,7 @@ namespace etw
 				0 == event_offset->info_class_size ||
 				0 == event_offset->file_index_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in %ws:%d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -205,7 +205,7 @@ namespace etw
 				0 == event_offset->extra_info_size ||
 				0 == event_offset->info_class_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo %ws:%d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -263,7 +263,7 @@ namespace etw
 
 			if (0 == event_offset->file_object_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in %ws, line %d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -271,12 +271,12 @@ namespace etw
 
 			if (event_offset->file_name_offs > event_offset->file_object_offs)
 			{
-				debug::DebugPrintW(L"The position for FileIoNameEvent is as expected.");
+				PrintDebugW(L"The position for FileIoNameEvent is as expected.");
 				event_offset->is_positioned = true;
 			}
 			else
 			{
-				debug::DebugPrintW(L"The position for FileIoNameEvent is not as expected.");
+				PrintDebugW(L"The position for FileIoNameEvent is not as expected.");
 			}
 		}
 		PBYTE p_data = event.GetPEventData();
@@ -328,7 +328,7 @@ namespace etw
 				0 == event_offset->extra_info_size ||
 				0 == event_offset->nt_status_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in %ws, line %d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -390,7 +390,7 @@ namespace etw
 				0 == event_offset->io_size_size ||
 				0 == event_offset->io_flags_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in %ws, line %d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}
@@ -446,7 +446,7 @@ namespace etw
 				0 == event_offset->file_object_size ||
 				0 == event_offset->file_key_size)
 			{
-				debug::DebugPrintW(L"Error in GetPropertyInfo in %ws, line %d", __FUNCTIONW__, __LINE__);
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}

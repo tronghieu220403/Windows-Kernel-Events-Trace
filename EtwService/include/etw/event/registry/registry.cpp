@@ -38,12 +38,12 @@ namespace etw
 				0 == event_offset->key_handle_size ||
 				0 == event_offset->key_name_size)
 			{
-				debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo failed\n", __FUNCTIONW__, __LINE__, event.GetType());
+				PrintDebugW(L"Event type %d GetPropertyInfo failed", event.GetType());
 				event_offset->is_successful = false;
 				return;
 			}
 
-			debug::DebugPrintW(L"[%s:%d] Event type %d GetPropertyInfo completed\n", __FUNCTIONW__, __LINE__, event.GetType());
+			PrintDebugW(L"Event type %d GetPropertyInfo completed", event.GetType());
 			event_offset->is_successful = true;
 			event_offset->is_positioned = true;
 		}

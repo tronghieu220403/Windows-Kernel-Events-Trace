@@ -121,6 +121,7 @@ namespace etw
         return;
     }
 
+	// Cache to this must be clear after a period of time, or memory will be leaked
 	std::unordered_set<size_t> file_object_write;
 	std::unordered_map<size_t, size_t> file_key_to_pid_map_; // file_key -> <pid>
     std::unordered_map<size_t, std::pair<std::wstring, std::wstring>> file_rename_map_; // file_key -> <old_name, new_name>
@@ -286,7 +287,7 @@ namespace etw
             manager::kProcMan->UpdateProcessCreationTime(process_start_event.pid, event.GetTimeInMs());
             manager::kProcMan->UnlockMutex();
 
-            debug::DebugPrintW(L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line);
+            PrintDebugW(L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line);
         }
         if (type == ProcessEventType::kProcessEnd)
         {
@@ -301,7 +302,7 @@ namespace etw
             std::wstring w_image(image.begin(), image.end());
 
             std::wstring wstr;
-            debug::DebugPrintW(L"Process Operation, End event, pid %lld, issued pid %lld, image %s, image path %ws, issued image path %ws, commandline %ws", process_end_event.pid, event.GetProcessId(), image_path.data(), image_path.data(), issued_image_path.data(), process_end_event.command_line);
+            PrintDebugW(L"Process Operation, End event, pid %lld, issued pid %lld, image %s, image path %ws, issued image path %ws, commandline %ws", process_end_event.pid, event.GetProcessId(), image_path.data(), image_path.data(), issued_image_path.data(), process_end_event.command_line);
 
         } 
         else if (type == ProcessEventType::kProcessDCStart)
@@ -351,7 +352,7 @@ namespace etw
                 const std::wstring allocated_image_path = manager::kProcMan->GetImageFileName(allocated_pid);
                 manager::kProcMan->UnlockMutex();
 
-                debug::DebugPrintW(L"Page Fault, VirtualAlloc event, allocated pid %lld, issued pid %lld, size 0x%llx, allocated image path %ws, issued image path %ws", issued_pid, allocated_pid, alloc_event.region_size, issued_image_path.data(), allocated_image_path.data());
+                PrintDebugW(L"Page Fault, VirtualAlloc event, allocated pid %lld, issued pid %lld, size 0x%llx, allocated image path %ws, issued image path %ws", issued_pid, allocated_pid, alloc_event.region_size, issued_image_path.data(), allocated_image_path.data());
 			}
         }
         return VOID();
@@ -454,7 +455,7 @@ namespace etw
         ULONG status = ERROR_SUCCESS;
 
 #ifdef _DEBUG
-        debug::DebugPrintW(L"Total event count: %ws", std::to_wstring(event_count_).c_str());
+        PrintDebugW(L"Total event count: %ws", std::to_wstring(event_count_).c_str());
 #endif // _DEBUG
 
         if ((TRACEHANDLE)INVALID_HANDLE_VALUE != handle_trace_)

@@ -65,6 +65,8 @@ namespace debug
         mt.unlock();
     }
 
+#define PrintDebugW(str, ...) debug::DebugPrintW((std::wstring(L"[") + __FUNCTIONW__ + L":" + std::to_wstring(__LINE__) + L"] " + str).c_str(), __VA_ARGS__)
+
     inline void DebugPrintW(const wchar_t* pwsz_format, ...)
     {
         if (pwsz_format == nullptr) return;
