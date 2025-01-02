@@ -169,7 +169,7 @@ namespace ulti
         {
             result.reserve(cmd.size() * 10);
         }
-        catch (const std::exception& e)
+        catch (...)
         {
             result.clear();
             return result;

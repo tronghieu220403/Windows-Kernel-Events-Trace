@@ -280,25 +280,29 @@ namespace manager
 
     // Hàm kiểm tra xem file có chủ yếu chứa ký tự in được hay không (kiểm tra cả UTF-8, UTF-16 và ANSI)
     bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size) {
-        std::ifstream file(file_path, std::ios::binary); // Mở file dưới dạng nhị phân
-        if (!file.is_open()) {
-            //std::wcerr << L"Failed to open file: " << file_path << std::endl;
-            return false; // Trả về false nếu không mở được file
+        try
+        {
+            std::ifstream file(file_path, std::ios::binary); // 
+            if (!file.is_open()) {
+                return false; // 
+            }
+
+            std::streamsize file_size = std::min<std::streamsize>(max_size, static_cast<std::streamsize>(file.seekg(0, std::ios::end).tellg()));
+            file.seekg(0, std::ios::beg); // Đưa con trỏ file về đầu
+
+            std::vector<unsigned char> buffer(file_size); // Bộ đệm để chứa dữ liệu từ file
+            file.read(reinterpret_cast<char*>(buffer.data()), file_size); // Đọc toàn bộ dữ liệu vào bộ đệm
+            file.close();
+
+            // Kiểm tra theo các mã hóa khác nhau và trả về true nếu bất kỳ cái nào khớp
+            if (ulti::CheckPrintableUTF8(buffer) || ulti::CheckPrintableUTF16(buffer) || ulti::CheckPrintableANSI(buffer)) {
+                return true;
+			}
+		}
+		catch (...)
+		{
+
         }
-
-        // Xác định kích thước file để đọc (lấy FILE_MAX_SIZE_CHECK đầu tiên hoặc kích thước file, tùy cái nào nhỏ hơn)
-        std::streamsize file_size = std::min<std::streamsize>(max_size, static_cast<std::streamsize>(file.seekg(0, std::ios::end).tellg()));
-        file.seekg(0, std::ios::beg); // Đưa con trỏ file về đầu
-
-        std::vector<unsigned char> buffer(file_size); // Bộ đệm để chứa dữ liệu từ file
-        file.read(reinterpret_cast<char*>(buffer.data()), file_size); // Đọc toàn bộ dữ liệu vào bộ đệm
-        file.close();
-
-        // Kiểm tra theo các mã hóa khác nhau và trả về true nếu bất kỳ cái nào khớp
-        if (ulti::CheckPrintableUTF8(buffer) || ulti::CheckPrintableUTF16(buffer) || ulti::CheckPrintableANSI(buffer)) {
-            return true;
-        }
-
         return false; // Nếu không có mã hóa nào đạt yêu cầu, trả về false
     }
 
@@ -397,7 +401,14 @@ namespace manager
 
 		debug::DebugPrintW(L"Running TrID command: %ws", cmd.c_str());
 
-        std::wstring output(ulti::ExecCommand(cmd)); // Chạy command và lấy output
+        std::wstring output;
+        try {
+			output = ulti::ExecCommand(cmd); // Chạy command và lấy output
+		}
+		catch (const std::exception& e) {
+			debug::DebugPrintW(L"Failed to run TrID: %hs", e.what());
+			return {};
+        }
         std::vector<std::pair<std::wstring, bool>> trid_output;
 		if (output.empty()) {
 			debug::DebugPrintW(L"TrID failed to run.");
