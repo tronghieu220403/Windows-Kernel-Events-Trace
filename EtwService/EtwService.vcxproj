@@ -187,7 +187,7 @@
     <ClInclude Include="include\manager\process_manager.h" />
     <ClInclude Include="include\mutex\mutex.h" />
     <ClInclude Include="include\service\service.h" />
-    <ClInclude Include="include\ulti\collections.h" />
+    <ClInclude Include="include\ulti\include.h" />
     <ClInclude Include="include\ulti\debug.h" />
     <ClInclude Include="include\ulti\support.h" />
   </ItemGroup>

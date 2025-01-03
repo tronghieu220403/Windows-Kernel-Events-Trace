@@ -1,4 +1,5 @@
 ﻿#include "support.h"
+#include "debug.h"
 
 namespace ulti
 {
@@ -174,6 +175,7 @@ namespace ulti
 
         // Create a pipe for the child process's standard output
         if (!CreatePipe(&stdout_read, &stdout_write, &security_attributes, 0)) {
+			PrintDebugW(L"CreatePipe failed with error %d", GetLastError());
             return result;
         }
 
@@ -181,6 +183,7 @@ namespace ulti
         if (!SetHandleInformation(stdout_read, HANDLE_FLAG_INHERIT, 0)) {
             CloseHandle(stdout_read);
             CloseHandle(stdout_write);
+			PrintDebugW(L"SetHandleInformation failed with error %d", GetLastError());
             return result;
         }
 
@@ -208,9 +211,9 @@ namespace ulti
         {
             CloseHandle(stdout_read);
             CloseHandle(stdout_write);
+			PrintDebugW(L"CreateProcessW failed with error %d", GetLastError());
             return result;
         }
-
 
         // Close the write end of the pipe as it is not needed
         CloseHandle(stdout_write);
@@ -219,9 +222,18 @@ namespace ulti
 		std::string result_str;
         char buffer[4096];
         DWORD bytes_read = 0;
-        while (ReadFile(stdout_read, buffer, sizeof(buffer) - sizeof(char), &bytes_read, nullptr) && bytes_read > 0) {
-            buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
-            result_str += buffer;
+        while (true) {
+            DWORD status = ERROR_SUCCESS;
+            if ((status = ReadFile(stdout_read, buffer, sizeof(buffer) - sizeof(char), &bytes_read, nullptr)) && bytes_read > 0)
+            {
+                buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
+                result_str += buffer;
+            }
+            else
+            {
+				PrintDebugW(L"ReadFile failed with error %d", GetLastError());
+				break;
+            }
         }
 
         // Clean up handles

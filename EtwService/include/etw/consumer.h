@@ -7,7 +7,6 @@
 
 #define INITGUID
 #include "ulti/support.h"
-#include "ulti/collections.h"
 #include "../ulti/debug.h"
 #include "mutex/mutex.h"
 #include "etw/event.h"
