@@ -57,17 +57,17 @@ namespace etw
         return hr;
     }
 
-	void CleanUp()
-	{
-		if (kServices)
-		{
-			kServices->Release();
-			kServices = NULL;
-		}
-		CoUninitialize();
-	}
+    void CleanUp()
+    {
+        if (kServices)
+        {
+            kServices->Release();
+            kServices = NULL;
+        }
+        CoUninitialize();
+    }
 
-    WmiEventClass::WmiEventClass(std::wstring class_guid, ULONG version, ULONG type, USHORT pointer_size):
+    WmiEventClass::WmiEventClass(std::wstring class_guid, ULONG version, ULONG type, USHORT pointer_size) :
         class_guid_(class_guid),
         version_(version),
         type_(type),
@@ -350,7 +350,7 @@ namespace etw
         hr = p_class->GetNames(NULL, WBEM_FLAG_NONSYSTEM_ONLY, NULL, &p_names);
         if (p_names)
         {
-            
+
             // number of properties in ETW Event
             *p_property_count = p_names->rgsabound->cElements;
 
@@ -479,7 +479,7 @@ namespace etw
 
         hr = p_property->p_qualifiers->Get(L"Description", 0, &var_display_name, NULL);
         //wprintf(L"%s:\n", (SUCCEEDED(hr)) ? var_display_name.bstrVal : p_property->name);
-        
+
         name_ptr = (SUCCEEDED(hr)) ? var_display_name.bstrVal : p_property->name;
         size = wcslen(name_ptr);
         name.resize(size);
@@ -490,7 +490,7 @@ namespace etw
     }
 
     // Get datasize of a property, can not get datasize of a string or an array
-    void WmiEventClass::GetEventPropertyValue(PropertyList* p_property, const Event& event, int &data_size, int& offset)
+    void WmiEventClass::GetEventPropertyValue(PropertyList* p_property, const Event& event, int& data_size, int& offset)
     {
         HRESULT hr;
         VARIANT var_qualifier = { 0 };
@@ -507,7 +507,7 @@ namespace etw
             SUCCEEDED(hr = p_property->p_qualifiers->Get(L"PointerType", 0, NULL, NULL)))
         {
             data_size = pointer_size_;
-            return ;
+            return;
         }
         else
         {
@@ -618,7 +618,7 @@ namespace etw
                     if (_wcsicmp(L"SizeT", var_qualifier.bstrVal) == 0)
                     {
                         VariantClear(&var_qualifier);
-						data_size = pointer_size_ * array_size;
+                        data_size = pointer_size_ * array_size;
                         return;
                     }
                     if (_wcsicmp(L"Port", var_qualifier.bstrVal) == 0)
@@ -687,11 +687,11 @@ namespace etw
                 }
 
                 VariantClear(&var_qualifier);
-                data_size = element_size * array_size; 
+                data_size = element_size * array_size;
 
                 return;
             }
-            
+
             default:
             {
                 return;
@@ -705,11 +705,11 @@ namespace etw
     {
         int offset = -1;
         int temp_offset = 0;
-        IWbemClassObject *p_event_category_class = NULL;
-        PropertyList *p_properties = NULL;
-        IWbemClassObject *p_event_class = NULL;
+        IWbemClassObject* p_event_category_class = NULL;
+        PropertyList* p_properties = NULL;
+        IWbemClassObject* p_event_class = NULL;
         DWORD property_count = NULL;
-        LONG *p_property_index = NULL;
+        LONG* p_property_index = NULL;
         int data_size = 0;
 
         p_event_category_class = GetEventCategoryClass(&class_guid_[0], version_);
@@ -751,7 +751,7 @@ namespace etw
                 p_event_class = NULL;
             }
         }
-        return {offset, data_size};
+        return { offset, data_size };
     }
 }
 #endif

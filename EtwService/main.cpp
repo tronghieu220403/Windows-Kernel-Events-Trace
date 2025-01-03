@@ -27,10 +27,10 @@ void SetUpProvider()
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
         | EVENT_TRACE_FLAG_PROCESS
-		//| EVENT_TRACE_FLAG_REGISTRY
+        //| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
         | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
-        );
+    );
     auto start_time = std::chrono::high_resolution_clock::now();
 
     status = kp->BeginTrace();
@@ -63,7 +63,7 @@ void SetUpComsumer()
         Sleep(50);
     }
     etw::KernelConsumer* kc = new etw::KernelConsumer();
-    
+
     if (kc->Open() != ERROR_SUCCESS)
     {
         PrintDebugW(L"Consummer can not be opened");
@@ -76,10 +76,10 @@ void SetUpComsumer()
     auto start_time = std::chrono::high_resolution_clock::now();
     while (etw::Init() != S_OK)
     {
-		PrintDebugW(L"ETW namespace is waiting for connection");
+        PrintDebugW(L"ETW namespace is waiting for connection");
         Sleep(1000);
     }
-	PrintDebugW(L"ETW namespace is connected");
+    PrintDebugW(L"ETW namespace is connected");
 
     if (kc->StartProcessing() != ERROR_SUCCESS)
     {
@@ -111,17 +111,17 @@ void ServiceMain()
 #endif // _DEBUG
 
     if (ulti::CreateDir(MAIN_DIR) == false)
-	{
-		PrintDebugW(L"Create main dir %ws failed", MAIN_DIR);
-		return;
-	}
+    {
+        PrintDebugW(L"Create main dir %ws failed", MAIN_DIR);
+        return;
+    }
 
-	kDriverComm = new DriverComm();
-	kDriverComm->Initialize(HIEU_DEVICE_LINK);
+    kDriverComm = new DriverComm();
+    kDriverComm->Initialize(HIEU_DEVICE_LINK);
     manager::Init();
     std::jthread provider_thread(&SetUpProvider);
     std::jthread comsumer_thread(&SetUpComsumer);
-	std::jthread manager_thread([]() {
+    std::jthread manager_thread([]() {
         if (ulti::CreateDir(TEMP_DIR) == false)
         {
             return;
@@ -132,26 +132,27 @@ void ServiceMain()
         }
         while (provider_end == false || comsumer_end == false)
         {
-			auto start_time = std::chrono::high_resolution_clock::now();
+            auto start_time = std::chrono::high_resolution_clock::now();
             manager::EvaluateProcess();
-			auto end_time = std::chrono::high_resolution_clock::now();
-			DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-			Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
+            auto end_time = std::chrono::high_resolution_clock::now();
+            DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
         }
         });
-	manager_thread.join();
+    manager_thread.join();
     comsumer_thread.join();
     provider_thread.join();
-	debug::CleanupDebugLog();
+    debug::CleanupDebugLog();
 }
 
 void RunService()
 {
-	if (ulti::IsRunningAsSystem() == false)
-	{
+    if (ulti::IsRunningAsSystem() == false)
+    {
+        ShowWindow(GetConsoleWindow(), SW_HIDE);
         srv::Service service(SERVICE_NAME);
         service.Stop();
-		service.Delete();
+        service.Delete();
         std::wstring w_srv_path;
         w_srv_path.resize(1024);
         GetModuleFileNameW(nullptr, &w_srv_path[0], 1024);
@@ -159,13 +160,13 @@ void RunService()
         auto status = service.Create(w_srv_path, SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START);
         if (status == ERROR_SUCCESS || status == ERROR_DUPLICATE_SERVICE_NAME || status == ERROR_SERVICE_EXISTS)
         {
-			auto status = service.Run();
+            auto status = service.Run();
             if (status != ERROR_SUCCESS)
             {
-				PrintDebugW(L"Service run failed %d", status);
-			}
+                PrintDebugW(L"Service run failed %d", status);
+            }
         }
-	}
+    }
     else
     {
         SERVICE_TABLE_ENTRYW service_table[] = {
@@ -174,10 +175,10 @@ void RunService()
         };
 
         if (!StartServiceCtrlDispatcher(service_table)) {
-			PrintDebugW(L"StartServiceCtrlDispatcher failed");
+            PrintDebugW(L"StartServiceCtrlDispatcher failed");
         }
     }
-    
+
 }
 
 void RunProgram()
@@ -185,14 +186,14 @@ void RunProgram()
 #ifdef _DEBUG
     ServiceMain();
 #else
-	RunService();
+    RunService();
 #endif // _DEBUG
 }
 
 int main()
 {
-	RunProgram();
-    
+    RunProgram();
+
     return 0;
 }
 

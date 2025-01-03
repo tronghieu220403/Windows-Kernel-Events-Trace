@@ -2,80 +2,80 @@
 
 namespace manager
 {
-	void FileNameObjMap::MapObjectWithPath(const size_t file_object, const std::wstring& file_path)
-	{
-		obj_to_name_map_[file_object] = file_path;
-	}
+    void FileNameObjMap::MapObjectWithPath(const size_t file_object, const std::wstring& file_path)
+    {
+        obj_to_name_map_[file_object] = file_path;
+    }
 
-	void FileNameObjMap::RemoveObject(const size_t file_object)
-	{
-		obj_to_name_map_.erase(file_object);
-	}
+    void FileNameObjMap::RemoveObject(const size_t file_object)
+    {
+        obj_to_name_map_.erase(file_object);
+    }
 
     const std::wstring& FileNameObjMap::GetPathByObject(const size_t file_object)
     {
         auto it = obj_to_name_map_.find(file_object);
         if (it == obj_to_name_map_.end())
         {
-			it = obj_to_name_map_.find(0);
+            it = obj_to_name_map_.find(0);
             if (it == obj_to_name_map_.end())
             {
-				obj_to_name_map_[0] = L"";
-				it = obj_to_name_map_.find(0);
+                obj_to_name_map_[0] = L"";
+                it = obj_to_name_map_.find(0);
             }
         }
         return it->second;
     }
 
-	void FileIoManager::LockMutex()
-	{
-		file_io_mutex_.lock();
-	}
+    void FileIoManager::LockMutex()
+    {
+        file_io_mutex_.lock();
+    }
 
-	void FileIoManager::UnlockMutex()
-	{
-		file_io_mutex_.unlock();
-	}
+    void FileIoManager::UnlockMutex()
+    {
+        file_io_mutex_.unlock();
+    }
 
-	FileIoInfo FileIoManager::PopFileIoEvent()
-	{
-		FileIoInfo file_io_info;
-		if (!file_io_queue_.empty())
-		{
-			file_io_info = file_io_queue_.front();
-			file_io_queue_.pop_front();
-		}
-		return file_io_info;
-	}
+    FileIoInfo FileIoManager::PopFileIoEvent()
+    {
+        FileIoInfo file_io_info;
+        if (!file_io_queue_.empty())
+        {
+            file_io_info = file_io_queue_.front();
+            file_io_queue_.pop_front();
+        }
+        return file_io_info;
+    }
 
-	size_t FileIoManager::GetQueueSize()
-	{
-		return file_io_queue_.size();
-	}
+    size_t FileIoManager::GetQueueSize()
+    {
+        return file_io_queue_.size();
+    }
 
     void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& file_path_new, size_t pid, size_t start_time_ms)
     {
         PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
 
         FileIoInfo file_io_info;
-		file_io_info.featured_access_flags |= RENAME_FLAG;
+        file_io_info.featured_access_flags |= RENAME_FLAG;
         file_io_info.file_path_old = file_path_old;
         file_io_info.file_path_cur = file_path_new;
-		file_io_info.start_time_ms = start_time_ms;
-		file_io_info.pid = pid;
-		file_io_queue_.push_back(file_io_info);
+        file_io_info.start_time_ms = start_time_ms;
+        file_io_info.pid = pid;
+        file_io_queue_.push_back(file_io_info);
     }
 
     void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms)
     {
         PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
 
-		FileIoInfo file_io_info;
-		file_io_info.featured_access_flags |= WRITE_FLAG;
-		file_io_info.file_path_cur = file_path;
-		file_io_info.start_time_ms = start_time_ms;
-		file_io_info.pid = pid;
-		file_io_queue_.push_back(file_io_info);
+        FileIoInfo file_io_info;
+        file_io_info.featured_access_flags |= WRITE_FLAG;
+        file_io_info.file_path_cur = file_path;
+        file_io_info.start_time_ms = start_time_ms;
+        file_io_info.pid = pid;
+        file_io_queue_.push_back(file_io_info);
     }
 
     std::wstring GetNativePath(const std::wstring& win32_path)
@@ -83,7 +83,7 @@ namespace manager
         std::wstring drive_name = win32_path.substr(0, win32_path.find_first_of('\\'));
         if (kNativePath.find(drive_name) != kNativePath.end())
         {
-			return kNativePath[drive_name] + win32_path.substr(drive_name.length());
+            return kNativePath[drive_name] + win32_path.substr(drive_name.length());
         }
 
         std::wstring device_name;
@@ -100,7 +100,7 @@ namespace manager
             device_name.resize(device_name.size() * 2);
         }
         device_name.resize(wcslen(device_name.data()));
-		kNativePath.insert({ drive_name, device_name });
+        kNativePath.insert({ drive_name, device_name });
         return device_name + win32_path.substr(win32_path.find_first_of('\\'));
     }
 
@@ -164,18 +164,18 @@ namespace manager
 
     bool FileExist(const std::wstring& file_path)
     {
-		DWORD file_attributes = GetFileAttributesW(file_path.c_str());
-		if (file_attributes == INVALID_FILE_ATTRIBUTES || FlagOn(file_attributes, FILE_ATTRIBUTE_DIRECTORY) == true) {
-			return false;
-		}
+        DWORD file_attributes = GetFileAttributesW(file_path.c_str());
+        if (file_attributes == INVALID_FILE_ATTRIBUTES || FlagOn(file_attributes, FILE_ATTRIBUTE_DIRECTORY) == true) {
+            return false;
+        }
         return true;
     }
 
-	// Hàm lấy kích thước file
+    // Hàm lấy kích thước file
     size_t GetFileSize(const std::wstring& file_path)
     {
         // Open the file
-		HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+        HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
 
         if (file_handle == INVALID_HANDLE_VALUE) {
             PrintDebugW(L"Failed to open file %ws, error %d", file_path.c_str(), GetLastError);
@@ -219,10 +219,10 @@ namespace manager
             return L"";
         }
         HANDLE h_dest = CreateFileW(dest.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (h_dest == INVALID_HANDLE_VALUE) 
+        if (h_dest == INVALID_HANDLE_VALUE)
         {
-            CloseHandle(h_src); 
-            return L""; 
+            CloseHandle(h_src);
+            return L"";
         }
         char* buf = new char[copy_size];
         DWORD r = 0, w = 0;
@@ -230,20 +230,20 @@ namespace manager
         {
             WriteFile(h_dest, buf, r, &w, NULL);
         }
-        delete[] buf; 
-        CloseHandle(h_src); 
+        delete[] buf;
+        CloseHandle(h_src);
         CloseHandle(h_dest);
         return dest;
     }
 
-	// Hàm xóa các file tạm
+    // Hàm xóa các file tạm
     void ClearTmpFiles() {
         std::filesystem::path tmp_dir = TEMP_DIR;
         // Chuyển đổi đường dẫn sang kiểu wstring để dùng với Windows API
         std::wstring temp_path = tmp_dir.wstring();
-		if (temp_path[temp_path.size() - 1] != L'\\') {
-			temp_path += L"\\";
-		}
+        if (temp_path[temp_path.size() - 1] != L'\\') {
+            temp_path += L"\\";
+        }
 
         // Thiết lập bộ lọc để lấy tất cả các file và thư mục trong thư mục tạm
         std::wstring search_path = temp_path + L"*";
@@ -297,10 +297,10 @@ namespace manager
             // Kiểm tra theo các mã hóa khác nhau và trả về true nếu bất kỳ cái nào khớp
             if (ulti::CheckPrintableUTF8(buffer) || ulti::CheckPrintableUTF16(buffer) || ulti::CheckPrintableANSI(buffer)) {
                 return true;
-			}
-		}
-		catch (...)
-		{
+            }
+        }
+        catch (...)
+        {
 
         }
         return false; // Nếu không có mã hóa nào đạt yêu cầu, trả về false
@@ -340,7 +340,7 @@ namespace manager
                     });
 
                 if (!extension_matched) {
-                    if (IsPrintableFile(current_file)) 
+                    if (IsPrintableFile(current_file))
                     {
 #ifdef _DEBUG
                         PrintDebugW(L"IsPrintableFile: %ws", current_file.c_str());
@@ -404,21 +404,21 @@ namespace manager
             cmd += L"\"" + file + L"\" ";
         }
 
-		PrintDebugW(L"Running TrID command: %ws", cmd.c_str());
+        PrintDebugW(L"Running TrID command: %ws", cmd.c_str());
 
         std::wstring output;
         try {
-			output = ulti::ExecCommand(cmd); 
-		}
-		catch (const std::exception& e) {
-			PrintDebugW(L"Failed to run TrID: %hs", e.what());
-			return {};
+            output = ulti::ExecCommand(cmd);
+        }
+        catch (const std::exception& e) {
+            PrintDebugW(L"Failed to run TrID: %hs", e.what());
+            return {};
         }
         std::vector<std::pair<std::wstring, bool>> trid_output;
-		if (output.empty()) {
-			PrintDebugW(L"TrID failed to run.");
-			return trid_output;
-		}
+        if (output.empty()) {
+            PrintDebugW(L"TrID failed to run.");
+            return trid_output;
+        }
         if (output[output.size() - 1] != L'\n')
         {
             output += L"\n";

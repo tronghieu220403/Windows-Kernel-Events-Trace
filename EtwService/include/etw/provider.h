@@ -28,7 +28,7 @@ namespace etw
 
 		void SetFlags(ULONG flags);
 
-    	TRACEHANDLE GetSessionHandle() const;
+		TRACEHANDLE GetSessionHandle() const;
 		void SetSessionHandle(TRACEHANDLE session_handle);
 		EVENT_TRACE_PROPERTIES GetSessionProperties() const;
 

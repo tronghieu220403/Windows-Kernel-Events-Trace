@@ -3,62 +3,62 @@
 namespace manager
 {
     void ProcessManager::AddProcess(size_t pid, size_t ppid_real, size_t ppid_adopted) {
-		auto it = process_map_.find(pid);
+        auto it = process_map_.find(pid);
         if (it == process_map_.end()) {
             ProcessInfo process_info;
             process_map_[pid] = process_info;
-			it = process_map_.find(pid);
+            it = process_map_.find(pid);
         }
-		it->second.pid = pid;
-		it->second.ppid_real = ppid_real == (size_t)(-1) ? 0 : ppid_real;
-		it->second.ppid_adopted = ppid_adopted == (size_t)(-1) ? 0 : ppid_adopted;
+        it->second.pid = pid;
+        it->second.ppid_real = ppid_real == (size_t)(-1) ? 0 : ppid_real;
+        it->second.ppid_adopted = ppid_adopted == (size_t)(-1) ? 0 : ppid_adopted;
     }
 
-    void ProcessManager::RemoveProcess(size_t pid) 
+    void ProcessManager::RemoveProcess(size_t pid)
     {
-		auto it = process_map_.find(pid);
+        auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
             process_map_.erase(it);
         }
     }
 
-    bool ProcessManager::IsChild(size_t ppid, size_t pid) 
+    bool ProcessManager::IsChild(size_t ppid, size_t pid)
     {
-		auto it = process_map_.find(pid);
-		if (it != process_map_.end())
-		{
-			if (it->second.ppid_real == ppid || it->second.ppid_adopted == ppid)
-			{
-				return true;
-			}
-		}
+        auto it = process_map_.find(pid);
+        if (it != process_map_.end())
+        {
+            if (it->second.ppid_real == ppid || it->second.ppid_adopted == ppid)
+            {
+                return true;
+            }
+        }
         return false;
     }
 
     void ProcessManager::UpdateImageFileName(size_t pid, const std::wstring& image_file_name)
     {
-		if (process_map_.find(pid) != process_map_.end())
-		{
-			process_map_[pid].image_file_name = image_file_name;
-		}
+        if (process_map_.find(pid) != process_map_.end())
+        {
+            process_map_[pid].image_file_name = image_file_name;
+        }
         else
         {
             ProcessInfo process_info;
-			process_info.image_file_name = image_file_name;
-			process_info.pid = pid;
+            process_info.image_file_name = image_file_name;
+            process_info.pid = pid;
             process_map_[pid] = process_info;
         }
     }
 
     std::wstring ProcessManager::GetImageFileName(size_t pid)
     {
-		auto it = process_map_.find(pid);
+        auto it = process_map_.find(pid);
         if (it != process_map_.end() && it->second.image_file_name.size() > 0)
         {
-		    return it->second.image_file_name;
+            return it->second.image_file_name;
         }
-        
+
         DWORD error = 0;
         std::wstring image_file_name_w;
         HANDLE hProcess = nullptr;
@@ -68,7 +68,7 @@ namespace manager
         image_file_name_a.resize(MAX_PATH * 4);
 
         hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
-        if (hProcess) 
+        if (hProcess)
         {
             // Try GetProcessImageFileNameW with resizing loop
             while (true) {
@@ -109,7 +109,7 @@ namespace manager
                     }
                 }
             }
-       
+
             CloseHandle(hProcess);
         }
         else
@@ -123,37 +123,37 @@ namespace manager
         image_file_name_w = manager::GetWin32Path(image_file_name_w);
         if (image_file_name_w.size() > 0)
         {
-			UpdateImageFileName(pid, image_file_name_w);
+            UpdateImageFileName(pid, image_file_name_w);
         }
         return image_file_name_w;
     }
 
     void ProcessManager::UpdateProcessCreationTime(size_t pid, size_t creation_time)
     {
-		auto it = process_map_.find(pid);
+        auto it = process_map_.find(pid);
         if (it != process_map_.end())
         {
-			it->second.creation_time = creation_time;
+            it->second.creation_time = creation_time;
         }
     }
 
     const ProcessInfo& ProcessManager::GetProcessInfo(size_t pid)
     {
-		return process_map_[pid];
+        return process_map_[pid];
     }
 
     const std::unordered_map<size_t, ProcessInfo>& ProcessManager::GetProcessMap()
     {
-		return process_map_;
+        return process_map_;
     }
 
-	void ProcessManager::LockMutex()
-	{
-		process_map_mutex_.lock();
-	}
+    void ProcessManager::LockMutex()
+    {
+        process_map_mutex_.lock();
+    }
 
-	void ProcessManager::UnlockMutex()
-	{
-		process_map_mutex_.unlock();
-	}
+    void ProcessManager::UnlockMutex()
+    {
+        process_map_mutex_.unlock();
+    }
 }

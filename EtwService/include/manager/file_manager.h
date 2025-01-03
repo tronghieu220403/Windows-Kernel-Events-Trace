@@ -47,13 +47,13 @@ namespace manager {
 	};
 
 	class FileIoManager {
-	private: 
+	private:
 		std::mutex file_io_mutex_;
 		std::deque<FileIoInfo> file_io_queue_;
 	public:
 		void LockMutex();
 		void UnlockMutex();
-		
+
 		FileIoInfo PopFileIoEvent();
 		size_t GetQueueSize();
 
@@ -78,13 +78,13 @@ namespace manager {
 	bool FileExist(const std::wstring& file_path);
 
 	size_t GetFileSize(const std::wstring& file_path);
-	
+
 	std::wstring GetFileExtension(const std::wstring& file_name);
-	
+
 	bool IsExecutableFile(const std::wstring& file_path);
-	
+
 	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_SIZE_CHECK);
-	
+
 	void ClearTmpFiles();
 
 	std::vector<std::pair<std::wstring, bool>> CheckTrID(const std::vector<std::wstring>& file_list);

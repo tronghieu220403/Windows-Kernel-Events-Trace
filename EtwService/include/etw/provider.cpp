@@ -55,7 +55,7 @@ namespace etw
     }
 
     ULONG KernelProvider::BeginTrace()
-	{
+    {
         ULONG status = ERROR_SUCCESS;
 
         Initialize();
@@ -70,15 +70,15 @@ namespace etw
 
         return status;
 
-	}
+    }
 
     ULONG KernelProvider::CloseTrace()
-	{
+    {
         ULONG status = ERROR_SUCCESS;
         status = ControlTrace((TRACEHANDLE)&session_handle_, KERNEL_LOGGER_NAME, session_properties_, EVENT_TRACE_CONTROL_STOP);
 
         return status;
-	}
+    }
 
     KernelProvider::~KernelProvider()
     {

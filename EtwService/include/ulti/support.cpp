@@ -122,12 +122,12 @@ namespace ulti
                 i += 4;
             }
             else {
-				i++; // Skip invalid bytes
+                i++; // Skip invalid bytes
             }
         }
 
         if (total_chars == 0) {
-			return true; // If there is no character, return true
+            return true; // If there is no character, return true
         }
 
         return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
@@ -161,7 +161,7 @@ namespace ulti
         return CheckPrintableANSI(StringToVectorUChar(WstrToStr(wstr)));
     }
 
-	// Execute command and return output
+    // Execute command and return output
     std::wstring ExecCommand(const std::wstring& cmd) {
         std::wstring result;
         HANDLE stdout_read = nullptr;
@@ -175,16 +175,32 @@ namespace ulti
 
         // Create a pipe for the child process's standard output
         if (!CreatePipe(&stdout_read, &stdout_write, &security_attributes, 0)) {
-			PrintDebugW(L"CreatePipe failed with error %d", GetLastError());
+            PrintDebugW(L"CreatePipe failed with error %d", GetLastError());
             return result;
         }
+        else
+        {
+            //PrintDebugW(L"CreatePipe succeeded");
+        }
+        defer{
+            if (stdout_read != nullptr)
+            {
+                CloseHandle(stdout_read);
+            }
+            if (stdout_write != nullptr)
+            {
+                CloseHandle(stdout_write);
+            }
+        };
 
         // Ensure the read handle is not inheritable
         if (!SetHandleInformation(stdout_read, HANDLE_FLAG_INHERIT, 0)) {
-            CloseHandle(stdout_read);
-            CloseHandle(stdout_write);
-			PrintDebugW(L"SetHandleInformation failed with error %d", GetLastError());
+            PrintDebugW(L"SetHandleInformation failed with error %d", GetLastError());
             return result;
+        }
+        else
+        {
+            //PrintDebugW(L"SetHandleInformation succeeded");
         }
 
         // Set up the STARTUPINFO structure
@@ -192,55 +208,135 @@ namespace ulti
         startup_info.cb = sizeof(STARTUPINFOW);
         startup_info.hStdOutput = stdout_write;
         startup_info.hStdError = stdout_write;
-        startup_info.dwFlags |= STARTF_USESTDHANDLES;
+        startup_info.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        startup_info.wShowWindow = SW_HIDE;
 
         PROCESS_INFORMATION process_info = {};
 
-        // Create the child process
-        if (!CreateProcessW(
-            nullptr,                            // Application name
-            const_cast<LPWSTR>(cmd.c_str()),    // Command line
-            nullptr,                            // Process security attributes
-            nullptr,                            // Thread security attributes
-            TRUE,                               // Inherit handles
-            CREATE_NO_WINDOW,                   // Create without a console window
-            nullptr,                            // Use parent's environment block
-            nullptr,                            // Use parent's starting directory
-            &startup_info,                      // Pointer to STARTUPINFO
-            &process_info))                     // Pointer to PROCESS_INFORMATION
-        {
-            CloseHandle(stdout_read);
-            CloseHandle(stdout_write);
-			PrintDebugW(L"CreateProcessW failed with error %d", GetLastError());
-            return result;
-        }
-
-        // Close the write end of the pipe as it is not needed
-        CloseHandle(stdout_write);
-
-        // Read the child process's output from the pipe
-		std::string result_str;
-        char buffer[4096];
-        DWORD bytes_read = 0;
-        while (true) {
-            DWORD status = ERROR_SUCCESS;
-            if ((status = ReadFile(stdout_read, buffer, sizeof(buffer) - sizeof(char), &bytes_read, nullptr)) && bytes_read > 0)
+        if (IsRunningAsSystem() == false) {
+            // Create the child process
+            if (!CreateProcessW(
+                nullptr,                            // Application name
+                const_cast<LPWSTR>(cmd.c_str()),    // Command line
+                nullptr,                            // Process security attributes
+                nullptr,                            // Thread security attributes
+                TRUE,                               // Inherit handles
+                CREATE_NEW_CONSOLE,
+                nullptr,                            // Use parent's environment block
+                nullptr,                            // Use parent's starting directory
+                &startup_info,                      // Pointer to STARTUPINFO
+                &process_info))                     // Pointer to PROCESS_INFORMATION
             {
-                buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
-                result_str += buffer;
+                PrintDebugW(L"CreateProcessW failed with error %d", GetLastError());
+                return result;
+            }
+            defer{
+                CloseHandle(process_info.hProcess);
+                CloseHandle(process_info.hThread);
+            };
+        }
+        else
+        {
+            DWORD session_id = GetCurrentSessionId();
+            if (session_id == 0)
+            {
+                return result;
             }
             else
             {
-				PrintDebugW(L"ReadFile failed with error %d", GetLastError());
-				break;
+                //PrintDebugW(L"Session ID: %d", session_id);
             }
+
+            HANDLE h_token = NULL;
+            if (!WTSQueryUserToken(session_id, &h_token))
+            {
+                PrintDebugW(L"WTSQueryUserToken failed with error %d", GetLastError());
+                return result;
+            }
+            else
+            {
+                //PrintDebugW(L"WTSQueryUserToken succeeded");
+            }
+            defer{
+                CloseHandle(h_token);
+            };
+
+            void* env = nullptr;
+            if (!CreateEnvironmentBlock(&env, h_token, TRUE))
+            {
+                PrintDebugW(L"CreateEnvironmentBlock failed with error %d", GetLastError());
+                return result;
+            }
+            else
+            {
+                //PrintDebugW(L"CreateEnvironmentBlock succeeded");
+            }
+            defer{
+                DestroyEnvironmentBlock(env);
+            };
+            startup_info.lpDesktop = (LPWSTR)L"winsta0\\default";
+            DWORD dw_creation_flags = NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT;
+            std::wstring cmd_editable = cmd;
+            if (!CreateProcessAsUserW(
+                h_token,                            // User token
+                nullptr,                            // Application name
+                (LPWSTR)(cmd_editable.c_str()),     // Command line
+                nullptr,                            // Process security attributes
+                nullptr,                            // Thread security attributes
+                TRUE,                               // Inherit handles
+                dw_creation_flags,
+                env,
+                nullptr,                            // Use parent's starting directory
+                &startup_info,                      // Pointer to STARTUPINFO
+                &process_info))                     // Pointer to PROCESS_INFORMATION
+            {
+                PrintDebugW(L"CreateProcessAsUserW failed with error %d", GetLastError());
+                return result;
+            }
+            else
+            {
+                PrintDebugW(L"CreateProcessAsUserW succeeded");
+                DWORD exit_code = 0;
+                PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
+                /*
+                PrintDebugW(L"Wating for process to finish");
+                // Successfully created the process.  Wait for it to finish.
+                WaitForSingleObject(process_info.hProcess, INFINITE);
+
+                // Get the exit code.
+                result = GetExitCodeProcess(process_info.hProcess, &exit_code);
+                PrintDebugW(L"Exit code %d", exit_code);
+                */
+            }
+            defer{
+                CloseHandle(process_info.hProcess);
+                CloseHandle(process_info.hThread);
+            };
         }
 
-        // Clean up handles
-        CloseHandle(stdout_read);
-        CloseHandle(process_info.hProcess);
-        CloseHandle(process_info.hThread);
+        CloseHandle(stdout_write);
+        stdout_write = nullptr;
+        std::string result_str;
 
+        // Read the child process's output from the pipe
+        char buffer[4096];
+        DWORD bytes_read = 0;
+        while (true)
+        {
+            if (ReadFile(stdout_read, buffer, sizeof(buffer) - sizeof(char), &bytes_read, nullptr) == TRUE || bytes_read > 0)
+            {
+                buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
+                result_str += buffer;
+                //PrintDebugW(L"Read %d bytes", bytes_read);
+            }
+            else
+            {
+                //PrintDebugW(L"ReadFile failed with error %d", GetLastError());
+                break;
+            }
+        }
+        PrintDebugW(L"Total bytes read %d", result_str.size());
+        // Clean up handles
         return ulti::StrToWStr(result_str);
     }
 
@@ -275,5 +371,30 @@ namespace ulti
         free(token_user);
 
         return is_system;
+    }
+
+    DWORD GetCurrentSessionId()
+    {
+        WTS_SESSION_INFO* p_session_info;
+        DWORD n_sessions = 0;
+        BOOL ok = WTSEnumerateSessions(WTS_CURRENT_SERVER, 0, 1, &p_session_info, &n_sessions);
+        if (!ok)
+        {
+            PrintDebugW(L"WTSEnumerateSessions failed with error %d", GetLastError());
+            return 0;
+        }
+
+        DWORD session_id = 0;
+
+        for (DWORD i = 0; i < n_sessions; ++i)
+        {
+            if (p_session_info[i].State == WTSActive)
+            {
+                session_id = p_session_info[i].SessionId;
+                break;
+            }
+        }
+        WTSFreeMemory(p_session_info);
+        return session_id;
     }
 }

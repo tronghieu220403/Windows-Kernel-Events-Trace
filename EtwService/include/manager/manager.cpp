@@ -20,8 +20,8 @@ namespace manager {
 		delete kProcMan;
 	}
 
-    void EvaluateProcess()
-    {
+	void EvaluateProcess()
+	{
 		PrintDebugW(L"Start evaluating processes");
 
 		std::vector<FileIoInfo> file_io_list;
@@ -37,24 +37,24 @@ namespace manager {
 		{
 			std::wstring current_path;
 			std::wstring tmp_path;
-            size_t pid;
+			size_t pid;
 		};
 		std::vector<FileInfo> file_list;
 		std::vector<std::wstring> paths;
 		std::unordered_map<size_t, size_t> pid_file_cnt;
 		std::unordered_set<size_t> unique_paths;
 		for (const FileIoInfo& io : file_io_list)
-        {
+		{
 			const std::wstring file_path = io.file_path_cur;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
 			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) || unique_paths.find(file_path_hash) != unique_paths.end())
- 			{
+			{
 				continue;
 			}
 			size_t pid = io.pid;
 			pid_file_cnt[pid]++;
 			unique_paths.insert(file_path_hash);
-        }
+		}
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path_cur;
@@ -131,18 +131,18 @@ namespace manager {
 			proc_check_results[pid].second++;
 		}
 
-        // Clear temporary files
-        manager::ClearTmpFiles();
+		// Clear temporary files
+		manager::ClearTmpFiles();
 
-        for (const auto& [pid, stats] : proc_check_results)
-        {
-            size_t num_recognized = stats.first;
-            size_t total = stats.second;
-            if (total >= MIN_FILE_COUNT && BelowThreshold(num_recognized, total))
-            {
+		for (const auto& [pid, stats] : proc_check_results)
+		{
+			size_t num_recognized = stats.first;
+			size_t total = stats.second;
+			if (total >= MIN_FILE_COUNT && BelowThreshold(num_recognized, total))
+			{
 				PrintDebugW(L"PID %d is ransomware.", pid);
 			}
-        }
+		}
 		PrintDebugW(L"Process evaluation done");
 	}
 
@@ -196,6 +196,7 @@ namespace manager {
 		}
 		return true;
 	}
+
 	bool RegistryEventFilter(size_t status, size_t handle)
 	{
 		if (status != 0 || handle == 0)
