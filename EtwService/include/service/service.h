@@ -3,8 +3,8 @@
 #ifndef ETWSERVICE_SERVICE_SERVICE_H_
 #define ETWSERVICE_SERVICE_SERVICE_H_
 
+#include "ulti/support.h"
 #include "ulti/debug.h"
-#include "ulti/collections.h"
 
 #define SERVICE_CONTROL_START 128
 

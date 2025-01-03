@@ -1,8 +1,8 @@
 #pragma once
 
-#include "support.h"
-
+#include "include.h"
 #define DEBUG_LOG_THRESHOLD 1000
+#define LOG_PATH L"E:\\hieunt20210330\\log.txt"
 
 namespace debug
 {
