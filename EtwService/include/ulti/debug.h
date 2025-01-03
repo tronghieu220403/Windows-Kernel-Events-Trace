@@ -15,15 +15,15 @@ namespace debug
     {
         try
         {
-			if (outfile.is_open())
-			{
-				outfile.close();
-			}
-			outfile.open(LOG_PATH, std::ios_base::app);
-			debug_cnt = 0;
-		}
-		catch (...)
-		{
+            if (outfile.is_open())
+            {
+                outfile.close();
+            }
+            outfile.open(LOG_PATH, std::ios_base::app);
+            debug_cnt = 0;
+        }
+        catch (...)
+        {
         }
     }
 
@@ -59,9 +59,9 @@ namespace debug
                 InitDebugLog();
             }
         }
-		catch (...)
-		{
-		}
+        catch (...)
+        {
+        }
         mt.unlock();
     }
 
@@ -104,7 +104,7 @@ namespace debug
 
             log.insert(0, time_str);
             OutputDebugStringW(log.c_str());
-			WriteDebugToFileW(log.c_str());
+            WriteDebugToFileW(log.c_str());
         }
 
         va_end(args);

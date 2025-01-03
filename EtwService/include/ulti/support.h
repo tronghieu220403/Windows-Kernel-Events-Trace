@@ -37,6 +37,9 @@ namespace ulti
     std::wstring ExecCommand(const std::wstring& cmd);
 
     bool IsRunningAsSystem();
+
+    DWORD GetCurrentSessionId();
+
 }
 
 #endif

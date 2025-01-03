@@ -75,8 +75,11 @@ namespace srv
 			return ERROR_INVALID_HANDLE;
 		}
 
-		std::string stop_srv_cmd = "sc stop " + ulti::WstrToStr(service_name_);
-		std::system(stop_srv_cmd.c_str());
+		if (ulti::IsRunningAsSystem() == false)
+		{
+			std::string stop_srv_cmd = "sc stop " + ulti::WstrToStr(service_name_);
+			std::system(stop_srv_cmd.c_str());
+		}
 
 		// Open the service to stop and delete.
 		SC_HANDLE service_handle = OpenService(h_services_control_manager_, service_name_.c_str(), SERVICE_STOP | SERVICE_QUERY_STATUS | DELETE);
@@ -114,7 +117,6 @@ namespace srv
 		}
 
 		DWORD err = ERROR_SUCCESS;
-		std::string delete_srv_cmd = "sc delete " + ulti::WstrToStr(service_name_);
 		SC_HANDLE service = OpenService(h_services_control_manager_, service_name_.c_str(), DELETE);
 		if (service)
 		{
@@ -122,7 +124,7 @@ namespace srv
 			if (DeleteService(service) == FALSE)
 			{
 				err = GetLastError();
-				PrintDebugW(L"DeleteService %ws  failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
+				PrintDebugW(L"DeleteService %ws  failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err).c_str());
 			}
 			else
 			{
@@ -135,9 +137,13 @@ namespace srv
 		else
 		{
 			err = GetLastError();
-			PrintDebugW(L"OpenService %ws failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err));
+			PrintDebugW(L"OpenService %ws failed with error %d, %ws", service_name_.c_str(), err, debug::GetErrorMessage(err).c_str());
 		}
-		std::system(delete_srv_cmd.c_str());
+		if (ulti::IsRunningAsSystem() == false)
+		{
+			std::string delete_srv_cmd = "sc delete " + ulti::WstrToStr(service_name_);
+			std::system(delete_srv_cmd.c_str());
+		}
 		return err;
 	}
 
@@ -147,7 +153,7 @@ namespace srv
 	{
 		if (h_services_control_manager_ == NULL) {
 			auto err = GetLastError();
-			PrintDebugW(L"Failed to open Service Control Manager: %d, %ws", err, debug::GetErrorMessage(err));
+			PrintDebugW(L"Failed to open Service Control Manager: %d, %ws", err, debug::GetErrorMessage(err).c_str());
 		}
 	}
 

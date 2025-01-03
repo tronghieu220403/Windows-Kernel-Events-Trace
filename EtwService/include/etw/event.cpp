@@ -5,8 +5,8 @@
 namespace etw
 {
     Event::Event(PEVENT_TRACE p_event)
-	{
-		p_event_ = p_event;
+    {
+        p_event_ = p_event;
     }
 
     PEVENT_TRACE Event::GetPEvent() const
@@ -28,9 +28,9 @@ namespace etw
 
     FILETIME Event::GetFileTime() const
     {
-        return *(FILETIME *)&p_event_->Header.TimeStamp.QuadPart;
+        return *(FILETIME*)&p_event_->Header.TimeStamp.QuadPart;
     }
-    
+
     ULONGLONG Event::GetTimeInMs() const
     {
         return p_event_->Header.TimeStamp.QuadPart / 10000;

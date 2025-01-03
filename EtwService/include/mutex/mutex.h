@@ -15,7 +15,7 @@ namespace mutex
     public:
         NamedMutex() = default;
         explicit NamedMutex(const std::string& mutex_name);
-        
+
         void SetMutex(const std::string& mutex_name);
 
         std::string GetMutexName() const;

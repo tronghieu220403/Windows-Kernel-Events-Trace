@@ -38,7 +38,7 @@ namespace etw
 		static int GetPointerSize();
 
 		static ULONG WINAPI ProcessBuffer(PEVENT_TRACE_LOGFILE p_buffer);
-		
+
 		static VOID WINAPI ProcessEvent(PEVENT_TRACE p_event);
 
 		static VOID WINAPI ProcessFileIoEvent(Event event);

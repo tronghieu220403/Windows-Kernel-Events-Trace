@@ -2,7 +2,7 @@
 
 namespace mutex
 {
-    NamedMutex::NamedMutex(const std::string& mutex_name):
+    NamedMutex::NamedMutex(const std::string& mutex_name) :
         mutex_name_(mutex_name)
     {
         SetMutex(mutex_name);
@@ -17,10 +17,10 @@ namespace mutex
         sec.bInheritHandle = TRUE;
         sec.lpSecurityDescriptor = nullptr;
         handle_mutex_ = CreateMutexA(
-                            &sec,
-                            FALSE, 
-                            mutex_name.size() != 0 ? &mutex_name[0] : nullptr
-                        );
+            &sec,
+            FALSE,
+            mutex_name.size() != 0 ? &mutex_name[0] : nullptr
+        );
     }
 
     std::string NamedMutex::GetMutexName() const
@@ -36,7 +36,7 @@ namespace mutex
     bool NamedMutex::TryLock()
     {
         DWORD dw_wait_result = WaitForSingleObject(handle_mutex_, 0);
-		return dw_wait_result == WAIT_OBJECT_0;
+        return dw_wait_result == WAIT_OBJECT_0;
     }
 
     void NamedMutex::Unlock()
