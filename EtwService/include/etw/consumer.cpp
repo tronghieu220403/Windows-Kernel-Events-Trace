@@ -136,7 +136,10 @@ namespace etw
         {
             FileIoCreateEvent file_create_event(event);
             file_path = file_create_event.open_path;
-
+			if (FlagOn(file_create_event.create_options, FILE_DIRECTORY_FILE))
+			{
+				return;
+			}
             manager::kFileNameObjMap->MapObjectWithPath(file_create_event.file_object, manager::GetWin32Path(file_path));
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
@@ -256,7 +259,6 @@ namespace etw
                 manager::kFileIoManager->LockMutex();
                 manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs());
                 manager::kFileIoManager->UnlockMutex();
-                file_object_write.erase(close_event.file_object);
             }
 
             // Clean up
