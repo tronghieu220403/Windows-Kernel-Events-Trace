@@ -180,7 +180,7 @@ namespace ulti
         }
         else
         {
-            //PrintDebugW(L"CreatePipe succeeded");
+            PrintDebugW(L"CreatePipe succeeded");
         }
         defer{
             if (stdout_read != nullptr)
@@ -200,7 +200,7 @@ namespace ulti
         }
         else
         {
-            //PrintDebugW(L"SetHandleInformation succeeded");
+            PrintDebugW(L"SetHandleInformation succeeded");
         }
 
         // Set up the STARTUPINFO structure
@@ -244,7 +244,7 @@ namespace ulti
             }
             else
             {
-                //PrintDebugW(L"Session ID: %d", session_id);
+                PrintDebugW(L"Session ID: %d", session_id);
             }
 
             HANDLE h_token = NULL;
@@ -255,7 +255,7 @@ namespace ulti
             }
             else
             {
-                //PrintDebugW(L"WTSQueryUserToken succeeded");
+                PrintDebugW(L"WTSQueryUserToken succeeded");
             }
             defer{
                 CloseHandle(h_token);
@@ -269,7 +269,7 @@ namespace ulti
             }
             else
             {
-                //PrintDebugW(L"CreateEnvironmentBlock succeeded");
+                PrintDebugW(L"CreateEnvironmentBlock succeeded");
             }
             defer{
                 DestroyEnvironmentBlock(env);
@@ -298,7 +298,6 @@ namespace ulti
                 PrintDebugW(L"CreateProcessAsUserW succeeded");
                 DWORD exit_code = 0;
                 PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
-                /*
                 PrintDebugW(L"Wating for process to finish");
                 // Successfully created the process.  Wait for it to finish.
                 WaitForSingleObject(process_info.hProcess, INFINITE);
@@ -306,7 +305,6 @@ namespace ulti
                 // Get the exit code.
                 result = GetExitCodeProcess(process_info.hProcess, &exit_code);
                 PrintDebugW(L"Exit code %d", exit_code);
-                */
             }
             defer{
                 CloseHandle(process_info.hProcess);
@@ -327,7 +325,7 @@ namespace ulti
             {
                 buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
                 result_str += buffer;
-                //PrintDebugW(L"Read %d bytes", bytes_read);
+                PrintDebugW(L"Read %d bytes", bytes_read);
             }
             else
             {

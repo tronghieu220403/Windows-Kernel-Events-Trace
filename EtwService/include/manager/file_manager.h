@@ -24,6 +24,7 @@
 #define MAX_TOTAL_SIZE_CHECK (150 * 1024 * 1024) // 150MB
 #define FILE_MAX_SIZE_CHECK (16 * 1024) // 16KB
 #define MIN_FILE_COUNT (2 * EVALUATATION_INTERVAL_MS / 1000)
+#define MAX_FILE_COUNT (MIN_FILE_COUNT * 3)
 #define THRESHOLD_PERCENTAGE 80
 #define BelowThreshold(part, total) (part <= total * THRESHOLD_PERCENTAGE / 100)
 

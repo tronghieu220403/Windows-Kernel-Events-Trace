@@ -53,6 +53,12 @@ namespace manager {
 			}
 			size_t pid = io.pid;
 			pid_file_cnt[pid]++;
+#ifndef _DEBUG
+			if (pid_file_cnt[pid] > MAX_FILE_COUNT)
+			{
+				continue;
+			}
+#endif // !_DEBUG
 			unique_paths.insert(file_path_hash);
 		}
 		for (const FileIoInfo& io : file_io_list)
