@@ -204,44 +204,43 @@ namespace ulti
 
         PROCESS_INFORMATION process_info = {};
 
-        if (IsRunningAsSystem() == false) {
-            // Create the child process
-            if (!CreateProcessW(
-                nullptr,                            // Application name
-                const_cast<LPWSTR>(cmd.c_str()),    // Command line
-                nullptr,                            // Process security attributes
-                nullptr,                            // Thread security attributes
-                TRUE,                               // Inherit handles
-                CREATE_NEW_CONSOLE,
-                nullptr,                            // Use parent's environment block
-                nullptr,                            // Use parent's starting directory
-                &startup_info,                      // Pointer to STARTUPINFO
-                &process_info))                     // Pointer to PROCESS_INFORMATION
-            {
-                PrintDebugW(L"CreateProcessW failed with error %d", GetLastError());
-                return result;
-            }
-            else
-            {
-                PrintDebugW(L"CreateProcessW succeeded");
-                DWORD exit_code = 0;
-                PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
-                /*
-                PrintDebugW(L"Wating for process to finish");
-                // Successfully created the process.  Wait for it to finish.
-                WaitForSingleObject(process_info.hProcess, INFINITE);
+        DWORD dw_creation_flags = REALTIME_PRIORITY_CLASS | CREATE_NEW_CONSOLE;
 
-                // Get the exit code.
-                result = GetExitCodeProcess(process_info.hProcess, &exit_code);
-                PrintDebugW(L"Exit code %d", exit_code);
-                */
-            }
-            defer{
-                CloseHandle(process_info.hProcess);
-                CloseHandle(process_info.hThread);
-            };
+        bool create_process_succeeded = false;
+
+        // Create the child process
+        if (!CreateProcessW(
+            nullptr,                            // Application name
+            const_cast<LPWSTR>(cmd.c_str()),    // Command line
+            nullptr,                            // Process security attributes
+            nullptr,                            // Thread security attributes
+            TRUE,                               // Inherit handles
+            dw_creation_flags,
+            nullptr,                            // Use parent's environment block
+            nullptr,                            // Use parent's starting directory
+            &startup_info,                      // Pointer to STARTUPINFO
+            &process_info))                     // Pointer to PROCESS_INFORMATION
+        {
+            PrintDebugW(L"CreateProcessW failed with error %d, try CreateProcessAsUserW", GetLastError());
         }
         else
+        {
+            create_process_succeeded = true;
+            PrintDebugW(L"CreateProcessW succeeded");
+            DWORD exit_code = 0;
+            PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
+            /*
+            PrintDebugW(L"Wating for process to finish");
+            // Successfully created the process.  Wait for it to finish.
+            WaitForSingleObject(process_info.hProcess, INFINITE);
+
+            // Get the exit code.
+            result = GetExitCodeProcess(process_info.hProcess, &exit_code);
+            PrintDebugW(L"Exit code %d", exit_code);
+            */
+            defer{ CloseHandle(process_info.hProcess); CloseHandle(process_info.hThread); };
+        }
+        if (create_process_succeeded == false && IsRunningAsSystem() == true)
         {
             DWORD session_id = GetCurrentSessionId();
             if (session_id == 0)
@@ -327,8 +326,6 @@ namespace ulti
             }
             defer{ RevertToSelf(); };
 
-            DWORD dw_creation_flags = REALTIME_PRIORITY_CLASS | CREATE_NEW_CONSOLE;
-
             std::wstring cmd_editable = cmd;
             // Start the process on behalf of the current user 
             if (!CreateProcessAsUserW(h_user_token, NULL,
@@ -356,11 +353,11 @@ namespace ulti
                 result = GetExitCodeProcess(process_info.hProcess, &exit_code);
                 PrintDebugW(L"Exit code %d", exit_code);
                 */
+                defer{
+                    CloseHandle(process_info.hProcess);
+                    CloseHandle(process_info.hThread);
+                };
             }
-            defer{
-                CloseHandle(process_info.hProcess);
-                CloseHandle(process_info.hThread);
-            };
         }
 
         CloseHandle(stdout_write);
