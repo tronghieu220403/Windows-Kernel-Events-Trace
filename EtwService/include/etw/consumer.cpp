@@ -122,9 +122,7 @@ namespace etw
     }
 
     // Cache to this must be clear after a period of time, or memory will be leaked
-    std::unordered_set<size_t> file_object_write;
-    std::unordered_map<size_t, size_t> file_key_to_pid_map_; // file_key -> <pid>
-    std::unordered_map<size_t, std::pair<std::wstring, std::wstring>> file_rename_map_; // file_key -> <old_name, new_name>
+    std::unordered_map<size_t, std::pair<std::pair<std::wstring, std::wstring>, size_t>> file_rename_map_; // file_key -> <<old_name, new_name>, pid>
 
     VOID WINAPI KernelConsumer::ProcessFileIoEvent(Event event)
     {
@@ -136,11 +134,27 @@ namespace etw
         {
             FileIoCreateEvent file_create_event(event);
             file_path = file_create_event.open_path;
+            const auto& win32_file_path = manager::GetWin32Path(file_path);
 			if (FlagOn(file_create_event.create_options, FILE_DIRECTORY_FILE))
 			{
-				return;
+				//PrintDebugW(L"File is a directory %ws", win32_file_path.c_str());
+                return;
 			}
-            manager::kFileNameObjMap->MapObjectWithPath(file_create_event.file_object, manager::GetWin32Path(file_path));
+			else if (win32_file_path.empty() 
+                || win32_file_path[win32_file_path.size() - 1] == L'\\' 
+                || manager::IsExecutableFile(win32_file_path)
+                )
+            {
+                //PrintDebugW(L"File is executable %ws", win32_file_path.c_str());
+                return;
+			}
+            else if (!manager::FileExist(win32_file_path))
+            {
+				//PrintDebugW(L"File does not exist %ws", win32_file_path.c_str());
+				return;
+            }
+            //PrintDebugW(L"File Operation, Create event, pid %lld, file path %ws, file_obj %p", event.GetProcessId(), win32_file_path.c_str(), file_create_event.file_object);
+            manager::kFileNameObjMap->MapObjectWithPath(file_create_event.file_object, win32_file_path);
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
         else if (type == FileIoEventType::kDirEnum)
@@ -171,8 +185,7 @@ namespace etw
             }
 
             // Rename event
-            file_key_to_pid_map_[rename_event.file_key] = pid;
-            file_rename_map_[rename_event.file_key] = std::make_pair(file_path, L"");
+            file_rename_map_[rename_event.file_key] = std::make_pair(std::make_pair(file_path, L""), pid);
         }
         else if (type == FileIoEventType::kQueryInfo)
         {
@@ -193,11 +206,12 @@ namespace etw
             int pid = static_cast<int>(event.GetProcessId());
 
             // Rename event
-            if (file_rename_map_.find(file_create_event.file_object) != file_rename_map_.end())
+			auto it = file_rename_map_.find(file_create_event.file_object);
+            if (it != file_rename_map_.end())
             {
-                file_rename_map_[file_create_event.file_object].second = manager::GetWin32Path(file_create_event.file_name);
-                const size_t issue_pid = file_key_to_pid_map_[file_create_event.file_object];
-                const std::pair<std::wstring, std::wstring> pss = file_rename_map_[file_create_event.file_object];
+                it->second.first.second = manager::GetWin32Path(file_create_event.file_name);
+                const size_t issue_pid = it->second.second;
+                const std::pair<std::wstring, std::wstring> pss = it->second.first;
                 const std::wstring old_path = pss.first;
                 const std::wstring new_path = pss.second;
 
@@ -233,39 +247,30 @@ namespace etw
                 return;
             }
             int pid = static_cast<int>(event.GetProcessId());
-            auto it = file_object_write.find(write_event.file_object);
-            if (it == file_object_write.end())
-            {
-                file_object_write.insert(write_event.file_object);
-            }
+			//PrintDebugW(L"File Operation, Write event, pid %lld, file_obj %p, offset 0x%llx, size 0x%llx", event.GetProcessId(), write_event.file_object, write_event.offset, write_event.io_size);
+            file_path = manager::kFileNameObjMap->GetPathByObject(write_event.file_object);
+			if (file_path.empty() == false)
+			{
+                manager::kFileIoManager->LockMutex();
+                manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs());
+                manager::kFileIoManager->UnlockMutex();
+				manager::kFileNameObjMap->RemoveObject(write_event.file_object);
+			}
         }
         // EventTypeName{ "Cleanup", "Close", "Flush" }
         else if (type == FileIoEventType::kCleanup)
         {
-            //FileIoSimpleOpCleanupEvent cleanup_event(event);
+            FileIoSimpleOpCleanupEvent cleanup_event(event);
+            // Clean up
+            manager::kFileNameObjMap->RemoveObject(cleanup_event.file_object);
+            file_rename_map_.erase(cleanup_event.file_key);
         }
         else if (type == FileIoEventType::kClose)
         {
             FileIoSimpleOpCloseEvent close_event(event);
-            int pid = static_cast<int>(event.GetProcessId());
-
-            if (file_object_write.find(close_event.file_object) != file_object_write.end())
-            {
-                file_path = manager::kFileNameObjMap->GetPathByObject(close_event.file_object);
-                if (file_path.empty())
-                {
-                    return;
-                }
-                manager::kFileIoManager->LockMutex();
-                manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs());
-                manager::kFileIoManager->UnlockMutex();
-            }
-
             // Clean up
             manager::kFileNameObjMap->RemoveObject(close_event.file_object);
             file_rename_map_.erase(close_event.file_key);
-            file_key_to_pid_map_.erase(close_event.file_key);
-            file_object_write.erase(close_event.file_object);
         }
         else if (type == FileIoEventType::kFlush)
         {
