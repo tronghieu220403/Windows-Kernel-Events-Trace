@@ -193,18 +193,9 @@ namespace ulti
             }
         };
 
-        // Ensure the read handle is not inheritable
-        if (!SetHandleInformation(stdout_read, HANDLE_FLAG_INHERIT, 0)) {
-            PrintDebugW(L"SetHandleInformation failed with error %d", GetLastError());
-            return result;
-        }
-        else
-        {
-            PrintDebugW(L"SetHandleInformation succeeded");
-        }
-
         // Set up the STARTUPINFO structure
         STARTUPINFOW startup_info = {};
+        GetStartupInfoW(&startup_info);
         startup_info.cb = sizeof(STARTUPINFOW);
         startup_info.hStdOutput = stdout_write;
         startup_info.hStdError = stdout_write;
@@ -230,6 +221,21 @@ namespace ulti
                 PrintDebugW(L"CreateProcessW failed with error %d", GetLastError());
                 return result;
             }
+            else
+            {
+                PrintDebugW(L"CreateProcessW succeeded");
+                DWORD exit_code = 0;
+                PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
+                /*
+                PrintDebugW(L"Wating for process to finish");
+                // Successfully created the process.  Wait for it to finish.
+                WaitForSingleObject(process_info.hProcess, INFINITE);
+
+                // Get the exit code.
+                result = GetExitCodeProcess(process_info.hProcess, &exit_code);
+                PrintDebugW(L"Exit code %d", exit_code);
+                */
+            }
             defer{
                 CloseHandle(process_info.hProcess);
                 CloseHandle(process_info.hThread);
@@ -247,48 +253,91 @@ namespace ulti
                 PrintDebugW(L"Session ID: %d", session_id);
             }
 
-            HANDLE h_token = NULL;
-            if (!WTSQueryUserToken(session_id, &h_token))
-            {
-                PrintDebugW(L"WTSQueryUserToken failed with error %d", GetLastError());
-                return result;
-            }
-            else
-            {
-                PrintDebugW(L"WTSQueryUserToken succeeded");
-            }
-            defer{
-                CloseHandle(h_token);
-            };
+            WTS_CONNECTSTATE_CLASS wts_connect_state = WTSDisconnected;
+            WTS_CONNECTSTATE_CLASS* ptr_wts_connect_state = NULL;
 
-            void* env = nullptr;
-            if (!CreateEnvironmentBlock(&env, h_token, TRUE))
+            DWORD bytes_returned = 0;
+            if (::WTSQuerySessionInformation(
+                WTS_CURRENT_SERVER_HANDLE,
+                session_id,
+                WTSConnectState,
+                reinterpret_cast<LPTSTR*>(&ptr_wts_connect_state),
+                &bytes_returned))
             {
-                PrintDebugW(L"CreateEnvironmentBlock failed with error %d", GetLastError());
-                return result;
+                wts_connect_state = *ptr_wts_connect_state;
+                ::WTSFreeMemory(ptr_wts_connect_state);
+                if (wts_connect_state != WTSActive) return result;
             }
             else
             {
-                PrintDebugW(L"CreateEnvironmentBlock succeeded");
+                PrintDebugW(L"WTSQuerySessionInformation failed %d", GetLastError());
+                return result;
             }
-            defer{
-                DestroyEnvironmentBlock(env);
-            };
-            startup_info.lpDesktop = (LPWSTR)L"winsta0\\default";
-            DWORD dw_creation_flags = NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE | CREATE_UNICODE_ENVIRONMENT;
+
+            HANDLE h_impersonation_token = NULL;
+
+            if (!WTSQueryUserToken(session_id, &h_impersonation_token))
+            {
+                PrintDebugW(L"WTSQueryUserToken failed %d", GetLastError());
+                return result;
+            }
+            defer{ if (h_impersonation_token) { CloseHandle(h_impersonation_token); } h_impersonation_token = NULL; };
+            //Get real token from impersonation token
+            DWORD sz = 0;
+            TOKEN_LINKED_TOKEN  real_token = {};
+            if (GetTokenInformation(h_impersonation_token, (::TOKEN_INFORMATION_CLASS)TokenLinkedToken, &real_token, sizeof(TOKEN_LINKED_TOKEN), &sz) == FALSE)
+            {
+                PrintDebugW(L"GetTokenInformation failed %d", GetLastError());
+                return result;
+            }
+            defer{ if (real_token.LinkedToken) { CloseHandle(real_token.LinkedToken); } real_token.LinkedToken = NULL; };
+
+            HANDLE h_user_token = NULL;
+
+            if (!DuplicateTokenEx(real_token.LinkedToken,
+                TOKEN_ASSIGN_PRIMARY | TOKEN_ALL_ACCESS | MAXIMUM_ALLOWED,
+                NULL,
+                SecurityImpersonation,
+                TokenPrimary,
+                &h_user_token))
+            {
+                PrintDebugW(L"DuplicateTokenEx failed %d", GetLastError());
+                return result;
+            }
+            defer{ if (h_user_token) { CloseHandle(h_user_token); } h_user_token = NULL; };
+
+            // Get user name of this process
+            //LPTSTR pUserName = NULL;
+            WCHAR* p_user_name;
+            DWORD user_name_len = 0;
+
+            if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, session_id, WTSUserName, &p_user_name, &user_name_len))
+            {
+                PrintDebugW(L"User name %s, session_id %d", p_user_name, session_id);
+            }
+            else
+            {
+                PrintDebugW(L"WTSQuerySessionInformationW failed %d", GetLastError());
+            }
+            defer{ if (p_user_name) { WTSFreeMemory(p_user_name); } p_user_name = NULL; };
+
+            if (ImpersonateLoggedOnUser(h_user_token) == FALSE)
+            {
+                PrintDebugW(L"ImpersonateLoggedOnUser failed %d", GetLastError());
+            }
+            defer{ RevertToSelf(); };
+
+            DWORD dw_creation_flags = REALTIME_PRIORITY_CLASS | CREATE_NEW_CONSOLE;
+
             std::wstring cmd_editable = cmd;
-            if (!CreateProcessAsUserW(
-                h_token,                            // User token
-                nullptr,                            // Application name
+            // Start the process on behalf of the current user 
+            if (!CreateProcessAsUserW(h_user_token, NULL,
                 (LPWSTR)(cmd_editable.c_str()),     // Command line
-                nullptr,                            // Process security attributes
-                nullptr,                            // Thread security attributes
-                TRUE,                               // Inherit handles
+                NULL, NULL,
+                TRUE,
                 dw_creation_flags,
-                env,
-                nullptr,                            // Use parent's starting directory
-                &startup_info,                      // Pointer to STARTUPINFO
-                &process_info))                     // Pointer to PROCESS_INFORMATION
+                NULL, NULL, &startup_info, &process_info)
+                )
             {
                 PrintDebugW(L"CreateProcessAsUserW failed with error %d", GetLastError());
                 return result;
@@ -298,6 +347,7 @@ namespace ulti
                 PrintDebugW(L"CreateProcessAsUserW succeeded");
                 DWORD exit_code = 0;
                 PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
+                /*
                 PrintDebugW(L"Wating for process to finish");
                 // Successfully created the process.  Wait for it to finish.
                 WaitForSingleObject(process_info.hProcess, INFINITE);
@@ -305,6 +355,7 @@ namespace ulti
                 // Get the exit code.
                 result = GetExitCodeProcess(process_info.hProcess, &exit_code);
                 PrintDebugW(L"Exit code %d", exit_code);
+                */
             }
             defer{
                 CloseHandle(process_info.hProcess);
@@ -325,7 +376,7 @@ namespace ulti
             {
                 buffer[bytes_read / sizeof(char)] = '\0';  // Null-terminate the string
                 result_str += buffer;
-                PrintDebugW(L"Read %d bytes", bytes_read);
+                //PrintDebugW(L"Read %d bytes", bytes_read);
             }
             else
             {
@@ -382,7 +433,7 @@ namespace ulti
             return 0;
         }
 
-        DWORD session_id = 0;
+        DWORD session_id = (DWORD)(-1);
 
         for (DWORD i = 0; i < n_sessions; ++i)
         {

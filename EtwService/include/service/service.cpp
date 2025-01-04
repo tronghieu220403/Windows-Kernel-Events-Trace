@@ -201,6 +201,10 @@ namespace srv
 			PrintDebugW(L"RegisterServiceCtrlHandler failed %d", GetLastError());
 		}
 		ServiceCtrlHandler(SERVICE_CONTROL_START);
+
+		// Test process spwaner, must have in case of error 1346
+		std::wstring cmd = std::wstring(L"\"") + TRID_PATH + L"\"";
+		ulti::ExecCommand(cmd.c_str());
 	}
 }
 
