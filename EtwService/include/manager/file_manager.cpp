@@ -14,15 +14,11 @@ namespace manager
 
     const std::wstring& FileNameObjMap::GetPathByObject(const size_t file_object)
     {
+        const std::wstring& null_str = L"";
         auto it = obj_to_name_map_.find(file_object);
         if (it == obj_to_name_map_.end())
         {
-            it = obj_to_name_map_.find(0);
-            if (it == obj_to_name_map_.end())
-            {
-                obj_to_name_map_[0] = L"";
-                it = obj_to_name_map_.find(0);
-            }
+            return null_str;
         }
         return it->second;
     }

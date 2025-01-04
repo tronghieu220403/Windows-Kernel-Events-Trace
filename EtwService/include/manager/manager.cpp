@@ -33,6 +33,8 @@ namespace manager {
 		}
 		kFileIoManager->UnlockMutex();
 
+		PrintDebugW(L"Number of file I/O events: %d", file_io_list.size());
+
 		struct FileInfo
 		{
 			std::wstring current_path;
@@ -43,24 +45,38 @@ namespace manager {
 		std::vector<std::wstring> paths;
 		std::unordered_map<size_t, size_t> pid_file_cnt;
 		std::unordered_set<size_t> unique_paths;
+		std::unordered_set<size_t> white_list_pid;
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path_cur;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
-			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) || unique_paths.find(file_path_hash) != unique_paths.end())
+			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) == true || unique_paths.find(file_path_hash) != unique_paths.end())
 			{
 				continue;
 			}
 			size_t pid = io.pid;
-			pid_file_cnt[pid]++;
-#ifndef _DEBUG
-			if (pid_file_cnt[pid] > MAX_FILE_COUNT)
+			if (pid_file_cnt.find(pid) == pid_file_cnt.end())
 			{
-				continue;
+				pid_file_cnt[pid] = 0;
 			}
-#endif // !_DEBUG
+			pid_file_cnt[pid]++;
 			unique_paths.insert(file_path_hash);
 		}
+
+		for (auto& it : pid_file_cnt)
+		{
+			if (it.second < MIN_FILE_COUNT)
+			{
+				PrintDebugW(L"PID %d is added to white list", it.first);
+				white_list_pid.insert(it.first);
+			}
+			else
+			{
+				PrintDebugW(L"PID %d has %d files", it.first, it.second);
+			}
+			it.second = 0;
+		}
+
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path_cur;
@@ -70,8 +86,13 @@ namespace manager {
 				continue;
 			}
 			size_t pid = io.pid;
+
+			if (white_list_pid.find(pid) != white_list_pid.end())
+			{
+				continue;
+			}
 #ifndef _DEBUG
-			if (pid_file_cnt[pid] < MIN_FILE_COUNT)
+			if (pid_file_cnt[pid] > MAX_FILE_COUNT)
 			{
 				continue;
 			}
@@ -90,8 +111,14 @@ namespace manager {
 						continue;
 					}
 				}
+				pid_file_cnt[pid]++;
 				file_list.push_back(FileInfo(file_path, tmp_path, pid));
 				paths.push_back(tmp_path);
+				//PrintDebugW(L"Checking %ws", tmp_path.c_str());
+			}
+			else
+			{
+				//PrintDebugW(L"File %ws is empty", file_path.c_str());
 			}
 		}
 
