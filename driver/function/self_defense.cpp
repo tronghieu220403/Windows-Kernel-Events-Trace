@@ -22,6 +22,7 @@ namespace self_defense {
     // Đăng ký các callback bảo vệ process và thread
     void DrvRegister()
     {
+        DebugMessage("%ws", __FUNCTIONW__);
         kDirMutex.Create();
         kProcessMapMutex.Create();
 
@@ -76,6 +77,7 @@ namespace self_defense {
     // Huỷ đăng ký các callback bảo vệ process và thread
     void DrvUnload()
     {
+        DebugMessage("%ws", __FUNCTIONW__);
         PsSetCreateProcessNotifyRoutineEx(ProcessNotifyCallback, TRUE);
         ObUnRegisterCallbacks(kHandleRegistration);
 
@@ -90,6 +92,7 @@ namespace self_defense {
     // Đăng ký các bộ lọc bảo vệ file
     void FltRegister()
     {
+        DebugMessage("%ws", __FUNCTIONW__);
         kEnableProtectFile = true;
 
         reg::kFltFuncVector->PushBack({ IRP_MJ_SET_INFORMATION, PreSetInformationFile, nullptr });
@@ -102,7 +105,7 @@ namespace self_defense {
     // Huỷ đăng ký các bộ lọc bảo vệ file
     void FltUnload()
     {
-
+        DebugMessage("%ws", __FUNCTIONW__);
     }
 
     // Process notification callback
@@ -179,17 +182,26 @@ namespace self_defense {
         {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
-        DebugMessage("Blocked Creation path %ws, pid %d, process path %ws\n", file_path.Data(), (int)PsGetCurrentProcessId(), GetProcessImageName(PsGetCurrentProcessId()).Data());
 
-        data->Iopb->Parameters.Create.SecurityContext->DesiredAccess &= (FILE_GENERIC_READ | FILE_GENERIC_EXECUTE);
 
+		DWORD desired_access = data->Iopb->Parameters.Create.SecurityContext->DesiredAccess;
         UINT8 create_disposition = data->Iopb->Parameters.Create.Options >> 24;
-        create_disposition = FILE_OPEN;
         DWORD create_options = data->Iopb->Parameters.Create.Options & 0x00FFFFFF;
-        create_options &= ~FILE_DELETE_ON_CLOSE;
 
-        data->Iopb->Parameters.Create.Options = create_disposition << 24 | create_options;
-        FltSetCallbackDataDirty(data);
+        if (FlagOn(create_options, FILE_DELETE_ON_CLOSE)
+            || !FlagOn(create_disposition, FILE_OPEN)
+            || FlagOn(desired_access, FILE_WRITE_DATA)
+            || FlagOn(desired_access, FILE_APPEND_DATA)
+            //|| FlagOn(desired_access, FILE_WRITE_EA)
+            //|| FlagOn(desired_access, FILE_WRITE_ATTRIBUTES)
+            )
+        {
+            DebugMessage("Creation blocked, %ws, pid %d, process path %ws, desired_access 0x%x, create_disposition 0x%x, create_options %d", file_path.Data(), (int)PsGetCurrentProcessId(), GetProcessImageName(PsGetCurrentProcessId()).Data(), desired_access, create_disposition, create_options);
+            data->IoStatus.Status = STATUS_ACCESS_DENIED;
+            FltSetCallbackDataDirty(data);
+            return FLT_PREOP_COMPLETE;
+        }
+
         return FLT_PREOP_SUCCESS_NO_CALLBACK;
     }
 
@@ -220,8 +232,6 @@ namespace self_defense {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
 
-        DebugMessage("Blocked SetInformationFile path %ws, pid %d, process path %ws\n", file_path.Data(), (int)PsGetCurrentProcessId(), GetProcessImageName(PsGetCurrentProcessId()).Data());
-
         PFILE_RENAME_INFORMATION rename_info;
         PFLT_FILE_NAME_INFORMATION name_info;
 
@@ -230,6 +240,7 @@ namespace self_defense {
             data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileEndOfFileInformation ||
             data->Iopb->Parameters.SetFileInformation.FileInformationClass == FileShortNameInformation)
         {
+            DebugMessage("SetInfo blocked, path %ws, pid %d, process path %ws, FileInformationClass %d", file_path.Data(), (int)PsGetCurrentProcessId(), GetProcessImageName(PsGetCurrentProcessId()).Data(), data->Iopb->Parameters.SetFileInformation.FileInformationClass);
             data->IoStatus.Status = STATUS_ACCESS_DENIED;
             FltSetCallbackDataDirty(data);
             return FLT_PREOP_COMPLETE;
@@ -254,6 +265,7 @@ namespace self_defense {
             {
                 //DebugMessage("Rename file: %wZ", name_info->Name);
                 if (IsInProtectedDirectory(String<WCHAR>(name_info->Name))) {
+                    DebugMessage("Rename blocked, path %ws, pid %d, process path %ws, FileInformationClass %d", file_path.Data(), (int)PsGetCurrentProcessId(), GetProcessImageName(PsGetCurrentProcessId()).Data(), data->Iopb->Parameters.SetFileInformation.FileInformationClass);
                     FltReleaseFileNameInformation(name_info);
                     data->IoStatus.Status = STATUS_ACCESS_DENIED;
                     FltSetCallbackDataDirty(data);
@@ -304,11 +316,11 @@ namespace self_defense {
         if (it != kProcessMap->End())
         {
             // Lấy thời gian bắt đầu
-            LARGE_INTEGER end_time;
-            KeQuerySystemTime(&end_time);
+            LARGE_INTEGER curr_time;
+            KeQuerySystemTime(&curr_time);
 
             // Tính sự khác biệt giữa hai lần lấy thời gian (sự khác biệt theo đơn vị 100 ns)
-            ULONG64 time_difference = end_time.QuadPart - it->second.start_time.QuadPart;
+            ULONG64 time_difference = curr_time.QuadPart - it->second.start_time.QuadPart;
 
             // Kiểm tra xem thời gian có nhỏ hơn 0.5 giây (500 triệu ns)
             if (time_difference < 5000000) // 5 triệu * 100 ns = 0.5 giây
@@ -321,15 +333,61 @@ namespace self_defense {
         if (operation_information->ObjectType == *PsProcessType)
         {
             // Xóa quyền như mô tả của Windows và thêm quyền cụ thể
+            /*
             operation_information->Parameters->CreateHandleInformation.DesiredAccess &=
-                ~(DELETE | READ_CONTROL | WRITE_DAC | WRITE_OWNER | PROCESS_ALL_ACCESS |
+				~(DELETE | READ_CONTROL | WRITE_DAC | WRITE_OWNER | PROCESS_ALL_ACCESS | PROCESS_TERMINATE |
                     PROCESS_CREATE_THREAD |
                     PROCESS_SET_INFORMATION |
-                    PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE);
-
-            // Cho phép quyền cụ thể nếu có
-            operation_information->Parameters->CreateHandleInformation.DesiredAccess |=
-                (PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION | PROCESS_SET_QUOTA | PROCESS_CREATE_PROCESS);
+                    PROCESS_VM_OPERATION | PROCESS_VM_WRITE);
+            */
+			DWORD desired_access = operation_information->Parameters->CreateHandleInformation.DesiredAccess;
+            //DebugMessage("Desired access: %x", desired_access);
+			if (desired_access & PROCESS_TERMINATE)
+			{
+                //DebugMessage("Terminate blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~PROCESS_TERMINATE;
+			}
+            if (desired_access & PROCESS_CREATE_THREAD)
+            {
+                //DebugMessage("Create thread blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~PROCESS_CREATE_THREAD;
+            }
+			if (desired_access & PROCESS_SET_SESSIONID)
+			{
+				//DebugMessage("Set sessionid blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+				desired_access &= ~PROCESS_SET_SESSIONID;
+			}
+            if (desired_access & PROCESS_VM_OPERATION)
+            {
+                //DebugMessage("VM operation blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~PROCESS_VM_OPERATION;
+            }
+            if (desired_access & PROCESS_VM_WRITE)
+            {
+                //DebugMessage("VM write blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~PROCESS_VM_WRITE;
+            }
+            if (desired_access & PROCESS_SET_INFORMATION)
+            {
+                //DebugMessage("Set information blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~PROCESS_SET_INFORMATION;
+            }
+            if (desired_access & DELETE)
+            {
+                //DebugMessage("Delete blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+                desired_access &= ~DELETE;
+            }
+			if (desired_access & WRITE_DAC)
+			{
+                //DebugMessage("Write DAC blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+				desired_access &= ~WRITE_DAC;
+			}
+			if (desired_access & WRITE_OWNER)
+			{
+                //DebugMessage("Write owner blocked, source %lld, target %lld", (size_t)source_pid, (size_t)target_pid);
+				desired_access &= ~WRITE_OWNER;
+			}
+			operation_information->Parameters->CreateHandleInformation.DesiredAccess = desired_access;
         }
         else if (operation_information->ObjectType == *PsThreadType)
         {

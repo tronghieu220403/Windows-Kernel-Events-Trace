@@ -221,6 +221,7 @@ DriverUnload(
     PDRIVER_OBJECT driver_object
 )
 {
+    DebugMessage("%ws", __FUNCTIONW__);
     reg::DrvUnload(driver_object);
     return STATUS_SUCCESS;
 }
@@ -234,9 +235,8 @@ MiniFsUnload (
 
     PAGED_CODE();
 
+    DebugMessage("%ws", __FUNCTIONW__);
     reg::FltUnload();
-
-    DebugMessage("FilterUnloadRegistered");
 
     return STATUS_SUCCESS;
 }

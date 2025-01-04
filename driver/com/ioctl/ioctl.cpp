@@ -2,6 +2,8 @@
 
 NTSTATUS ioctl::DrvRegister(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path)
 {
+	DebugMessage("%ws", __FUNCTIONW__);
+
 	driver_object->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ioctl::HandleIoctl;
 
 	// routines that will execute once a handle to our device's symbolik link is opened/closed
@@ -35,7 +37,7 @@ NTSTATUS ioctl::DrvRegister(PDRIVER_OBJECT driver_object, PUNICODE_STRING regist
 
 NTSTATUS ioctl::DrvUnload(PDRIVER_OBJECT driver_object)
 {
-	DebugMessage("DriverUnload: Unload\n");
+	DebugMessage("%ws", __FUNCTIONW__);
 
 	IoDeleteDevice(driver_object->DeviceObject);
 	IoDeleteSymbolicLink(&DEVICE_SYMBOLIC_NAME);
