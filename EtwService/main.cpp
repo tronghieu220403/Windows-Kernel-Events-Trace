@@ -29,7 +29,7 @@ void SetUpProvider()
         | EVENT_TRACE_FLAG_PROCESS
         //| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
-        | EVENT_TRACE_FLAG_VIRTUAL_ALLOC
+        //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
     );
     auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -130,10 +130,17 @@ void ServiceMain()
         {
             Sleep(100);
         }
-        while (provider_end == false || comsumer_end == false)
+        while (true)
         {
             auto start_time = std::chrono::high_resolution_clock::now();
-            manager::EvaluateProcess();
+            if (provider_end == true || comsumer_end == true)
+            {
+                PrintDebugW(L"Provider or Comsumer is stopped %d %d", provider_end, comsumer_end);
+            }
+            else
+            {
+                manager::EvaluateProcess();
+            }
             auto end_time = std::chrono::high_resolution_clock::now();
             DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
             Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
