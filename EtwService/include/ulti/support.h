@@ -9,7 +9,7 @@
 
 #define MAIN_DIR L"E:\\hieunt20210330\\"
 #define TEMP_DIR L"E:\\hieunt20210330\\temp\\"
-#define SERVICE_NAME L"HieuntEtwService"
+#define SERVICE_NAME L"EtwService"
 #define TRID_PATH L"E:\\hieunt20210330\\Trid\\trid.exe"
 
 namespace ulti
