@@ -53,6 +53,7 @@ namespace manager {
 		std::unordered_map<size_t, FileCount> pid_file_cnt; // <pid> -> <file count, total_size>
 		std::unordered_set<size_t> unique_paths;
 		std::unordered_set<size_t> white_list_pid;
+		std::unordered_map<size_t, size_t> file_size_map; // <file_path_hash> -> <file_size>
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path;
@@ -68,13 +69,20 @@ namespace manager {
 				pid_file_cnt[pid] = {};
 				it = pid_file_cnt.find(pid);
 			}
-			if (io.featured_access_flags & WRITE_FLAG)
+			size_t file_size = 0;
+			const auto& it_file_size_map = file_size_map.find(file_path_hash);
+			if (it_file_size_map == file_size_map.end())
 			{
-				it->second.total_size += io.write_info.size;
+				file_size = it_file_size_map->second;
 			}
-			else if (io.featured_access_flags & RENAME_FLAG)
+			else
 			{
-				it->second.total_size += manager::GetFileSize(io.file_path);
+				file_size = manager::GetFileSize(file_path);
+				file_size_map[file_path_hash] = file_size;
+			}
+			if ((io.featured_access_flags & WRITE_FLAG) || (io.featured_access_flags & RENAME_FLAG))
+			{
+				it->second.total_size += file_size;
 			}
 			else
 			{
@@ -83,7 +91,7 @@ namespace manager {
 			it->second.file_count++;
 			it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
 			unique_paths.insert(file_path_hash);
-			PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
+			//PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
 		}
 		for (auto& it : pid_file_cnt)
 		{
@@ -124,13 +132,13 @@ namespace manager {
 #endif // !_DEBUG
 			unique_paths.erase(file_path_hash);
 
-			size_t size = manager::GetFileSize(file_path);
-			if (size != 0)
+			size_t file_size = file_size_map[file_path_hash];
+			if (file_size != 0)
 			{
 				std::wstring tmp_path = file_path;
 				if (!ulti::CheckPrintableANSI(file_path))
 				{
-					tmp_path = CopyToTmp(file_path, min(size, FILE_MAX_SIZE_SCAN));
+					tmp_path = CopyToTmp(file_path, min(file_size, FILE_MAX_SIZE_SCAN));
 					if (tmp_path.empty())
 					{
 						continue;
