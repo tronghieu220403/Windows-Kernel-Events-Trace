@@ -71,7 +71,7 @@ namespace manager {
 			}
 			size_t file_size = 0;
 			const auto& it_file_size_map = file_size_map.find(file_path_hash);
-			if (it_file_size_map == file_size_map.end())
+			if (it_file_size_map != file_size_map.end())
 			{
 				file_size = it_file_size_map->second;
 			}
@@ -80,13 +80,13 @@ namespace manager {
 				file_size = manager::GetFileSize(file_path);
 				file_size_map[file_path_hash] = file_size;
 			}
+			if (file_size == 0)
+			{
+				continue;
+			}
 			if ((io.featured_access_flags & WRITE_FLAG) || (io.featured_access_flags & RENAME_FLAG))
 			{
 				it->second.total_size += file_size;
-			}
-			else
-			{
-				continue;
 			}
 			it->second.file_count++;
 			it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
@@ -210,7 +210,14 @@ namespace manager {
 				manager::kProcMan->LockMutex();
 				const auto& image_name = manager::kProcMan->GetImageFileName(pid);
 				manager::kProcMan->UnlockMutex();
-				debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" (" + image_name + L")" + L" is ransomware.");
+                if (!image_name.empty())
+                {
+                    debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" (" + image_name + L")" + L" is ransomware.");
+                }
+                else
+                {
+                    debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" is ransomware.");
+                }
 			}
 		}
 		PrintDebugW(L"Process evaluation done");

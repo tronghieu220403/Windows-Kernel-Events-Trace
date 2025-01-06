@@ -71,7 +71,7 @@ namespace manager
         file_io_info.file_path = file_path;
         file_io_info.start_time_ms = start_time_ms;
         file_io_info.pid = pid;
-		file_io_info.write_info.size = io_size;
+        file_io_info.write_info.size = io_size;
         file_io_queue_.push_back(file_io_info);
     }
 
@@ -161,7 +161,7 @@ namespace manager
 
     std::wstring GetWin32Path(const std::wstring& path)
     {
-		return ulti::ToLower(GetWin32PathCaseSensitive(path));
+        return ulti::ToLower(GetWin32PathCaseSensitive(path));
     }
 
     bool FileExist(const std::wstring& file_path)
@@ -173,12 +173,14 @@ namespace manager
         return true;
     }
 
-    // Hàm lấy kích thước file
     size_t GetFileSize(const std::wstring& file_path)
     {
         WIN32_FILE_ATTRIBUTE_DATA fad;
         if (!GetFileAttributesEx(file_path.c_str(), GetFileExInfoStandard, &fad))
-            return 0; // error condition, could call GetLastError to find out more
+        {
+            PrintDebugW(L"GetFileSize failed for file %ws, error %s", file_path.c_str(), debug::GetErrorMessage(GetLastError()).c_str());
+            return 0;
+        }
         LARGE_INTEGER size;
         size.HighPart = fad.nFileSizeHigh;
         size.LowPart = fad.nFileSizeLow;
