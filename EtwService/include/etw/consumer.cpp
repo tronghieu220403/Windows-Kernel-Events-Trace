@@ -99,7 +99,7 @@ namespace etw
             }
             else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
             {
-                ProcessPageFaultEvent(event);
+                //ProcessPageFaultEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
@@ -135,25 +135,29 @@ namespace etw
             FileIoCreateEvent file_create_event(event);
             file_path = file_create_event.open_path;
             const auto& win32_file_path = manager::GetWin32Path(file_path);
-			if (FlagOn(file_create_event.create_options, FILE_DIRECTORY_FILE))
-			{
-				//PrintDebugW(L"File is a directory %ws", win32_file_path.c_str());
+            UINT8 create_disposition = file_create_event.create_options >> 24;
+            DWORD create_options = file_create_event.create_options & 0x00FFFFFF;
+            if (FlagOn(create_options, FILE_DIRECTORY_FILE))
+            {
+                //PrintDebugW(L"File is a directory %ws", win32_file_path.c_str());
                 return;
-			}
-			else if (win32_file_path.empty() 
-                || win32_file_path[win32_file_path.size() - 1] == L'\\' 
+            }
+            else if (win32_file_path.empty()
+                || win32_file_path[win32_file_path.size() - 1] == L'\\'
                 || manager::IsExecutableFile(win32_file_path)
                 )
             {
                 //PrintDebugW(L"File is executable %ws", win32_file_path.c_str());
                 return;
-			}
+            }
+            /* // File might be renamed so we can't check if it exists
             else if (!manager::FileExist(win32_file_path))
             {
-				//PrintDebugW(L"File does not exist %ws", win32_file_path.c_str());
-				return;
+                //PrintDebugW(L"File does not exist %ws", win32_file_path.c_str());
+                return;
             }
-            //PrintDebugW(L"File Operation, Create event, pid %lld, file path %ws, file_obj %p", event.GetProcessId(), win32_file_path.c_str(), file_create_event.file_object);
+            */
+            //PrintDebugW(L"File Operation, Create event, pid %lld, file path %ws, file_obj %p, create_options %lx", event.GetProcessId(), win32_file_path.c_str(), file_create_event.file_object, create_options);
             manager::kFileNameObjMap->MapObjectWithPath(file_create_event.file_object, win32_file_path);
         }
         // EventTypeName{ "DirEnum", "DirNotify" }]
@@ -183,7 +187,6 @@ namespace etw
             {
                 return;
             }
-
             // Rename event
             file_rename_map_[rename_event.file_key] = std::make_pair(std::make_pair(file_path, L""), pid);
         }
@@ -206,7 +209,7 @@ namespace etw
             int pid = static_cast<int>(event.GetProcessId());
 
             // Rename event
-			auto it = file_rename_map_.find(file_create_event.file_object);
+            auto it = file_rename_map_.find(file_create_event.file_object);
             if (it != file_rename_map_.end())
             {
                 it->second.first.second = manager::GetWin32Path(file_create_event.file_name);
@@ -232,12 +235,12 @@ namespace etw
         // EventTypeName{ "OperationEnd" }
         else if (type == FileIoEventType::kOperationEnd)
         {
-            // FileIoOpEndEvent operation_end_event(event);
+            //FileIoOpEndEvent operation_end_event(event);
         }
         // EventTypeName{"Read", "Write"}
         else if (type == FileIoEventType::kRead)
         {
-            /*FileIoReadEvent read_event(event);*/
+            //FileIoReadEvent read_event(event);
         }
         else if (type == FileIoEventType::kWrite)
         {
@@ -247,15 +250,15 @@ namespace etw
                 return;
             }
             int pid = static_cast<int>(event.GetProcessId());
-			//PrintDebugW(L"File Operation, Write event, pid %lld, file_obj %p, offset 0x%llx, size 0x%llx", event.GetProcessId(), write_event.file_object, write_event.offset, write_event.io_size);
+            //PrintDebugW(L"File Operation, Write event, pid %lld, file_obj %p, offset 0x%llx, size 0x%llx", event.GetProcessId(), write_event.file_object, write_event.offset, write_event.io_size);
             file_path = manager::kFileNameObjMap->GetPathByObject(write_event.file_object);
-			if (file_path.empty() == false)
-			{
+            if (file_path.empty() == false)
+            {
                 manager::kFileIoManager->LockMutex();
                 manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs());
                 manager::kFileIoManager->UnlockMutex();
-				manager::kFileNameObjMap->RemoveObject(write_event.file_object);
-			}
+                manager::kFileNameObjMap->RemoveObject(write_event.file_object);
+            }
         }
         // EventTypeName{ "Cleanup", "Close", "Flush" }
         else if (type == FileIoEventType::kCleanup)
