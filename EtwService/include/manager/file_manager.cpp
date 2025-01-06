@@ -176,26 +176,13 @@ namespace manager
     // Hàm lấy kích thước file
     size_t GetFileSize(const std::wstring& file_path)
     {
-        // Open the file
-        HANDLE file_handle = CreateFileW(file_path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
-
-        if (file_handle == INVALID_HANDLE_VALUE) {
-            PrintDebugW(L"Failed to open file %ws, error %d", file_path.c_str(), GetLastError);
-            return 0;
-        }
-
-        // Get the file size
-        LARGE_INTEGER file_size;
-        if (GetFileSizeEx(file_handle, &file_size) == 0)
-        {
-            file_size.QuadPart = 0;
-        }
-
-        // Close the handle
-        CloseHandle(file_handle);
-
-        return file_size.QuadPart;
-
+        WIN32_FILE_ATTRIBUTE_DATA fad;
+        if (!GetFileAttributesEx(file_path.c_str(), GetFileExInfoStandard, &fad))
+            return 0; // error condition, could call GetLastError to find out more
+        LARGE_INTEGER size;
+        size.HighPart = fad.nFileSizeHigh;
+        size.LowPart = fad.nFileSizeLow;
+        return size.QuadPart;
     }
 
     // Hàm lấy đuôi file
