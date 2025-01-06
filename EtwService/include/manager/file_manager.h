@@ -19,12 +19,20 @@
 #define OVERWRITE_RENAME			(READ_WRITE_FLAG | RENAME_FLAG)
 #define OVERWRITE_RENAME_FLAG		OVERWRITE_RENAME
 
-#define EVALUATATION_INTERVAL_MS 5000
+#define EVALUATATION_INTERVAL_MS 10000
+#define EVALUATATION_INTERVAL_SEC (EVALUATATION_INTERVAL_MS / 1000)
 
-#define MAX_TOTAL_SIZE_CHECK (150 * 1024 * 1024) // 150MB
-#define FILE_MAX_SIZE_CHECK (16 * 1024) // 16KB
-#define MIN_FILE_COUNT (2 * EVALUATATION_INTERVAL_MS / 1000)
+#define MIN_TOTAL_SIZE_CHECK_PER_SEC (50 * 1024 * 1024)// 50MB
+#define MIN_TOTAL_SIZE_CHECK (MIN_TOTAL_SIZE_CHECK_PER_SEC * EVALUATATION_INTERVAL_SEC)
+
+#define MIN_FILE_COUNT_PER_SEC 2
+#define MIN_FILE_COUNT (MIN_FILE_COUNT_PER_SEC * EVALUATATION_INTERVAL_SEC)
 #define MAX_FILE_COUNT (MIN_FILE_COUNT * 3)
+
+#define MIN_DIR_COUNT 2
+
+#define FILE_MAX_SIZE_SCAN (16 * 1024) // 16KB
+
 #define THRESHOLD_PERCENTAGE 80
 #define BelowThreshold(part, total) (part <= total * THRESHOLD_PERCENTAGE / 100)
 
@@ -40,11 +48,18 @@ namespace manager {
 	};
 
 	struct FileIoInfo {
+
 		size_t featured_access_flags = 0;
-		std::wstring file_path_cur;
-		std::wstring file_path_old;
+		std::wstring file_path;
 		size_t start_time_ms = 0;
 		size_t pid = 0;
+
+		struct WriteInfo {
+			size_t size = 0;
+		} write_info;
+		struct RenameInfo {
+			std::wstring file_path_old;
+		} rename_info;
 	};
 
 	class FileIoManager {
@@ -58,9 +73,9 @@ namespace manager {
 		FileIoInfo PopFileIoEvent();
 		size_t GetQueueSize();
 
-		void PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& new_file_path, size_t pid, size_t start_time_ms);
+		void PushRenameFileEventToQueue(const std::wstring& file_path_new, size_t pid, size_t start_time_ms, const std::wstring& file_path_old);
 
-		void PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms);
+		void PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms, size_t io_size);
 	};
 
 	/*___________________________________________*/
@@ -74,6 +89,7 @@ namespace manager {
 	std::wstring GetNativePath(const std::wstring& win32_path);
 
 	// Win32 path getter function
+	std::wstring GetWin32PathCaseSensitive(const std::wstring& path);
 	std::wstring GetWin32Path(const std::wstring& path);
 
 	bool FileExist(const std::wstring& file_path);
@@ -84,7 +100,7 @@ namespace manager {
 
 	bool IsExecutableFile(const std::wstring& file_path);
 
-	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_SIZE_CHECK);
+	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_SIZE_SCAN);
 
 	void ClearTmpFiles();
 
@@ -94,7 +110,7 @@ namespace manager {
 	std::vector<std::pair<std::wstring, bool>> AnalyzeTridOutput(const std::wstring& output);
 
 	// Hàm kiểm tra file có chứa ký tự in được không
-	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_SIZE_CHECK);
+	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_SIZE_SCAN);
 
 }
 #endif  // FILE_MANAGER_H_

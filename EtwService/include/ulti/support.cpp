@@ -30,6 +30,19 @@ namespace ulti
         return myconv.to_bytes(wstr);
     }
 
+    std::wstring ToLower(const std::wstring& wstr)
+    {
+        std::wstring result = wstr;
+        for (wchar_t& c : result)
+        {
+            if (std::isalpha(c))
+            {
+                c = std::tolower(c);
+            }
+        }
+        return result;
+    }
+
     bool CreateDir(const std::wstring& dir_path)
     {
         BOOL status = ::CreateDirectory(dir_path.c_str(), NULL);

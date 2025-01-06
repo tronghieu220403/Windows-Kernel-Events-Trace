@@ -49,28 +49,29 @@ namespace manager
         return file_io_queue_.size();
     }
 
-    void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_old, const std::wstring& file_path_new, size_t pid, size_t start_time_ms)
+    void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_new, size_t pid, size_t start_time_ms, const std::wstring& file_path_old)
     {
-        PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
+        //PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
 
         FileIoInfo file_io_info;
-        file_io_info.featured_access_flags |= RENAME_FLAG;
-        file_io_info.file_path_old = file_path_old;
-        file_io_info.file_path_cur = file_path_new;
+        file_io_info.featured_access_flags = RENAME_FLAG;
+        file_io_info.file_path = file_path_new;
+        file_io_info.rename_info.file_path_old = file_path_old;
         file_io_info.start_time_ms = start_time_ms;
         file_io_info.pid = pid;
         file_io_queue_.push_back(file_io_info);
     }
 
-    void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms)
+    void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms, size_t io_size)
     {
-        PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
+        //PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
 
         FileIoInfo file_io_info;
-        file_io_info.featured_access_flags |= WRITE_FLAG;
-        file_io_info.file_path_cur = file_path;
+        file_io_info.featured_access_flags = WRITE_FLAG;
+        file_io_info.file_path = file_path;
         file_io_info.start_time_ms = start_time_ms;
         file_io_info.pid = pid;
+		file_io_info.write_info.size = io_size;
         file_io_queue_.push_back(file_io_info);
     }
 
@@ -100,8 +101,8 @@ namespace manager
         return device_name + win32_path.substr(win32_path.find_first_of('\\'));
     }
 
-    std::wstring GetWin32Path(const std::wstring& path) {
-
+    std::wstring GetWin32PathCaseSensitive(const std::wstring& path)
+    {
         // If the path is empty or it does not start with "\\" (not a device path), return as-is
         if (path.empty() || path[0] != L'\\') {
             return path;
@@ -156,6 +157,11 @@ namespace manager
         }
 
         return win_api_path;
+    }
+
+    std::wstring GetWin32Path(const std::wstring& path)
+    {
+		return ulti::ToLower(GetWin32PathCaseSensitive(path));
     }
 
     bool FileExist(const std::wstring& file_path)

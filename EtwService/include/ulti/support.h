@@ -19,6 +19,7 @@ namespace ulti
     std::vector<char> StringToVectorChar(const std::string& s);
     std::vector<unsigned char> StringToVectorUChar(const std::string& s);
     std::string WstrToStr(const std::wstring& wstr);
+    std::wstring ToLower(const std::wstring& wstr);
 
     bool CreateDir(const std::wstring& dir_path);
 

@@ -219,7 +219,7 @@ namespace etw
                 const std::wstring new_path = pss.second;
 
                 manager::kFileIoManager->LockMutex();
-                manager::kFileIoManager->PushRenameFileEventToQueue(old_path, new_path, issue_pid, event.GetTimeInMs());
+                manager::kFileIoManager->PushRenameFileEventToQueue(new_path, issue_pid, event.GetTimeInMs(), old_path);
                 manager::kFileIoManager->UnlockMutex();
                 file_rename_map_.erase(file_create_event.file_object);
             }
@@ -245,7 +245,7 @@ namespace etw
         else if (type == FileIoEventType::kWrite)
         {
             FileIoWriteEvent write_event(event);
-            if (write_event.offset > FILE_MAX_SIZE_CHECK)
+            if (write_event.offset > FILE_MAX_SIZE_SCAN)
             {
                 return;
             }
@@ -255,7 +255,7 @@ namespace etw
             if (file_path.empty() == false)
             {
                 manager::kFileIoManager->LockMutex();
-                manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs());
+                manager::kFileIoManager->PushWriteFileEventToQueue(file_path, pid, event.GetTimeInMs(), write_event.io_size);
                 manager::kFileIoManager->UnlockMutex();
                 manager::kFileNameObjMap->RemoveObject(write_event.file_object);
             }

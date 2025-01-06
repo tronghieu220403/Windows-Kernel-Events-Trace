@@ -41,45 +41,70 @@ namespace manager {
 			std::wstring tmp_path;
 			size_t pid;
 		};
+
 		std::vector<FileInfo> file_list;
 		std::vector<std::wstring> paths;
-		std::unordered_map<size_t, size_t> pid_file_cnt;
+		struct FileCount
+		{
+			size_t file_count = 0;
+			size_t total_size = 0;
+			std::unordered_set<size_t> unique_dir_hashes;
+		};
+		std::unordered_map<size_t, FileCount> pid_file_cnt; // <pid> -> <file count, total_size>
 		std::unordered_set<size_t> unique_paths;
 		std::unordered_set<size_t> white_list_pid;
 		for (const FileIoInfo& io : file_io_list)
 		{
-			const std::wstring file_path = io.file_path_cur;
+			const std::wstring file_path = io.file_path;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
 			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) == true || unique_paths.find(file_path_hash) != unique_paths.end())
 			{
 				continue;
 			}
 			size_t pid = io.pid;
-			if (pid_file_cnt.find(pid) == pid_file_cnt.end())
+			auto it = pid_file_cnt.find(pid);
+			if (it == pid_file_cnt.end())
 			{
-				pid_file_cnt[pid] = 0;
+				pid_file_cnt[pid] = {};
+				it = pid_file_cnt.find(pid);
 			}
-			pid_file_cnt[pid]++;
-			unique_paths.insert(file_path_hash);
-		}
-
-		for (auto& it : pid_file_cnt)
-		{
-			if (it.second < MIN_FILE_COUNT)
+			if (io.featured_access_flags & WRITE_FLAG)
 			{
-				PrintDebugW(L"PID %d is added to white list", it.first);
-				white_list_pid.insert(it.first);
+				it->second.total_size += io.write_info.size;
+			}
+			else if (io.featured_access_flags & RENAME_FLAG)
+			{
+				it->second.total_size += manager::GetFileSize(io.file_path);
 			}
 			else
 			{
-				PrintDebugW(L"PID %d has %d files", it.first, it.second);
+				continue;
 			}
-			it.second = 0;
+			it->second.file_count++;
+			it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
+			unique_paths.insert(file_path_hash);
+			PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
+		}
+		for (auto& it : pid_file_cnt)
+		{
+			const auto& total_size = it.second.total_size;
+			const auto& file_count = it.second.file_count;
+			const auto& unique_dir_count = it.second.unique_dir_hashes.size();
+			if (file_count >= MIN_FILE_COUNT && total_size >= MIN_TOTAL_SIZE_CHECK && unique_dir_count >= MIN_DIR_COUNT)
+			{
+				PrintDebugW(L"PID %d changed %d files in %d folders, total io %d bytes", it.first, file_count, unique_dir_count, total_size);
+			}
+			else
+			{
+				PrintDebugW(L"PID %d is skipped, changed %d files in %d folders, total io %d bytes", it.first, file_count, unique_dir_count, total_size);
+				white_list_pid.insert(it.first);
+			}
+			it.second.file_count = 0;
 		}
 
 		for (const FileIoInfo& io : file_io_list)
 		{
-			const std::wstring file_path = io.file_path_cur;
+			const std::wstring file_path = io.file_path;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
 			if (unique_paths.find(file_path_hash) == unique_paths.end())
 			{
@@ -92,7 +117,7 @@ namespace manager {
 				continue;
 			}
 #ifndef _DEBUG
-			if (pid_file_cnt[pid] > MAX_FILE_COUNT)
+			if (pid_file_cnt[pid].file_count > MAX_FILE_COUNT)
 			{
 				continue;
 			}
@@ -105,13 +130,13 @@ namespace manager {
 				std::wstring tmp_path = file_path;
 				if (!ulti::CheckPrintableANSI(file_path))
 				{
-					tmp_path = CopyToTmp(file_path, min(size, FILE_MAX_SIZE_CHECK));
+					tmp_path = CopyToTmp(file_path, min(size, FILE_MAX_SIZE_SCAN));
 					if (tmp_path.empty())
 					{
 						continue;
 					}
 				}
-				pid_file_cnt[pid]++;
+				pid_file_cnt[pid].file_count++;
 				file_list.push_back(FileInfo(file_path, tmp_path, pid));
 				paths.push_back(tmp_path);
 				//PrintDebugW(L"Checking %ws", tmp_path.c_str());
