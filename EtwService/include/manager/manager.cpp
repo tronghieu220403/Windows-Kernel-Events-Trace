@@ -174,6 +174,10 @@ namespace manager {
 			if (total >= MIN_FILE_COUNT && BelowThreshold(num_recognized, total))
 			{
 				PrintDebugW(L"PID %d is ransomware.", pid);
+				manager::kProcMan->LockMutex();
+				const auto& image_name = manager::kProcMan->GetImageFileName(pid);
+				manager::kProcMan->UnlockMutex();
+				debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" (" + image_name + L")" + L" is ransomware.");
 			}
 		}
 		PrintDebugW(L"Process evaluation done");
