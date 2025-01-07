@@ -150,6 +150,11 @@ namespace etw
                 //PrintDebugW(L"File is executable %ws", win32_file_path.c_str());
                 return;
             }
+            else if (manager::DirExist(win32_file_path))
+            {
+                // PrintDebugW(L"File is a directory %ws", win32_file_path.c_str());
+                return;
+            }
             /* // File might be renamed so we can't check if it exists
             else if (!manager::FileExist(win32_file_path))
             {

@@ -93,6 +93,7 @@ namespace manager {
 	std::wstring GetWin32Path(const std::wstring& path);
 
 	bool FileExist(const std::wstring& file_path);
+	bool DirExist(const std::wstring& dir_path);
 
 	size_t GetFileSize(const std::wstring& file_path);
 

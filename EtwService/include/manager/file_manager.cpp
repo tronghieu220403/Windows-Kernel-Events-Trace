@@ -173,6 +173,15 @@ namespace manager
         return true;
     }
 
+    bool DirExist(const std::wstring& dir_path)
+    {
+        DWORD file_attributes = GetFileAttributesW(dir_path.c_str());
+        if (file_attributes == INVALID_FILE_ATTRIBUTES || FlagOn(file_attributes, FILE_ATTRIBUTE_DIRECTORY) == false) {
+            return false;
+        }
+        return true;
+    }
+
     size_t GetFileSize(const std::wstring& file_path)
     {
         WIN32_FILE_ATTRIBUTE_DATA fad;
