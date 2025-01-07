@@ -33,6 +33,8 @@ namespace manager {
 		}
 		kFileIoManager->UnlockMutex();
 
+		// Since write event is rarer than rename event in case of ransomware, we can not use file_rename_map to see if a file is written-and-renamed
+
 		PrintDebugW(L"Number of file I/O events: %d", file_io_list.size());
 
 		struct FileInfo
