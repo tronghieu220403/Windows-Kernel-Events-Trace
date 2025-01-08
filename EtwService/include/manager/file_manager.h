@@ -22,16 +22,16 @@
 #define EVALUATATION_INTERVAL_MS 5000
 #define EVALUATATION_INTERVAL_SEC (EVALUATATION_INTERVAL_MS / 1000)
 
-#define MIN_TOTAL_SIZE_CHECK_PER_SEC (20 * 1024 * 1024)// 20MB
+#define MIN_TOTAL_SIZE_CHECK_PER_SEC (1 * 1024 * 1024)// 1MB
 #define MIN_TOTAL_SIZE_CHECK (MIN_TOTAL_SIZE_CHECK_PER_SEC * EVALUATATION_INTERVAL_SEC)
 
 #define MIN_FILE_COUNT_PER_SEC 2
 #define MIN_FILE_COUNT (MIN_FILE_COUNT_PER_SEC * EVALUATATION_INTERVAL_SEC)
-#define MAX_FILE_COUNT (MIN_FILE_COUNT * 3)
+#define MAX_FILE_COUNT (MIN_FILE_COUNT * 5)
 
 #define MIN_DIR_COUNT 2
 
-#define FILE_MAX_SIZE_SCAN (16 * 1024) // 16KB
+#define FILE_MAX_TOTAL_SIZE_SCAN ((10 * 1024 * 1024) * EVALUATATION_INTERVAL_SEC) // 10MB per sec
 
 #define THRESHOLD_PERCENTAGE 80
 #define BelowThreshold(part, total) (part <= total * THRESHOLD_PERCENTAGE / 100)
@@ -101,7 +101,7 @@ namespace manager {
 
 	bool IsExecutableFile(const std::wstring& file_path);
 
-	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_SIZE_SCAN);
+	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_TOTAL_SIZE_SCAN);
 
 	void ClearTmpFiles();
 
@@ -111,7 +111,7 @@ namespace manager {
 	std::vector<std::pair<std::wstring, bool>> AnalyzeTridOutput(const std::wstring& output);
 
 	// Hàm kiểm tra file có chứa ký tự in được không
-	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_SIZE_SCAN);
+	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_TOTAL_SIZE_SCAN);
 
 }
 #endif  // FILE_MANAGER_H_

@@ -60,40 +60,35 @@ namespace manager {
 		{
 			const std::wstring file_path = io.file_path;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
-			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) == true || unique_paths.find(file_path_hash) != unique_paths.end())
+			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) == true)
 			{
 				continue;
 			}
-			size_t pid = io.pid;
-			auto it = pid_file_cnt.find(pid);
-			if (it == pid_file_cnt.end())
-			{
-				pid_file_cnt[pid] = {};
-				it = pid_file_cnt.find(pid);
-			}
 			size_t file_size = 0;
-			const auto& it_file_size_map = file_size_map.find(file_path_hash);
-			if (it_file_size_map != file_size_map.end())
-			{
-				file_size = it_file_size_map->second;
-			}
-			else
+			if (file_size_map.find(file_path_hash) == file_size_map.end())
 			{
 				file_size = manager::GetFileSize(file_path);
 				file_size_map[file_path_hash] = file_size;
+				if (file_size == 0)
+				{
+					continue;
+				}
+				size_t pid = io.pid;
+				auto it = pid_file_cnt.find(pid);
+				if (it == pid_file_cnt.end())
+				{
+					pid_file_cnt[pid] = {};
+					it = pid_file_cnt.find(pid);
+				}
+				if ((io.featured_access_flags & WRITE_FLAG) || (io.featured_access_flags & RENAME_FLAG))
+				{
+					it->second.total_size += file_size;
+					it->second.file_count++;
+					it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
+					unique_paths.insert(file_path_hash);
+				}
+				PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
 			}
-			if (file_size == 0)
-			{
-				continue;
-			}
-			if ((io.featured_access_flags & WRITE_FLAG) || (io.featured_access_flags & RENAME_FLAG))
-			{
-				it->second.total_size += file_size;
-			}
-			it->second.file_count++;
-			it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
-			unique_paths.insert(file_path_hash);
-			//PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
 		}
 		for (auto& it : pid_file_cnt)
 		{
@@ -110,6 +105,7 @@ namespace manager {
 				white_list_pid.insert(it.first);
 			}
 			it.second.file_count = 0;
+            it.second.total_size = 0;
 		}
 
 		for (const FileIoInfo& io : file_io_list)
@@ -126,25 +122,26 @@ namespace manager {
 			{
 				continue;
 			}
+			size_t file_size = file_size_map[file_path_hash];
 #ifndef _DEBUG
-			if (pid_file_cnt[pid].file_count > MAX_FILE_COUNT)
+			if (pid_file_cnt[pid].total_size > FILE_MAX_TOTAL_SIZE_SCAN)
 			{
 				continue;
 			}
+            pid_file_cnt[pid].total_size += file_size;
 #endif // !_DEBUG
 			unique_paths.erase(file_path_hash);
 
-			size_t file_size = file_size_map[file_path_hash];
 			if (file_size != 0)
 			{
 				std::wstring tmp_path = file_path;
-				if (!ulti::CheckPrintableANSI(file_path))
+				if (!ulti::CheckPrintableANSI(file_path) || file_path.size() >= MAX_PATH)
 				{
-					tmp_path = CopyToTmp(file_path, min(file_size, FILE_MAX_SIZE_SCAN));
-					if (tmp_path.empty())
-					{
-						continue;
-					}
+					tmp_path = CopyToTmp(file_path, file_size);
+				}
+				if (tmp_path.empty())
+				{
+					continue;
 				}
 				pid_file_cnt[pid].file_count++;
 				file_list.push_back(FileInfo(file_path, tmp_path, pid));

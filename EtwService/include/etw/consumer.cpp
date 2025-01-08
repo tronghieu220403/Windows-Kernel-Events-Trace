@@ -250,7 +250,7 @@ namespace etw
         else if (type == FileIoEventType::kWrite)
         {
             FileIoWriteEvent write_event(event);
-            if (write_event.offset > FILE_MAX_SIZE_SCAN)
+            if (write_event.offset > FILE_MAX_TOTAL_SIZE_SCAN)
             {
                 return;
             }
