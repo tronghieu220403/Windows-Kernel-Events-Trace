@@ -74,7 +74,7 @@ namespace ulti
         for (std::size_t i = 0; i + 1 < buffer.size(); i += 2) {
             wchar_t wchar = buffer[i] | (buffer[i + 1] << 8);
             total_chars++;
-            if (iswprint(wchar) || iswspace(wchar)) {
+            if (iswprint(wchar) || iswspace(wchar) || wchar == L'\n') {
                 printable_chars++;
             }
         }
@@ -99,7 +99,7 @@ namespace ulti
             unsigned char c = buffer[i];
             if (c < 0x80) { // 1-byte ASCII (7-bit)
                 total_chars++;
-                if (isprint(c) || isspace(c)) {
+                if (isprint(c) || isspace(c) || c == '\n') {
                     printable_chars++;
                 }
                 i++;
@@ -157,7 +157,7 @@ namespace ulti
 
         for (unsigned char c : buffer) {
             total_chars++;
-            if (isprint(c) || isspace(c)) {
+            if (isprint(c) || isspace(c) || c == '\n') {
                 printable_chars++;
             }
         }
