@@ -87,7 +87,7 @@ namespace manager {
 					it->second.unique_dir_hashes.insert(std::hash<std::wstring>{}(fs::path(file_path).parent_path().wstring()));
 					unique_paths.insert(file_path_hash);
 				}
-				PrintDebugW(L"PID %d changed %ws", pid, file_path.c_str());
+				PrintDebugW(L"PID %d changed %ws, file size %lld", pid, file_path.c_str(), file_size);
 			}
 		}
 		for (auto& it : pid_file_cnt)
@@ -124,7 +124,7 @@ namespace manager {
 			}
 			size_t file_size = file_size_map[file_path_hash];
 #ifndef _DEBUG
-			if (pid_file_cnt[pid].total_size > FILE_MAX_TOTAL_SIZE_SCAN)
+			if (pid_file_cnt[pid].total_size + file_size > FILE_MAX_TOTAL_SIZE_SCAN)
 			{
 				continue;
 			}
