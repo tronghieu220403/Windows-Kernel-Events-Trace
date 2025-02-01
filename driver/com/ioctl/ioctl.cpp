@@ -39,8 +39,8 @@ NTSTATUS ioctl::DrvUnload(PDRIVER_OBJECT driver_object)
 {
 	DebugMessage("%ws", __FUNCTIONW__);
 
-	IoDeleteDevice(driver_object->DeviceObject);
 	IoDeleteSymbolicLink(&DEVICE_SYMBOLIC_NAME);
+	IoDeleteDevice(driver_object->DeviceObject);
 
 	return STATUS_SUCCESS;
 }
