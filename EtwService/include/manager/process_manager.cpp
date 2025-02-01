@@ -63,16 +63,16 @@ namespace manager
         std::wstring image_file_name_w;
         HANDLE hProcess = nullptr;
         std::string image_file_name_a;
-        size_t size_tmp = 0;
+        DWORD size_tmp = 0;
         image_file_name_w.resize(MAX_PATH * 4);
         image_file_name_a.resize(MAX_PATH * 4);
 
         hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, static_cast<DWORD>(pid));
         if (hProcess)
         {
-            // Try GetProcessImageFileNameW with resizing loop
             while (true) {
-                if (size_tmp = GetProcessImageFileNameW(hProcess, image_file_name_w.data(), (DWORD)image_file_name_w.size())) {
+                size_tmp = image_file_name_w.size();
+                if ((size_tmp = GetProcessImageFileName(hProcess, image_file_name_w.data(), image_file_name_w.size())) != NULL) {
                     error = ERROR_SUCCESS;
                     image_file_name_w.resize(size_tmp);
                     break;
@@ -83,29 +83,8 @@ namespace manager
                         image_file_name_w.resize(image_file_name_w.size() * 2);
                     }
                     else {
+                        PrintDebugW((L"PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + debug::GetErrorMessage(error)).c_str());
                         break; // Move to the next step on any other error
-                    }
-                }
-            }
-
-            if (error != ERROR_SUCCESS) {
-                // Try GetProcessImageFileNameA with resizing loop
-                while (true) {
-                    if (size_tmp = GetProcessImageFileNameA(hProcess, image_file_name_a.data(), (DWORD)image_file_name_a.size())) {
-                        error = ERROR_SUCCESS;
-                        image_file_name_a.resize(size_tmp);
-                        image_file_name_w = std::wstring(image_file_name_a.begin(), image_file_name_a.end());
-                        break;
-                    }
-                    else {
-                        error = GetLastError();
-                        if (error == ERROR_INSUFFICIENT_BUFFER) {
-                            image_file_name_a.resize(image_file_name_a.size() * 2);
-                        }
-                        else {
-                            PrintDebugW((L"PID " + std::to_wstring(pid) + L" GetProcessImageFileName failed: " + debug::GetErrorMessage(error)).c_str());
-                            break; // Move to the next step on any other error
-                        }
                     }
                 }
             }

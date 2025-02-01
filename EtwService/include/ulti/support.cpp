@@ -9,6 +9,12 @@ namespace ulti
         return myconv.from_bytes(str);
     }
 
+    std::string WstrToStr(const std::wstring& wstr)
+    {
+        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> myconv;
+        return myconv.to_bytes(wstr);
+    }
+
     std::string CharVectorToString(const std::vector<char>& v)
     {
         return std::string(v.begin(), v.end());
@@ -24,20 +30,18 @@ namespace ulti
         return std::vector<unsigned char>(s.begin(), s.end());
     }
 
-    std::string WstrToStr(const std::wstring& wstr)
-    {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> myconv;
-        return myconv.to_bytes(wstr);
-    }
-
     std::wstring ToLower(const std::wstring& wstr)
     {
+        std::setlocale(LC_ALL, "en_US.utf8");
+        defer{
+            std::setlocale(LC_ALL, nullptr);
+        };
         std::wstring result = wstr;
         for (wchar_t& c : result)
         {
-            if (std::isalpha(c))
+            if (std::iswalpha(c))
             {
-                c = std::tolower(c);
+                c = std::towlower(c);
             }
         }
         return result;
@@ -67,31 +71,40 @@ namespace ulti
         return false;
     }
 
-    bool CheckPrintableUTF16(const std::vector<unsigned char>& buffer) {
-        std::streamsize printable_chars = 0;
-        std::streamsize total_chars = 0;
+    bool CheckPrintableUTF16(const std::vector<unsigned char>& buffer)
+    {
+        std::wstring wstr = std::wstring((wchar_t*)buffer.data(), buffer.size() / sizeof(wchar_t));
+        return CheckPrintableUTF16(wstr);
+    }
 
-        for (std::size_t i = 0; i + 1 < buffer.size(); i += 2) {
-            wchar_t wchar = buffer[i] | (buffer[i + 1] << 8);
-            total_chars++;
-            if (iswprint(wchar) || iswspace(wchar) || wchar == L'\n') {
+    bool CheckPrintableUTF16(const std::wstring& wstr)
+    {
+        if (wstr.size() == 0) {
+            return true;
+        }
+
+        std::streamsize printable_chars = 0;
+        std::streamsize total_chars = wstr.size();
+
+        for (const auto& c: wstr) {
+            if (iswprint(c) || iswspace(c)) {
                 printable_chars++;
             }
         }
 
         if (total_chars == 0) {
+            return false;
+        }
+
+        return !BelowTextThreshold(printable_chars, total_chars);
+    }
+
+    bool CheckPrintableUTF8(const std::vector<unsigned char>& buffer)
+    {
+        if (buffer.size() == 0) {
             return true;
         }
 
-        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
-    }
-
-    bool CheckPrintableUTF16(const std::wstring& wstr)
-    {
-        return CheckPrintableUTF16(StringToVectorUChar(WstrToStr(wstr)));
-    }
-
-    bool CheckPrintableUTF8(const std::vector<unsigned char>& buffer) {
         std::streamsize printable_chars = 0;
         std::streamsize total_chars = 0;
         std::size_t i = 0;
@@ -99,7 +112,7 @@ namespace ulti
             unsigned char c = buffer[i];
             if (c < 0x80) { // 1-byte ASCII (7-bit)
                 total_chars++;
-                if (isprint(c) || isspace(c) || c == '\n') {
+                if (isprint(c) || isspace(c) ) {
                     printable_chars++;
                 }
                 i++;
@@ -140,10 +153,10 @@ namespace ulti
         }
 
         if (total_chars == 0) {
-            return true; // If there is no character, return true
+            return false;
         }
 
-        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
+        return !BelowTextThreshold(printable_chars, total_chars);
     }
 
     bool CheckPrintableUTF8(const std::wstring& wstr)
@@ -151,22 +164,27 @@ namespace ulti
         return CheckPrintableUTF8(StringToVectorUChar(WstrToStr(wstr)));
     }
 
-    bool CheckPrintableANSI(const std::vector<unsigned char>& buffer) {
+    bool CheckPrintableANSI(const std::vector<unsigned char>& buffer)
+    {
+        if (buffer.size() == 0) {
+            return true;
+        }
+
         std::streamsize printable_chars = 0;
         std::streamsize total_chars = 0;
 
         for (unsigned char c : buffer) {
             total_chars++;
-            if (isprint(c) || isspace(c) || c == '\n') {
+            if (isprint(c) || isspace(c)) {
                 printable_chars++;
             }
         }
 
         if (total_chars == 0) {
-            return true;
+            return false;
         }
 
-        return (static_cast<double>(printable_chars) / total_chars) >= 0.97;
+        return !BelowTextThreshold(printable_chars, total_chars);
     }
 
     bool CheckPrintableANSI(const std::wstring& wstr)

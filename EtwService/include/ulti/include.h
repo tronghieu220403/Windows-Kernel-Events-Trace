@@ -1,6 +1,7 @@
 #pragma once
 #define _CRT_SECURE_NO_DEPRECATE
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+#define _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
 
 #ifndef ETWSERVICE_ULTI_INCLUDE_H_
 #define ETWSERVICE_ULTI_INCLUDE_H_
@@ -43,6 +44,7 @@
 #include <locale>
 #include <cctype>
 #include <codecvt>
+#include <cwctype>
 
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "comsupp.lib")

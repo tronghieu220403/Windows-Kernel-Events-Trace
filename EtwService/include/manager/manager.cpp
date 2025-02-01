@@ -60,6 +60,13 @@ namespace manager {
 		{
 			const std::wstring file_path = io.file_path;
 			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
+			size_t pid = io.pid;
+			auto it = pid_file_cnt.find(pid);
+			if (it == pid_file_cnt.end())
+			{
+				pid_file_cnt[pid] = {};
+				it = pid_file_cnt.find(pid);
+			}
 			if (manager::FileExist(file_path) == false || manager::IsExecutableFile(file_path) == true)
 			{
 				continue;
@@ -72,13 +79,6 @@ namespace manager {
 				if (file_size == 0)
 				{
 					continue;
-				}
-				size_t pid = io.pid;
-				auto it = pid_file_cnt.find(pid);
-				if (it == pid_file_cnt.end())
-				{
-					pid_file_cnt[pid] = {};
-					it = pid_file_cnt.find(pid);
 				}
 				if ((io.featured_access_flags & WRITE_FLAG) || (io.featured_access_flags & RENAME_FLAG))
 				{
@@ -105,7 +105,7 @@ namespace manager {
 				white_list_pid.insert(it.first);
 			}
 			it.second.file_count = 0;
-            it.second.total_size = 0;
+			it.second.total_size = 0;
 		}
 
 		for (const FileIoInfo& io : file_io_list)
@@ -124,11 +124,12 @@ namespace manager {
 			}
 			size_t file_size = file_size_map[file_path_hash];
 #ifndef _DEBUG
+			// This code must be deleted in the final version because we will use file type map, copy limited size to tmp folder and not limit the total size of files to scan
 			if (pid_file_cnt[pid].total_size + file_size > FILE_MAX_TOTAL_SIZE_SCAN)
 			{
 				continue;
 			}
-            pid_file_cnt[pid].total_size += file_size;
+			pid_file_cnt[pid].total_size += file_size;
 #endif // !_DEBUG
 			unique_paths.erase(file_path_hash);
 
@@ -156,7 +157,7 @@ namespace manager {
 
 		// Check TrID
 		std::vector<std::pair<std::wstring, bool>> trid_output;
-		if (!paths.empty())
+		if (paths.size() >= MIN_FILE_COUNT)
 		{
 			trid_output = manager::CheckTrID(paths);
 		}
@@ -180,6 +181,7 @@ namespace manager {
 			bool is_recognized = false;
 			if (trid_map.find(tmp_path_hash) == trid_map.end())
 			{
+				// TrID does not scan txt files, so we need to check them manually
 				if (FileExist(file_path) == true && GetFileExtension(file_path) == L"txt")
 				{
 					is_recognized = manager::IsPrintableFile(file_path);
@@ -209,14 +211,14 @@ namespace manager {
 				manager::kProcMan->LockMutex();
 				const auto& image_name = manager::kProcMan->GetImageFileName(pid);
 				manager::kProcMan->UnlockMutex();
-                if (!image_name.empty())
-                {
-                    debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" (" + image_name + L")" + L" is ransomware.");
-                }
-                else
-                {
-                    debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" is ransomware.");
-                }
+				if (!image_name.empty())
+				{
+					debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" (" + image_name + L")" + L" is ransomware.");
+				}
+				else
+				{
+					debug::PopUpMessageBox(L"Ransomware detected", L"PID " + std::to_wstring(pid) + L" is ransomware.");
+				}
 			}
 		}
 		PrintDebugW(L"Process evaluation done");
@@ -254,9 +256,14 @@ namespace manager {
 		// Accecpt allocation from a father process if the time of the operation is less than 0.2 second after the process creation.
 		if (manager::kProcMan->IsChild(issuing_pid, allocated_pid))
 		{
-			if (time_ms - manager::kProcMan->GetProcessInfo(allocated_pid).creation_time < 200)
+			size_t time_diff = time_ms - manager::kProcMan->GetProcessInfo(allocated_pid).creation_time;
+			if (time_diff < 200)
 			{
 				return false;
+			}
+			else
+			{
+				PrintDebugW(L"PID %d is child of PID %d, time diff %d ms", issuing_pid, allocated_pid, time_diff);
 			}
 		}
 

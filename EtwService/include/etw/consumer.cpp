@@ -1,12 +1,14 @@
 #ifdef _WIN32
 
 #include "consumer.h"
+#include "provider.h"
+
 namespace etw
 {
     KernelConsumer::KernelConsumer()
     {
         trace_.LogFileName = NULL;
-        trace_.LoggerName = (LPWSTR)KERNEL_LOGGER_NAME;
+        trace_.LoggerName = (LPWSTR)HIEUNT_LOGGER_NAME;
         trace_.BufferCallback = (PEVENT_TRACE_BUFFER_CALLBACK)(ProcessBuffer);
         trace_.EventCallback = (PEVENT_CALLBACK)(ProcessEvent);
         trace_.ProcessTraceMode = PROCESS_TRACE_MODE_REAL_TIME | PROCESS_TRACE_MODE_RAW_TIMESTAMP;// | PROCESS_TRACE_MODE_EVENT_RECORD; // create real time sesion + event should be represented as EVENT_RECORD structure
@@ -79,7 +81,7 @@ namespace etw
 
     VOID WINAPI KernelConsumer::ProcessEvent(PEVENT_TRACE p_event)
     {
-        if (IsEqualGUID(p_event->Header.Guid, EventTraceGuid) &&
+        if (IsEqualGUID(p_event->Header.Guid, EventTraceGuid) || 
             p_event->Header.Class.Type == EVENT_TRACE_TYPE_INFO)
         {
             ; // Skip this event.
@@ -95,11 +97,11 @@ namespace etw
 
             if (IsEqualGUID(event.GetGuid(), FileIoGuid))
             {
-                ProcessFileIoEvent(event);
+                //ProcessFileIoEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PageFaultGuid))
             {
-                //ProcessPageFaultEvent(event);
+                ProcessPageFaultEvent(event);
             }
             else if (IsEqualGUID(event.GetGuid(), PerfInfoGuid))
             {
@@ -293,31 +295,54 @@ namespace etw
         if (type == ProcessEventType::kProcessStart)
         {
             ProcessStartEvent process_start_event(event);
-            int pid = static_cast<int>(event.GetProcessId());
+
+            int pid = static_cast<int>(process_start_event.pid);
+            int real_ppid = static_cast<int>(event.GetProcessId());
+            int spoofed_ppid = static_cast<int>(process_start_event.ppid);
+
             std::string image = process_start_event.image_file_name;
             std::wstring w_image(image.begin(), image.end());
             manager::kProcMan->LockMutex();
-            const auto image_path = manager::kProcMan->GetImageFileName(process_start_event.pid);
-            manager::kProcMan->AddProcess(process_start_event.pid, event.GetProcessId(), process_start_event.ppid);
-            manager::kProcMan->UpdateProcessCreationTime(process_start_event.pid, event.GetTimeInMs());
+            const auto image_path = manager::kProcMan->GetImageFileName(pid);
+            const auto real_ppid_image_path = manager::kProcMan->GetImageFileName(real_ppid);
+            const auto spoofed_ppid_image_path = manager::kProcMan->GetImageFileName(spoofed_ppid);
+            manager::kProcMan->AddProcess(pid, real_ppid, spoofed_ppid);
+            manager::kProcMan->UpdateProcessCreationTime(pid, event.GetTimeInMs());
             manager::kProcMan->UnlockMutex();
+#ifdef _DEBUG
+            if (real_ppid != spoofed_ppid)
+            {
+                PrintDebugW(L"Process Operation, Start event, pid %lld, real ppid %lld, spoofed ppid %d, image path \"%ws\", true parent image path \"%ws\", spoofed parent image path \"%ws\"", pid, real_ppid, spoofed_ppid,image_path.data(), real_ppid_image_path.data(), spoofed_ppid_image_path.data());
+            }
+            else
+            {
+                PrintDebugW(L"Process Operation, Start event, pid %lld, ppid %lld, image path \"%ws\", parent image path \"%ws\"", pid, real_ppid, image_path.data(), real_ppid_image_path.data());
+            }
+#else
+            if (real_ppid != spoofed_ppid)
+            {
+                PrintDebugW(L"Process Operation, Start event, pid %lld, real ppid %lld, spoofed ppid %d, image %s, image path \"%ws\", true parent image path \"%ws\", spoofed parent image path \"%ws\", commandline %ws", pid, real_ppid, spoofed_ppid, image.c_str(), image_path.data(), real_ppid_image_path.data(), spoofed_ppid_image_path.data(), process_start_event.command_line);
+        }
+            else
+            {
+                PrintDebugW(L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path \"%ws\", parent image path \"%ws\", commandline %ws", pid, real_ppid, image.c_str(), image_path.data(), real_ppid_image_path.data(), process_start_event.command_line);
+            }
 
-            PrintDebugW(L"Process Operation, Start event, pid %lld, ppid %lld, image %s, image path %ws, commandline %ws", process_start_event.pid, event.GetProcessId(), w_image.data(), image_path.data(), process_start_event.command_line);
+#endif // DEBUG
         }
         if (type == ProcessEventType::kProcessEnd)
         {
             ProcessEndEvent process_end_event(event);
             manager::kProcMan->LockMutex();
-            const std::wstring image_path = manager::kProcMan->GetImageFileName(process_end_event.pid);
-            const std::wstring issued_image_path = manager::kProcMan->GetImageFileName(event.GetProcessId());
+            std::wstring image_path = manager::kProcMan->GetImageFileName(process_end_event.pid);
             manager::kProcMan->RemoveProcess(process_end_event.pid);
             manager::kProcMan->UnlockMutex();
 
-            std::string image = process_end_event.image_file_name;
-            std::wstring w_image(image.begin(), image.end());
-
-            std::wstring wstr;
-            PrintDebugW(L"Process Operation, End event, pid %lld, issued pid %lld, image %s, image path %ws, issued image path %ws, commandline %ws", process_end_event.pid, event.GetProcessId(), image_path.data(), image_path.data(), issued_image_path.data(), process_end_event.command_line);
+#ifdef _DEBUG
+            PrintDebugW(L"Process Operation, End event, pid %lld, image path %ws", process_end_event.pid, image_path.data());
+#else
+            PrintDebugW(L"Process Operation, End event, pid %lld, image path %ws, commandline %ws", process_end_event.pid, image_path.data(), process_end_event.command_line);
+#endif // DEBUG
 
         }
         else if (type == ProcessEventType::kProcessDCStart)

@@ -22,7 +22,7 @@
 #define EVALUATATION_INTERVAL_MS 5000
 #define EVALUATATION_INTERVAL_SEC (EVALUATATION_INTERVAL_MS / 1000)
 
-#define MIN_TOTAL_SIZE_CHECK_PER_SEC (1 * 1024 * 1024)// 1MB
+#define MIN_TOTAL_SIZE_CHECK_PER_SEC (0)// 0MB
 #define MIN_TOTAL_SIZE_CHECK (MIN_TOTAL_SIZE_CHECK_PER_SEC * EVALUATATION_INTERVAL_SEC)
 
 #define MIN_FILE_COUNT_PER_SEC 2
@@ -110,7 +110,6 @@ namespace manager {
 	// Parse trid output and return test results for each file
 	std::vector<std::pair<std::wstring, bool>> AnalyzeTridOutput(const std::wstring& output);
 
-	// Hàm kiểm tra file có chứa ký tự in được không
 	bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size = FILE_MAX_TOTAL_SIZE_SCAN);
 
 }

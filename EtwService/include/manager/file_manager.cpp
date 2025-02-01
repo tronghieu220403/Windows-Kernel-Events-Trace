@@ -51,7 +51,7 @@ namespace manager
 
     void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_new, size_t pid, size_t start_time_ms, const std::wstring& file_path_old)
     {
-        //PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
+        // PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
 
         FileIoInfo file_io_info;
         file_io_info.featured_access_flags = RENAME_FLAG;
@@ -64,7 +64,7 @@ namespace manager
 
     void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms, size_t io_size)
     {
-        //PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
+        // PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
 
         FileIoInfo file_io_info;
         file_io_info.featured_access_flags = WRITE_FLAG;
@@ -196,23 +196,23 @@ namespace manager
         return size.QuadPart;
     }
 
-    // Hàm lấy đuôi file
+    // Function to get file extension
     std::wstring GetFileExtension(const std::wstring& file_name) {
         size_t pos = file_name.find_last_of(L".");
         if (pos == std::wstring::npos) {
-            return L""; // Không có đuôi file
+            return L""; // No file extension
         }
-        return file_name.substr(pos + 1); // Trả về phần đuôi file
+        return ulti::ToLower(file_name.substr(pos + 1)); // Return the file extension
     }
 
     // Check if a file is an executable (filters by extension)
     bool IsExecutableFile(const std::wstring& file_path) {
         static const std::wregex exe_pattern(L".*\\.(exe|dll|msi|bat|cmd)$", std::regex_constants::icase);
-        return std::regex_match(file_path, exe_pattern);
+        return std::regex_match(ulti::ToLower(file_path), exe_pattern);
     }
 
     std::wstring CopyToTmp(const std::wstring& path, size_t copy_size) {
-        std::wstring dest = TEMP_DIR + std::to_wstring(std::hash<std::wstring>{}(path)) + L"." + path.substr(path.find_last_of(L".") + 1);
+        std::wstring dest = TEMP_DIR + std::to_wstring(std::hash<std::wstring>{}(ulti::ToLower(path))) + L"." + path.substr(path.find_last_of(L".") + 1);
         HANDLE h_src = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (h_src == INVALID_HANDLE_VALUE)
         {
@@ -236,65 +236,65 @@ namespace manager
         return dest;
     }
 
-    // Hàm xóa các file tạm
+    // Function to clear temporary files
     void ClearTmpFiles() {
         std::filesystem::path tmp_dir = TEMP_DIR;
-        // Chuyển đổi đường dẫn sang kiểu wstring để dùng với Windows API
+        // Convert path to wstring for Windows API
         std::wstring temp_path = tmp_dir.wstring();
         if (temp_path[temp_path.size() - 1] != L'\\') {
             temp_path += L"\\";
         }
 
-        // Thiết lập bộ lọc để lấy tất cả các file và thư mục trong thư mục tạm
+        // Set up filter to get all files and directories in the temporary directory
         std::wstring search_path = temp_path + L"*";
         WIN32_FIND_DATAW find_file_data;
         HANDLE h_find = FindFirstFileW(search_path.c_str(), &find_file_data);
 
         if (h_find == INVALID_HANDLE_VALUE) {
-            return;  // Không thể mở thư mục tạm
+            return;  // Cannot open temporary directory
         }
 
         do {
-            // Bỏ qua các file và thư mục đặc biệt "." và ".."
+            // Skip special files and directories "." and ".."
             if (wcscmp(find_file_data.cFileName, L".") == 0 || wcscmp(find_file_data.cFileName, L"..") == 0) {
                 continue;
             }
 
-            // Tạo đường dẫn đầy đủ đến file hoặc thư mục
+            // Create full path to file or directory
             std::wstring full_path = temp_path + find_file_data.cFileName;
 
-            // Kiểm tra và xóa file hoặc thư mục
+            // Check and delete file or directory
             if (find_file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-                // Nếu là thư mục, xóa thư mục (không đệ quy)
+                // If it's a directory, delete it (not recursive)
                 RemoveDirectoryW(full_path.c_str());
             }
             else {
-                // Nếu là file, xóa file
+                // If it's a file, delete it
                 DeleteFileW(full_path.c_str());
             }
         } while (FindNextFileW(h_find, &find_file_data) != 0);
 
-        // Đóng handle tìm kiếm
+        // Close search handle
         FindClose(h_find);
     }
 
-    // Hàm kiểm tra xem file có chủ yếu chứa ký tự in được hay không (kiểm tra cả UTF-8, UTF-16 và ANSI)
+    // Function to check if a file contains mostly printable characters (checks UTF-8, UTF-16, and ANSI)
     bool IsPrintableFile(const std::wstring& file_path, std::streamsize max_size) {
         try
         {
-            std::ifstream file(file_path, std::ios::binary); // 
+            std::ifstream file(file_path, std::ios::binary); // Open file in binary mode
             if (!file.is_open()) {
-                return false; // 
+                return false; // File cannot be opened
             }
 
             std::streamsize file_size = std::min<std::streamsize>(max_size, static_cast<std::streamsize>(file.seekg(0, std::ios::end).tellg()));
-            file.seekg(0, std::ios::beg); // Đưa con trỏ file về đầu
+            file.seekg(0, std::ios::beg); // Move file pointer to the beginning
 
-            std::vector<unsigned char> buffer(file_size); // Bộ đệm để chứa dữ liệu từ file
-            file.read(reinterpret_cast<char*>(buffer.data()), file_size); // Đọc toàn bộ dữ liệu vào bộ đệm
+            std::vector<unsigned char> buffer(file_size); // Buffer to hold file data
+            file.read(reinterpret_cast<char*>(buffer.data()), file_size); // Read all data into buffer
             file.close();
 
-            // Kiểm tra theo các mã hóa khác nhau và trả về true nếu bất kỳ cái nào khớp
+            // Check against different encodings and return true if any matches
             if (ulti::CheckPrintableUTF8(buffer) || ulti::CheckPrintableUTF16(buffer) || ulti::CheckPrintableANSI(buffer)) {
                 return true;
             }
@@ -303,27 +303,28 @@ namespace manager
         {
 
         }
-        return false; // Nếu không có mã hóa nào đạt yêu cầu, trả về false
+        return false; // If no encoding matches, return false
     }
 
-    // Hàm phân tích output của trid và trả về kết quả kiểm tra từng file
+    // Function to analyze TrID output and return the result of each file check
     std::vector<std::pair<std::wstring, bool>> AnalyzeTridOutput(const std::wstring& output) {
         std::wistringstream stream(output);
         std::wstring line;
         std::wstring current_file;
-        std::vector<std::wstring> found_extensions; // Đuôi file tìm thấy từ `trid`
-        std::vector<std::pair<std::wstring, bool>> results; // Kết quả kiểm tra từng file
+        std::vector<std::wstring> found_extensions; // Extensions found by `trid`
+        std::vector<std::pair<std::wstring, bool>> results; // Result of each file check
         for (int i = 0; i < 5; i++)
         {
             std::getline(stream, line);
         }
         int cnt = 0;
-        // Duyệt từng dòng của output
+        // Iterate through each line of the output
         while (std::getline(stream, line)) {
             if (line.size() > 0 && line[line.size() - 1] == L'\r')
             {
                 line.resize(line.size() - 1);
             }
+            line = ulti::ToLower(line);
 #ifdef _DEBUG
             PrintDebugW(L"TrID text: %ws", line.c_str());
 #endif // _DEBUG
@@ -362,33 +363,31 @@ namespace manager
                 }
                 current_file.resize(0);
             }
-            else if (line.find(L"Collecting data from file: ") == 0 ||
-                line.find(L"File: ") == 0)
-            { // Nếu là dòng thông tin file
+            else if (line.find(L"file: ") != std::wstring::npos)
+            { // If it's a file information line
                 current_file = line.substr(line.find(L"ile: ") + sizeof(L"ile: ") / sizeof(WCHAR) - 1);
 #ifdef _DEBUG
                 PrintDebugW(L"Checking file: %ws", current_file.c_str());
 #endif // _DEBUG
                 cnt++;
-                found_extensions.clear(); // Reset danh sách đuôi file tìm thấy
+                found_extensions.clear(); // Reset found extensions list
             }
-            else if (line.find(L"% (.") != std::wstring::npos) { // Nếu là dòng chứa phần trăm tỉ lệ của đuôi file
-                if (line.find(L"ransom") != std::wstring::npos || line.find(L"Ransom") != std::wstring::npos) {
+            else if (line.find(L"% (.") != std::wstring::npos) { // If it's a line containing the percentage of the file extension
+                if (line.find(L"ransom") != std::wstring::npos || line.find(L"encrypt") != std::wstring::npos) {
                     continue;
                 }
-                size_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Vị trí bắt đầu của đuôi file
+                size_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Start position of the file extension
                 size_t end_pos = line.find(L")", start_pos);
                 if (end_pos != std::wstring::npos) {
                     std::wstring exts = line.substr(start_pos, end_pos - start_pos);
                     if (exts.size() != 0)
                     {
-                        std::transform(exts.begin(), exts.end(), exts.begin(), ::towlower);
-                        // Extension có thể chứa nhiều đuôi file (ví dụ JPG/JPEG, cần phân tách ra)
+                        // Extension may contain multiple file extensions (e.g., JPG/JPEG, need to split)
                         std::wstringstream ss(exts);
                         std::wstring ext;
                         while (std::getline(ss, ext, L'/'))
                         {
-                            found_extensions.push_back(ext); // Lưu đuôi file tìm thấy
+                            found_extensions.push_back(ext); // Save found extension
                         }
                     }
                 }
@@ -428,7 +427,7 @@ namespace manager
             output += L"\n";
         }
 
-        // Phân tích output
+        // Analyze output
         trid_output = std::move(AnalyzeTridOutput(output));
         return trid_output;
     }
