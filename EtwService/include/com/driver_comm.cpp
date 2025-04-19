@@ -31,7 +31,7 @@ std::wstring DriverComm::GetProcessImageFromPid(int pid)
     return std::wstring();
 }
 
-std::vector<UCHAR> DriverComm::SendCommand(IOCTL_CMD_CLASS cmdClass, size_t number) {
+std::vector<UCHAR> DriverComm::SendCommand(IOCTL_CMD_CLASS cmdClass, uint64_t number) {
     DWORD bytes_returned = 0;
     std::vector<UCHAR> reply(4096, 0);
 

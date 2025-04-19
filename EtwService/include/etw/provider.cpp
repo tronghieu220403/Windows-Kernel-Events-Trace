@@ -33,10 +33,10 @@ namespace etw
         session_properties_->LogFileMode = EVENT_TRACE_REAL_TIME_MODE | EVENT_TRACE_SYSTEM_LOGGER_MODE;
         session_properties_->MaximumFileSize = 0;
         session_properties_->LoggerNameOffset = 0;
-        session_properties_->BufferSize = 64;
+        session_properties_->BufferSize = 16;
         session_properties_->MinimumBuffers = 64;
         session_properties_->MaximumBuffers = 128;
-        session_properties_->FlushTimer = 3;
+        //session_properties_->FlushTimer = 1;
     }
 
     void KernelProvider::SetFlags(ULONG flags)

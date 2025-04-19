@@ -46,7 +46,7 @@ namespace etw
 				0 == event_offset->file_attributes_size ||
 				0 == event_offset->share_access_size)
 			{
-				PrintDebugW(L"Error in GetPropertyInfo in FileCreateEvent");
+				PrintDebugW(L"Error in GetPropertyInfo");
 				event_offset->is_successful = false;
 				return;
 			}

@@ -107,7 +107,7 @@ namespace ulti
 
         std::streamsize printable_chars = 0;
         std::streamsize total_chars = 0;
-        std::size_t i = 0;
+        std::uint64_t i = 0;
         while (i < buffer.size()) {
             unsigned char c = buffer[i];
             if (c < 0x80) { // 1-byte ASCII (7-bit)
@@ -197,22 +197,6 @@ namespace ulti
         std::wstring result;
         HANDLE stdout_read = nullptr;
         HANDLE stdout_write = nullptr;
-
-        // Security attributes to allow handle inheritance
-        SECURITY_ATTRIBUTES security_attributes = {};
-        security_attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-        security_attributes.bInheritHandle = TRUE;
-        security_attributes.lpSecurityDescriptor = nullptr;
-
-        // Create a pipe for the child process's standard output
-        if (!CreatePipe(&stdout_read, &stdout_write, &security_attributes, 0)) {
-            PrintDebugW(L"CreatePipe failed with error %d", GetLastError());
-            return result;
-        }
-        else
-        {
-            PrintDebugW(L"CreatePipe succeeded");
-        }
         defer{
             if (stdout_read != nullptr)
             {
@@ -223,6 +207,22 @@ namespace ulti
                 CloseHandle(stdout_write);
             }
         };
+        
+        // Security attributes to allow handle inheritance
+        SECURITY_ATTRIBUTES security_attributes = {};
+        security_attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+        security_attributes.bInheritHandle = TRUE;
+        security_attributes.lpSecurityDescriptor = nullptr;
+
+        // Create a pipe for the child process's standard output
+        if (!CreatePipe(&stdout_read, &stdout_write, &security_attributes, 0)) {
+            //PrintDebugW(L"CreatePipe failed with error %d", GetLastError());
+            return result;
+        }
+        else
+        {
+            //PrintDebugW(L"CreatePipe succeeded");
+        }
 
         // Set up the STARTUPINFO structure
         STARTUPINFOW startup_info = {};
@@ -234,6 +234,11 @@ namespace ulti
         startup_info.wShowWindow = SW_HIDE;
 
         PROCESS_INFORMATION process_info = {};
+        defer{
+            CloseHandle(process_info.hProcess);
+            CloseHandle(process_info.hThread);
+            KillProcess(process_info.dwProcessId);
+        };
 
         DWORD dw_creation_flags = REALTIME_PRIORITY_CLASS | CREATE_NEW_CONSOLE;
 
@@ -257,19 +262,18 @@ namespace ulti
         else
         {
             create_process_succeeded = true;
-            PrintDebugW(L"CreateProcessW succeeded");
+            //PrintDebugW(L"CreateProcessW succeeded");
             DWORD exit_code = 0;
-            PrintDebugW(L"Process ID: %d", process_info.dwProcessId);
-            /*
-            PrintDebugW(L"Wating for process to finish");
+            //PrintDebugW(L"Process ID: %d", c);
+            
+            //PrintDebugW(L"Wating for process to finish");
             // Successfully created the process.  Wait for it to finish.
-            WaitForSingleObject(process_info.hProcess, INFINITE);
+            //WaitForSingleObject(process_info.hProcess, INFINITE);
 
             // Get the exit code.
-            result = GetExitCodeProcess(process_info.hProcess, &exit_code);
-            PrintDebugW(L"Exit code %d", exit_code);
-            */
-            defer{ CloseHandle(process_info.hProcess); CloseHandle(process_info.hThread); };
+            //result = GetExitCodeProcess(process_info.hProcess, &exit_code);
+            //PrintDebugW(L"Exit code %d", exit_code);
+            
         }
         if (create_process_succeeded == false && IsRunningAsSystem() == true)
         {
@@ -280,7 +284,7 @@ namespace ulti
             }
             else
             {
-                PrintDebugW(L"Session ID: %d", session_id);
+                //PrintDebugW(L"Session ID: %d", session_id);
             }
 
             WTS_CONNECTSTATE_CLASS wts_connect_state = WTSDisconnected;
@@ -305,24 +309,46 @@ namespace ulti
             }
 
             HANDLE h_impersonation_token = NULL;
+            defer
+            {
+                if (h_impersonation_token)
+                {
+                    CloseHandle(h_impersonation_token);
+                }
+                h_impersonation_token = NULL;
+            };
 
             if (!WTSQueryUserToken(session_id, &h_impersonation_token))
             {
                 PrintDebugW(L"WTSQueryUserToken failed %d", GetLastError());
                 return result;
             }
-            defer{ if (h_impersonation_token) { CloseHandle(h_impersonation_token); } h_impersonation_token = NULL; };
+
             //Get real token from impersonation token
             DWORD sz = 0;
-            TOKEN_LINKED_TOKEN  real_token = {};
+            TOKEN_LINKED_TOKEN real_token = {};
+            defer {
+                if (real_token.LinkedToken)
+                {
+                    CloseHandle(real_token.LinkedToken);
+                }
+                real_token.LinkedToken = NULL;
+            };
+
             if (GetTokenInformation(h_impersonation_token, (::TOKEN_INFORMATION_CLASS)TokenLinkedToken, &real_token, sizeof(TOKEN_LINKED_TOKEN), &sz) == FALSE)
             {
                 PrintDebugW(L"GetTokenInformation failed %d", GetLastError());
                 return result;
             }
-            defer{ if (real_token.LinkedToken) { CloseHandle(real_token.LinkedToken); } real_token.LinkedToken = NULL; };
 
             HANDLE h_user_token = NULL;
+            defer {
+                if (h_user_token)
+                {
+                    CloseHandle(h_user_token);
+                }
+                h_user_token = NULL; 
+            };
 
             if (!DuplicateTokenEx(real_token.LinkedToken,
                 TOKEN_ASSIGN_PRIMARY | TOKEN_ALL_ACCESS | MAXIMUM_ALLOWED,
@@ -334,11 +360,18 @@ namespace ulti
                 PrintDebugW(L"DuplicateTokenEx failed %d", GetLastError());
                 return result;
             }
-            defer{ if (h_user_token) { CloseHandle(h_user_token); } h_user_token = NULL; };
 
             // Get user name of this process
             //LPTSTR pUserName = NULL;
             WCHAR* p_user_name;
+            defer {
+                if (p_user_name)
+                {
+                    WTSFreeMemory(p_user_name);
+                }
+                p_user_name = NULL;
+            };
+
             DWORD user_name_len = 0;
 
             if (WTSQuerySessionInformationW(WTS_CURRENT_SERVER_HANDLE, session_id, WTSUserName, &p_user_name, &user_name_len))
@@ -349,13 +382,14 @@ namespace ulti
             {
                 PrintDebugW(L"WTSQuerySessionInformationW failed %d", GetLastError());
             }
-            defer{ if (p_user_name) { WTSFreeMemory(p_user_name); } p_user_name = NULL; };
 
             if (ImpersonateLoggedOnUser(h_user_token) == FALSE)
             {
                 PrintDebugW(L"ImpersonateLoggedOnUser failed %d", GetLastError());
             }
-            defer{ RevertToSelf(); };
+            defer {
+                RevertToSelf();
+            };
 
             std::wstring cmd_editable = cmd;
             // Start the process on behalf of the current user 
@@ -384,10 +418,6 @@ namespace ulti
                 result = GetExitCodeProcess(process_info.hProcess, &exit_code);
                 PrintDebugW(L"Exit code %d", exit_code);
                 */
-                defer{
-                    CloseHandle(process_info.hProcess);
-                    CloseHandle(process_info.hThread);
-                };
             }
         }
 
@@ -415,6 +445,19 @@ namespace ulti
         PrintDebugW(L"Total bytes read %d", result_str.size());
         // Clean up handles
         return ulti::StrToWStr(result_str);
+    }
+
+    bool KillProcess(DWORD pid)
+    {
+        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+        if (hProcess == NULL) {
+            return false;
+        }
+        defer{ CloseHandle(hProcess); };
+        if (!TerminateProcess(hProcess, 0)) {
+            return false;
+        }
+        return true;
     }
 
     bool IsRunningAsSystem() {

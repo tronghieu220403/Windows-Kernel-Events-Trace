@@ -85,13 +85,13 @@ namespace etw
 	struct ProcessTypeGroup1EventMember
 	{
 	public:
-		size_t process_unique_key = 0;
-		size_t pid = 0;
-		size_t ppid = 0;
-		size_t session_id = 0;
-		size_t exit_status = 0;
-		size_t directory_table_base = 0;
-		size_t flags = 0; // The "Flags" attribute is undocumented, only tested on Windows 10 22h
+		uint64_t process_unique_key = 0;
+		uint64_t pid = 0;
+		uint64_t ppid = 0;
+		uint64_t session_id = 0;
+		uint64_t exit_status = 0;
+		uint64_t directory_table_base = 0;
+		uint64_t flags = 0; // The "Flags" attribute is undocumented, only tested on Windows 10 22h
 
 		//PVOID user_sid = nullptr;  // Assuming object type is represented as a pointer
 		char* image_file_name = nullptr;
@@ -206,20 +206,20 @@ namespace etw
 	struct ThreadTypeGroup1EventMember
 	{
 	public:
-		size_t pid = 0;
-		size_t ttid = 0;
-		size_t stack_base = 0;
-		size_t stack_limit = 0;
-		size_t user_stack_base = 0;
-		size_t user_stack_limit = 0;
-		size_t affinity = 0;
-		size_t win32_start_addr = 0;
-		size_t teb_base = 0;
-		size_t sub_process_tag = 0;
-		size_t base_priority = 0;
-		size_t page_priority = 0;
-		size_t io_priority = 0;
-		size_t thread_flags = 0;
+		uint64_t pid = 0;
+		uint64_t ttid = 0;
+		uint64_t stack_base = 0;
+		uint64_t stack_limit = 0;
+		uint64_t user_stack_base = 0;
+		uint64_t user_stack_limit = 0;
+		uint64_t affinity = 0;
+		uint64_t win32_start_addr = 0;
+		uint64_t teb_base = 0;
+		uint64_t sub_process_tag = 0;
+		uint64_t base_priority = 0;
+		uint64_t page_priority = 0;
+		uint64_t io_priority = 0;
+		uint64_t thread_flags = 0;
 
 		ThreadTypeGroup1EventMember() = default;
 		ThreadTypeGroup1EventMember(const Event& event, ThreadTypeGroup1EventOffset* event_offset);
@@ -312,17 +312,17 @@ namespace etw
 	struct ImageLoadEventMember
 	{
 	public:
-		size_t ImageBase = 0;
-		size_t ImageSize = 0;
-		size_t ProcessId = 0;
-		size_t ImageCheckSum = 0;
-		size_t TimeDateStamp = 0;
-		size_t Reserved0 = 0;
-		size_t DefaultBase = 0;
-		size_t Reserved1 = 0;
-		size_t Reserved2 = 0;
-		size_t Reserved3 = 0;
-		size_t Reserved4 = 0;
+		uint64_t ImageBase = 0;
+		uint64_t ImageSize = 0;
+		uint64_t ProcessId = 0;
+		uint64_t ImageCheckSum = 0;
+		uint64_t TimeDateStamp = 0;
+		uint64_t Reserved0 = 0;
+		uint64_t DefaultBase = 0;
+		uint64_t Reserved1 = 0;
+		uint64_t Reserved2 = 0;
+		uint64_t Reserved3 = 0;
+		uint64_t Reserved4 = 0;
 		wchar_t* file_name = nullptr;
 
 		ImageLoadEventMember() = default;

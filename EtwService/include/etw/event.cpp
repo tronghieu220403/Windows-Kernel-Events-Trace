@@ -50,14 +50,14 @@ namespace etw
         return (PBYTE)p_event_->MofData;
     }
 
-    size_t Event::GetThreadId() const
+    uint64_t Event::GetThreadId() const
     {
-        return (size_t)p_event_->Header.ThreadId;
+        return (uint64_t)p_event_->Header.ThreadId;
     }
 
-    size_t Event::GetProcessId() const
+    uint64_t Event::GetProcessId() const
     {
-        return (size_t)p_event_->Header.ProcessId;
+        return (uint64_t)p_event_->Header.ProcessId;
     }
 }
 

@@ -183,7 +183,6 @@ namespace self_defense {
             return FLT_PREOP_SUCCESS_NO_CALLBACK;
         }
 
-
 		DWORD desired_access = data->Iopb->Parameters.Create.SecurityContext->DesiredAccess;
         UINT8 create_disposition = data->Iopb->Parameters.Create.Options >> 24;
         DWORD create_options = data->Iopb->Parameters.Create.Options & 0x00FFFFFF;

@@ -2,23 +2,31 @@
 
 namespace manager
 {
-    void FileNameObjMap::MapObjectWithPath(const size_t file_object, const std::wstring& file_path)
+    void FileNameObjMap::MapObjectWithPath(const uint64_t file_object, const std::wstring& file_path)
     {
+        if (file_object == 0)
+        {
+            return;
+        }
         obj_to_name_map_[file_object] = file_path;
     }
 
-    void FileNameObjMap::RemoveObject(const size_t file_object)
+    void FileNameObjMap::RemoveObject(const uint64_t file_object)
     {
+        if (file_object == 0)
+        {
+            return;
+        }
         obj_to_name_map_.erase(file_object);
     }
 
-    const std::wstring& FileNameObjMap::GetPathByObject(const size_t file_object)
+    const std::wstring& FileNameObjMap::GetPathByObject(const uint64_t file_object)
     {
         const std::wstring& null_str = L"";
         auto it = obj_to_name_map_.find(file_object);
         if (it == obj_to_name_map_.end())
         {
-            return null_str;
+            return obj_to_name_map_[0];
         }
         return it->second;
     }
@@ -44,12 +52,12 @@ namespace manager
         return file_io_info;
     }
 
-    size_t FileIoManager::GetQueueSize()
+    uint64_t FileIoManager::GetQueueSize()
     {
         return file_io_queue_.size();
     }
 
-    void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_new, size_t pid, size_t start_time_ms, const std::wstring& file_path_old)
+    void FileIoManager::PushRenameFileEventToQueue(const std::wstring& file_path_new, uint64_t pid, uint64_t start_time_ms, const std::wstring& file_path_old)
     {
         // PrintDebugW(L"File I/O, custom Rename event, pid %llu, from %ws to %ws\n", pid, file_path_old.data(), file_path_new.data());
 
@@ -62,7 +70,7 @@ namespace manager
         file_io_queue_.push_back(file_io_info);
     }
 
-    void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms, size_t io_size)
+    void FileIoManager::PushWriteFileEventToQueue(const std::wstring& file_path, uint64_t pid, uint64_t start_time_ms, uint64_t io_size)
     {
         // PrintDebugW(L"File I/O, custom Write event, pid %llu, file %ws\n", pid, file_path.data());
 
@@ -182,7 +190,7 @@ namespace manager
         return true;
     }
 
-    size_t GetFileSize(const std::wstring& file_path)
+    uint64_t GetFileSize(const std::wstring& file_path)
     {
         WIN32_FILE_ATTRIBUTE_DATA fad;
         if (!GetFileAttributesEx(file_path.c_str(), GetFileExInfoStandard, &fad))
@@ -198,7 +206,7 @@ namespace manager
 
     // Function to get file extension
     std::wstring GetFileExtension(const std::wstring& file_name) {
-        size_t pos = file_name.find_last_of(L".");
+        uint64_t pos = file_name.find_last_of(L".");
         if (pos == std::wstring::npos) {
             return L""; // No file extension
         }
@@ -211,7 +219,7 @@ namespace manager
         return std::regex_match(ulti::ToLower(file_path), exe_pattern);
     }
 
-    std::wstring CopyToTmp(const std::wstring& path, size_t copy_size) {
+    std::wstring CopyToTmp(const std::wstring& path, uint64_t copy_size) {
         std::wstring dest = TEMP_DIR + std::to_wstring(std::hash<std::wstring>{}(ulti::ToLower(path))) + L"." + path.substr(path.find_last_of(L".") + 1);
         HANDLE h_src = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (h_src == INVALID_HANDLE_VALUE)
@@ -376,8 +384,8 @@ namespace manager
                 if (line.find(L"ransom") != std::wstring::npos || line.find(L"encrypt") != std::wstring::npos) {
                     continue;
                 }
-                size_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Start position of the file extension
-                size_t end_pos = line.find(L")", start_pos);
+                uint64_t start_pos = line.find(L"% (.") + (sizeof(L"% (.")) / sizeof(WCHAR) - 1; // Start position of the file extension
+                uint64_t end_pos = line.find(L")", start_pos);
                 if (end_pos != std::wstring::npos) {
                     std::wstring exts = line.substr(start_pos, end_pos - start_pos);
                     if (exts.size() != 0)
@@ -398,37 +406,42 @@ namespace manager
 
     std::vector<std::pair<std::wstring, bool>> CheckTrID(const std::vector<std::wstring>& file_list) {
 
-        std::wstring cmd = L"\"" TRID_PATH L"\" -n:5 ";
-        for (const auto& file : file_list) {
-            cmd += L"\"" + file + L"\" ";
-        }
-
-        PrintDebugW(L"Running TrID command: %ws", cmd.c_str());
-
-        std::wstring output;
-        try {
-            output = ulti::ExecCommand(cmd);
-        }
-        catch (const std::exception& e) {
-            PrintDebugW(L"Failed to run TrID: %hs", e.what());
-            return {};
-        }
         std::vector<std::pair<std::wstring, bool>> trid_output;
-        if (output.empty()) {
-            PrintDebugW(L"TrID failed to run.");
-            return trid_output;
-        }
-        if (output[output.size() - 1] != L'\n')
-        {
-            output += L"\n";
-        }
-        if (output[output.size() - 2] != L'\n')
-        {
-            output += L"\n";
-        }
+        std::wstring cmd = L"\"" TRID_PATH L"\" -n:5 ";
 
-        // Analyze output
-        trid_output = std::move(AnalyzeTridOutput(output));
+        for (int i = 0; i < file_list.size(); i++)
+        {
+            const auto& file = file_list[i];
+            cmd += L"\"" + file + L"\" ";
+
+            if (cmd.size() > 7000 || i == file_list.size() - 1)
+            {
+                PrintDebugW(L"Running TrID command: %ws", cmd.c_str());
+
+                std::wstring output = ulti::ExecCommand(cmd);
+
+                if (output.empty()) {
+                    PrintDebugW(L"TrID failed to run: %ws", cmd.c_str());
+                }
+                else
+                {
+                    if (output[output.size() - 1] != L'\n')
+                    {
+                        output += L"\n";
+                    }
+                    if (output[output.size() - 2] != L'\n')
+                    {
+                        output += L"\n";
+                    }
+
+                    // Analyze output
+                    std::vector<std::pair<std::wstring, bool>> trid_output_temp = std::move(AnalyzeTridOutput(output));
+                    trid_output.insert(trid_output.end(), trid_output_temp.begin(), trid_output_temp.end());
+                }
+
+                cmd = L"\"" TRID_PATH L"\" -n:5 ";
+            }
+        }
         return trid_output;
     }
 }

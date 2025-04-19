@@ -20,10 +20,10 @@ namespace etw
 	[EventType{98, 99}, EventTypeName{"VirtualAlloc", "VirtualFree"}]
 	class PageFault_VirtualAlloc : PageFault_V2
 	{
-		size_t BaseAddress;
-		size_t RegionSize;
-		size_t ProcessId;
-		size_t Flags;
+		uint64_t BaseAddress;
+		uint64_t RegionSize;
+		uint64_t ProcessId;
+		uint64_t Flags;
 	};
 	*/
 	struct PageFaultVirtualAllocEventOffset
@@ -45,10 +45,10 @@ namespace etw
 	struct PageFaultVirtualAllocEventMember
 	{
 	public:
-		size_t base_address = 0;
-		size_t region_size = 0;
-		size_t process_id = 0;
-		size_t flags = 0;
+		uint64_t base_address = 0;
+		uint64_t region_size = 0;
+		uint64_t process_id = 0;
+		uint64_t flags = 0;
 
 		PageFaultVirtualAllocEventMember() = default;
 		PageFaultVirtualAllocEventMember(const Event& event, PageFaultVirtualAllocEventOffset* event_offset);

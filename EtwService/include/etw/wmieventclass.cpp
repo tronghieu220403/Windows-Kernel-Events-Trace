@@ -650,7 +650,7 @@ namespace etw
                     {
                         VariantClear(&var_qualifier);
                         ULONG temp = 0;
-                        PVOID p_event_data = (PVOID)((size_t)event.GetPEventData() + offset);
+                        PVOID p_event_data = (PVOID)((uint64_t)event.GetPEventData() + offset);
                         USHORT copy_length = 0;
                         BYTE buffer[SECURITY_MAX_SID_SIZE];
                         SID* psid;
@@ -662,19 +662,19 @@ namespace etw
                             {
                                 USHORT bytes_to_sid = pointer_size_ * 2;
                                 data_size += bytes_to_sid;
-                                p_event_data = (PVOID)((size_t)p_event_data + bytes_to_sid);
-                                copy_length = (((event.GetMofLength() - (size_t)offset) - bytes_to_sid) > (size_t)SECURITY_MAX_SID_SIZE) ?
+                                p_event_data = (PVOID)((uint64_t)p_event_data + bytes_to_sid);
+                                copy_length = (((event.GetMofLength() - (uint64_t)offset) - bytes_to_sid) > (uint64_t)SECURITY_MAX_SID_SIZE) ?
                                     SECURITY_MAX_SID_SIZE :
-                                    (USHORT)((event.GetMofLength() - (size_t)offset) - bytes_to_sid);
+                                    (USHORT)((event.GetMofLength() - (uint64_t)offset) - bytes_to_sid);
                                 CopyMemory(&buffer, p_event_data, copy_length);
                                 psid = (SID*)&buffer;
                                 data_size += SeLengthSid(psid);
-                                p_event_data = (PVOID)((size_t)p_event_data + SeLengthSid(psid));
+                                p_event_data = (PVOID)((uint64_t)p_event_data + SeLengthSid(psid));
                             }
                             else
                             {
                                 data_size += sizeof(ULONG);
-                                p_event_data = (PVOID)((size_t)p_event_data + sizeof(ULONG));
+                                p_event_data = (PVOID)((uint64_t)p_event_data + sizeof(ULONG));
                             }
                         }
                         return;

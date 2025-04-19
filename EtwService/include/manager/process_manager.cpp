@@ -2,7 +2,7 @@
 
 namespace manager
 {
-    void ProcessManager::AddProcess(size_t pid, size_t ppid_real, size_t ppid_adopted) {
+    void ProcessManager::AddProcess(uint64_t pid, uint64_t ppid_real, uint64_t ppid_adopted) {
         auto it = process_map_.find(pid);
         if (it == process_map_.end()) {
             ProcessInfo process_info;
@@ -10,11 +10,11 @@ namespace manager
             it = process_map_.find(pid);
         }
         it->second.pid = pid;
-        it->second.ppid_real = ppid_real == (size_t)(-1) ? 0 : ppid_real;
-        it->second.ppid_adopted = ppid_adopted == (size_t)(-1) ? 0 : ppid_adopted;
+        it->second.ppid_real = ppid_real == (uint64_t)(-1) ? 0 : ppid_real;
+        it->second.ppid_adopted = ppid_adopted == (uint64_t)(-1) ? 0 : ppid_adopted;
     }
 
-    void ProcessManager::RemoveProcess(size_t pid)
+    void ProcessManager::RemoveProcess(uint64_t pid)
     {
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
@@ -23,7 +23,7 @@ namespace manager
         }
     }
 
-    bool ProcessManager::IsChild(size_t ppid, size_t pid)
+    bool ProcessManager::IsChild(uint64_t ppid, uint64_t pid)
     {
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
@@ -36,7 +36,7 @@ namespace manager
         return false;
     }
 
-    void ProcessManager::UpdateImageFileName(size_t pid, const std::wstring& image_file_name)
+    void ProcessManager::UpdateImageFileName(uint64_t pid, const std::wstring& image_file_name)
     {
         if (process_map_.find(pid) != process_map_.end())
         {
@@ -51,7 +51,7 @@ namespace manager
         }
     }
 
-    std::wstring ProcessManager::GetImageFileName(size_t pid)
+    std::wstring ProcessManager::GetImageFileName(uint64_t pid)
     {
         auto it = process_map_.find(pid);
         if (it != process_map_.end() && it->second.image_file_name.size() > 0)
@@ -107,7 +107,7 @@ namespace manager
         return image_file_name_w;
     }
 
-    void ProcessManager::UpdateProcessCreationTime(size_t pid, size_t creation_time)
+    void ProcessManager::UpdateProcessCreationTime(uint64_t pid, uint64_t creation_time)
     {
         auto it = process_map_.find(pid);
         if (it != process_map_.end())
@@ -116,12 +116,12 @@ namespace manager
         }
     }
 
-    const ProcessInfo& ProcessManager::GetProcessInfo(size_t pid)
+    const ProcessInfo& ProcessManager::GetProcessInfo(uint64_t pid)
     {
         return process_map_[pid];
     }
 
-    const std::unordered_map<size_t, ProcessInfo>& ProcessManager::GetProcessMap()
+    const std::unordered_map<uint64_t, ProcessInfo>& ProcessManager::GetProcessMap()
     {
         return process_map_;
     }

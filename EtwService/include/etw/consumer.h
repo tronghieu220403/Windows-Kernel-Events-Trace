@@ -10,6 +10,7 @@
 #include "../ulti/debug.h"
 #include "mutex/mutex.h"
 #include "etw/event.h"
+#include "etw/event/disk/disk.h"
 #include "etw/event/file/file.h"
 #include "etw/event/process/process.h"
 #include "etw/event/page-fault/page-fault.h"
@@ -23,7 +24,7 @@ namespace etw
 	class KernelConsumer
 	{
 	private:
-		static inline size_t event_count_ = 0;
+		static inline uint64_t event_count_ = 0;
 		EVENT_TRACE_LOGFILE trace_ = { 0 };
 		TRACEHANDLE handle_trace_ = NULL;
 		inline static int pointer_size_ = 0;
@@ -41,12 +42,12 @@ namespace etw
 
 		static VOID WINAPI ProcessEvent(PEVENT_TRACE p_event);
 
+		static VOID WINAPI ProcessDiskIoEvent(Event event);
 		static VOID WINAPI ProcessFileIoEvent(Event event);
 		static VOID WINAPI ProcessProcessEvent(Event event);
 		static VOID WINAPI ProcessThreadEvent(Event event);
 		static VOID WINAPI ProcessPageFaultEvent(Event event);
 		static VOID WINAPI ProcessRegistryEvent(Event event);
-
 		// Unused events
 		/*
 		static VOID WINAPI ProcessImageLoadEvent(Event event);

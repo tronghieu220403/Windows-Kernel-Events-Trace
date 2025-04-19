@@ -35,7 +35,7 @@ namespace etw
 	struct SysCallEnterEventMember
 	{
 	public:
-		size_t sys_call_address = 0;
+		uint64_t sys_call_address = 0;
 
 		SysCallEnterEventMember() = default;
 		SysCallEnterEventMember(const Event& event, SysCallEnterEventOffset* event_offset);

@@ -32,6 +32,7 @@
 #define MIN_DIR_COUNT 2
 
 #define FILE_MAX_TOTAL_SIZE_SCAN ((10 * 1024 * 1024) * EVALUATATION_INTERVAL_SEC) // 10MB per sec
+#define FILE_MAX_WRITE_OFFSET (3 * 1024) // 3KB
 
 #define THRESHOLD_PERCENTAGE 80
 #define BelowThreshold(part, total) (part <= total * THRESHOLD_PERCENTAGE / 100)
@@ -40,22 +41,22 @@ namespace manager {
 
 	class FileNameObjMap {
 	public:
-		void MapObjectWithPath(const size_t file_object, const std::wstring& file_path);
-		void RemoveObject(const size_t file_object);
-		const std::wstring& GetPathByObject(const size_t file_object);
+		void MapObjectWithPath(const uint64_t file_object, const std::wstring& file_path);
+		void RemoveObject(const uint64_t file_object);
+		const std::wstring& GetPathByObject(const uint64_t file_object);
 	private:
-		std::unordered_map<size_t, std::wstring> obj_to_name_map_;
+		std::unordered_map<uint64_t, std::wstring> obj_to_name_map_ = { {0, L""} };
 	};
 
 	struct FileIoInfo {
 
-		size_t featured_access_flags = 0;
+		uint64_t featured_access_flags = 0;
 		std::wstring file_path;
-		size_t start_time_ms = 0;
-		size_t pid = 0;
+		uint64_t start_time_ms = 0;
+		uint64_t pid = 0;
 
 		struct WriteInfo {
-			size_t size = 0;
+			uint64_t size = 0;
 		} write_info;
 		struct RenameInfo {
 			std::wstring file_path_old;
@@ -71,11 +72,11 @@ namespace manager {
 		void UnlockMutex();
 
 		FileIoInfo PopFileIoEvent();
-		size_t GetQueueSize();
+		uint64_t GetQueueSize();
 
-		void PushRenameFileEventToQueue(const std::wstring& file_path_new, size_t pid, size_t start_time_ms, const std::wstring& file_path_old);
+		void PushRenameFileEventToQueue(const std::wstring& file_path_new, uint64_t pid, uint64_t start_time_ms, const std::wstring& file_path_old);
 
-		void PushWriteFileEventToQueue(const std::wstring& file_path, size_t pid, size_t start_time_ms, size_t io_size);
+		void PushWriteFileEventToQueue(const std::wstring& file_path, uint64_t pid, uint64_t start_time_ms, uint64_t io_size);
 	};
 
 	/*___________________________________________*/
@@ -95,13 +96,13 @@ namespace manager {
 	bool FileExist(const std::wstring& file_path);
 	bool DirExist(const std::wstring& dir_path);
 
-	size_t GetFileSize(const std::wstring& file_path);
+	uint64_t GetFileSize(const std::wstring& file_path);
 
 	std::wstring GetFileExtension(const std::wstring& file_name);
 
 	bool IsExecutableFile(const std::wstring& file_path);
 
-	std::wstring CopyToTmp(const std::wstring& path, size_t size = FILE_MAX_TOTAL_SIZE_SCAN);
+	std::wstring CopyToTmp(const std::wstring& path, uint64_t size = FILE_MAX_TOTAL_SIZE_SCAN);
 
 	void ClearTmpFiles();
 

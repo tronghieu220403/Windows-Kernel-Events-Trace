@@ -15,7 +15,7 @@ enum IOCTL_CMD_CLASS
 struct IOCTL_CMD
 {
 	IOCTL_CMD_CLASS cmd_class;
-	size_t data_len;
+	uint64_t data_len;
 	char data[1];
 };
 
@@ -37,7 +37,7 @@ private:
 	HANDLE device;
 	BOOL status;
 
-	std::vector<UCHAR> SendCommand(IOCTL_CMD_CLASS cmdClass, const size_t number);
+	std::vector<UCHAR> SendCommand(IOCTL_CMD_CLASS cmdClass, const uint64_t number);
 };
 
 inline DriverComm* kDriverComm = nullptr;

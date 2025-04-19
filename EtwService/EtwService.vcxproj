@@ -100,6 +100,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +142,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,6 +156,7 @@
     <ClCompile Include="include\com\driver_comm.cpp" />
     <ClCompile Include="include\etw\consumer.cpp" />
     <ClCompile Include="include\etw\event.cpp" />
+    <ClCompile Include="include\etw\event\disk\disk.cpp" />
     <ClCompile Include="include\etw\event\file\file.cpp" />
     <ClCompile Include="include\etw\event\network\network.cpp" />
     <ClCompile Include="include\etw\event\page-fault\page-fault.cpp" />
@@ -174,6 +178,7 @@
     <ClInclude Include="include\com\driver_comm.h" />
     <ClInclude Include="include\etw\consumer.h" />
     <ClInclude Include="include\etw\event.h" />
+    <ClInclude Include="include\etw\event\disk\disk.h" />
     <ClInclude Include="include\etw\event\file\file.h" />
     <ClInclude Include="include\etw\event\network\network.h" />
     <ClInclude Include="include\etw\event\page-fault\page-fault.h" />

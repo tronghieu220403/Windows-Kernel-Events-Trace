@@ -71,12 +71,12 @@ namespace etw
 	struct FileIoCreateEventMember
 	{
 	public:
-		size_t irp_ptr = 0;
-		size_t ttid = NULL;
-		size_t file_object = 0;
-		size_t create_options = NULL;
-		size_t file_attributes = NULL;
-		size_t share_access = NULL;
+		uint64_t irp_ptr = 0;
+		uint64_t ttid = NULL;
+		uint64_t file_object = 0;
+		uint64_t create_options = NULL;
+		uint64_t file_attributes = NULL;
+		uint64_t share_access = NULL;
 		wchar_t* open_path = nullptr;
 
 		FileIoCreateEventMember() = default;
@@ -132,13 +132,13 @@ namespace etw
 	struct FileIoDirEnumEventMember
 	{
 	public:
-		size_t irp_ptr = 0;
-		size_t ttid = NULL;
-		size_t file_object = 0;
-		size_t file_key = 0;
-		size_t length = NULL;
+		uint64_t irp_ptr = 0;
+		uint64_t ttid = NULL;
+		uint64_t file_object = 0;
+		uint64_t file_key = 0;
+		uint64_t length = NULL;
 		PVOID info_class = nullptr;
-		size_t file_index = NULL;
+		uint64_t file_index = NULL;
 		wchar_t* file_name = nullptr;
 
 		FileIoDirEnumEventMember() = default;
@@ -196,11 +196,11 @@ namespace etw
 	struct FileIoInfoEventMember
 	{
 	public:
-		size_t irp_ptr = 0;
-		size_t ttid = NULL;
-		size_t file_object = 0;
-		size_t file_key = 0;
-		size_t extra_info = NULL;
+		uint64_t irp_ptr = 0;
+		uint64_t ttid = NULL;
+		uint64_t file_object = 0;
+		uint64_t file_key = 0;
+		uint64_t extra_info = NULL;
 		PVOID info_class = nullptr;
 
 		FileIoInfoEventMember() = default;
@@ -270,7 +270,7 @@ namespace etw
 	struct FileIoNameEventMember
 	{
 	public:
-		size_t file_object = 0;
+		uint64_t file_object = 0;
 		wchar_t* file_name = nullptr;
 
 		FileIoNameEventMember() = default;
@@ -335,9 +335,9 @@ namespace etw
 	struct FileIoOpEndEventMember
 	{
 	public:
-		size_t irp_ptr = 0;
-		size_t extra_info = NULL;
-		size_t nt_status = NULL;
+		uint64_t irp_ptr = 0;
+		uint64_t extra_info = NULL;
+		uint64_t nt_status = NULL;
 
 		FileIoOpEndEventMember() = default;
 		FileIoOpEndEventMember(const Event& event, FileIoOpEndEventOffset* event_offset);
@@ -390,12 +390,12 @@ namespace etw
 	{
 	public:
 		uint64_t offset = 0;
-		size_t irp_ptr = 0;
-		size_t ttid = NULL;
-		size_t file_object = 0;
-		size_t file_key = 0;
-		size_t io_size = NULL;
-		size_t io_flags = NULL;
+		uint64_t irp_ptr = 0;
+		uint64_t ttid = NULL;
+		uint64_t file_object = 0;
+		uint64_t file_key = 0;
+		uint64_t io_size = NULL;
+		uint64_t io_flags = NULL;
 
 		FileIoReadWriteEventMember() = default;
 		FileIoReadWriteEventMember(const Event& event, FileIoReadWriteEventOffset* event_offset);
@@ -446,10 +446,10 @@ namespace etw
 	struct FileIoSimpleOpEventMember
 	{
 	public:
-		size_t irp_ptr = 0;
-		size_t ttid = NULL;
-		size_t file_object = 0;
-		size_t file_key = 0;
+		uint64_t irp_ptr = 0;
+		uint64_t ttid = NULL;
+		uint64_t file_object = 0;
+		uint64_t file_key = 0;
 
 		FileIoSimpleOpEventMember() = default;
 		FileIoSimpleOpEventMember(const Event& event, FileIoSimpleOpEventOffset* event_offset);

@@ -9,39 +9,39 @@
 namespace manager {
 
     struct ProcessInfo {
-        size_t pid = 0;
-        size_t ppid_real = 0;
-        size_t ppid_adopted = 0;
-        size_t creation_time = 0;
+        uint64_t pid = 0;
+        uint64_t ppid_real = 0;
+        uint64_t ppid_adopted = 0;
+        uint64_t creation_time = 0;
         std::wstring image_file_name;
     };
 
     class ProcessManager {
     public:
         // Add or remove a process by its PID
-        void AddProcess(size_t pid, size_t ppid_real, size_t ppid_adopted);
-        void RemoveProcess(size_t pid);
+        void AddProcess(uint64_t pid, uint64_t ppid_real, uint64_t ppid_adopted);
+        void RemoveProcess(uint64_t pid);
 
-        const std::unordered_map<size_t, ProcessInfo>& GetProcessMap();
+        const std::unordered_map<uint64_t, ProcessInfo>& GetProcessMap();
 
-        bool IsChild(size_t ppid, size_t pid);
+        bool IsChild(uint64_t ppid, uint64_t pid);
 
         // TODO: Tìm không ra thì hỏi kernel
         // Add image file name of a process
-        void UpdateImageFileName(size_t pid, const std::wstring& image_file_name);
+        void UpdateImageFileName(uint64_t pid, const std::wstring& image_file_name);
 
         // Get image file name of a process
-        std::wstring GetImageFileName(size_t pid);
+        std::wstring GetImageFileName(uint64_t pid);
 
-        void UpdateProcessCreationTime(size_t pid, size_t creation_time);
+        void UpdateProcessCreationTime(uint64_t pid, uint64_t creation_time);
 
-        const ProcessInfo& GetProcessInfo(size_t pid);
+        const ProcessInfo& GetProcessInfo(uint64_t pid);
 
         void LockMutex();
         void UnlockMutex();
 
     private:
-        std::unordered_map<size_t, ProcessInfo> process_map_; // PID -> ProcessInfo
+        std::unordered_map<uint64_t, ProcessInfo> process_map_; // PID -> ProcessInfo
         std::mutex process_map_mutex_;
     };
 }

@@ -63,10 +63,10 @@ namespace etw
 	struct RegistryTypeGroup1EventMember
 	{
 	public:
-		size_t InitialTime = 0;
-		size_t Status = 0;
-		size_t Index = 0;
-		size_t KeyHandle = 0;
+		uint64_t InitialTime = 0;
+		uint64_t Status = 0;
+		uint64_t Index = 0;
+		uint64_t KeyHandle = 0;
 		wchar_t* KeyName = nullptr;
 
 		RegistryTypeGroup1EventMember() = default;

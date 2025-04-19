@@ -41,26 +41,26 @@ namespace manager {
 		{
 			std::wstring current_path;
 			std::wstring tmp_path;
-			size_t pid;
+			uint64_t pid;
 		};
 
 		std::vector<FileInfo> file_list;
 		std::vector<std::wstring> paths;
 		struct FileCount
 		{
-			size_t file_count = 0;
-			size_t total_size = 0;
-			std::unordered_set<size_t> unique_dir_hashes;
+			uint64_t file_count = 0;
+			uint64_t total_size = 0;
+			std::unordered_set<uint64_t> unique_dir_hashes;
 		};
-		std::unordered_map<size_t, FileCount> pid_file_cnt; // <pid> -> <file count, total_size>
-		std::unordered_set<size_t> unique_paths;
-		std::unordered_set<size_t> white_list_pid;
-		std::unordered_map<size_t, size_t> file_size_map; // <file_path_hash> -> <file_size>
+		std::unordered_map<uint64_t, FileCount> pid_file_cnt; // <pid> -> <file count, total_size>
+		std::unordered_set<uint64_t> unique_paths;
+		std::unordered_set<uint64_t> white_list_pid;
+		std::unordered_map<uint64_t, uint64_t> file_size_map; // <file_path_hash> -> <file_size>
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path;
-			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
-			size_t pid = io.pid;
+			uint64_t file_path_hash = std::hash<std::wstring>{}(file_path);
+			uint64_t pid = io.pid;
 			auto it = pid_file_cnt.find(pid);
 			if (it == pid_file_cnt.end())
 			{
@@ -71,7 +71,7 @@ namespace manager {
 			{
 				continue;
 			}
-			size_t file_size = 0;
+			uint64_t file_size = 0;
 			if (file_size_map.find(file_path_hash) == file_size_map.end())
 			{
 				file_size = manager::GetFileSize(file_path);
@@ -111,18 +111,18 @@ namespace manager {
 		for (const FileIoInfo& io : file_io_list)
 		{
 			const std::wstring file_path = io.file_path;
-			size_t file_path_hash = std::hash<std::wstring>{}(file_path);
+			uint64_t file_path_hash = std::hash<std::wstring>{}(file_path);
 			if (unique_paths.find(file_path_hash) == unique_paths.end())
 			{
 				continue;
 			}
-			size_t pid = io.pid;
+			uint64_t pid = io.pid;
 
 			if (white_list_pid.find(pid) != white_list_pid.end())
 			{
 				continue;
 			}
-			size_t file_size = file_size_map[file_path_hash];
+			uint64_t file_size = file_size_map[file_path_hash];
 #ifndef _DEBUG
 			// This code must be deleted in the final version because we will use file type map, copy limited size to tmp folder and not limit the total size of files to scan
 			if (pid_file_cnt[pid].total_size + file_size > FILE_MAX_TOTAL_SIZE_SCAN)
@@ -162,13 +162,13 @@ namespace manager {
 			trid_output = manager::CheckTrID(paths);
 		}
 
-		std::unordered_map<size_t, bool> trid_map;
+		std::unordered_map<uint64_t, bool> trid_map;
 		for (int i = 0; i < trid_output.size(); i++)
 		{
 			trid_map[std::hash<std::wstring>{}(paths[i])] = trid_output[i].second;
 		}
 
-		std::unordered_map<size_t, std::pair<size_t, size_t>> proc_check_results; // <pid> -> <recognized, total>
+		std::unordered_map<uint64_t, std::pair<uint64_t, uint64_t>> proc_check_results; // <pid> -> <recognized, total>
 
 		for (int i = 0; i < file_list.size(); i++)
 		{
@@ -177,7 +177,7 @@ namespace manager {
 				continue;
 			}
 			const std::wstring& file_path = file_list[i].current_path;
-			size_t tmp_path_hash = std::hash<std::wstring>{}(file_list[i].tmp_path);
+			uint64_t tmp_path_hash = std::hash<std::wstring>{}(file_list[i].tmp_path);
 			bool is_recognized = false;
 			if (trid_map.find(tmp_path_hash) == trid_map.end())
 			{
@@ -203,8 +203,8 @@ namespace manager {
 
 		for (const auto& [pid, stats] : proc_check_results)
 		{
-			size_t num_recognized = stats.first;
-			size_t total = stats.second;
+			uint64_t num_recognized = stats.first;
+			uint64_t total = stats.second;
 			if (total >= MIN_FILE_COUNT && BelowThreshold(num_recognized, total))
 			{
 				PrintDebugW(L"PID %d is ransomware.", pid);
@@ -224,16 +224,25 @@ namespace manager {
 		PrintDebugW(L"Process evaluation done");
 	}
 
-	bool OverallEventFilter(size_t issuing_pid)
+	bool OverallEventFilter(uint64_t issuing_pid)
 	{
-		if (issuing_pid == 0 || issuing_pid == 4 || issuing_pid == kCurrentPid)
+		if (issuing_pid == 0 || 
+			//issuing_pid == 4
+			issuing_pid == kCurrentPid)
 		{
 			return false;
 		}
+#ifdef _DEBUG
+        if (issuing_pid == (DWORD)(-1) || issuing_pid == 4 || issuing_pid == 0)
+        {
+            return true;
+        }
+#endif // _DEBUG
+
 		return true;
 	}
 
-	bool PageFaultEventFilter(size_t issuing_pid, size_t allocated_pid, size_t time_ms)
+	bool PageFaultEventFilter(uint64_t issuing_pid, uint64_t allocated_pid, uint64_t time_ms)
 	{
 		if (issuing_pid == 0 || allocated_pid == 0)
 		{
@@ -256,7 +265,7 @@ namespace manager {
 		// Accecpt allocation from a father process if the time of the operation is less than 0.2 second after the process creation.
 		if (manager::kProcMan->IsChild(issuing_pid, allocated_pid))
 		{
-			size_t time_diff = time_ms - manager::kProcMan->GetProcessInfo(allocated_pid).creation_time;
+			uint64_t time_diff = time_ms - manager::kProcMan->GetProcessInfo(allocated_pid).creation_time;
 			if (time_diff < 200)
 			{
 				return false;
@@ -280,7 +289,7 @@ namespace manager {
 		return true;
 	}
 
-	bool RegistryEventFilter(size_t status, size_t handle)
+	bool RegistryEventFilter(uint64_t status, uint64_t handle)
 	{
 		if (status != 0 || handle == 0)
 		{

@@ -62,9 +62,9 @@ namespace etw
 
 		PBYTE GetPEventData() const;
 
-		size_t GetThreadId() const;
+		uint64_t GetThreadId() const;
 
-		size_t GetProcessId() const;
+		uint64_t GetProcessId() const;
 	};
 
 };

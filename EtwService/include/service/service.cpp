@@ -193,7 +193,7 @@ namespace srv
 		service_status.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 		service_status.dwWin32ExitCode = NO_ERROR;
 		service_status.dwWaitHint = 0;
-		service_status.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
+		service_status.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN;// | SERVICE_ACCEPT_STOP;
 
 		status_handle = RegisterServiceCtrlHandlerW(service_name, ServiceCtrlHandler);
 		if (status_handle == NULL)
@@ -202,9 +202,11 @@ namespace srv
 		}
 		ServiceCtrlHandler(SERVICE_CONTROL_START);
 
+		/*
 		// Test process spwaner, must have in case of error 1346
 		std::wstring cmd = std::wstring(L"\"") + TRID_PATH + L"\"";
 		ulti::ExecCommand(cmd.c_str());
+		*/
 	}
 }
 

@@ -18,10 +18,10 @@ void StartEventCollector()
     etw::KernelProvider* kp = new etw::KernelProvider(
         EVENT_TRACE_FLAG_NO_SYSCONFIG
         //| EVENT_TRACE_FLAG_DISK_IO_INIT | EVENT_TRACE_FLAG_DISK_IO 
-        //| EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
+        | EVENT_TRACE_FLAG_FILE_IO_INIT | EVENT_TRACE_FLAG_FILE_IO | EVENT_TRACE_FLAG_DISK_FILE_IO
         //| EVENT_TRACE_FLAG_IMAGE_LOAD
         //| EVENT_TRACE_FLAG_NETWORK_TCPIP
-        | EVENT_TRACE_FLAG_PROCESS
+        //| EVENT_TRACE_FLAG_PROCESS
         //| EVENT_TRACE_FLAG_REGISTRY
         //| EVENT_TRACE_FLAG_THREAD
         //| EVENT_TRACE_FLAG_VIRTUAL_ALLOC
@@ -87,10 +87,15 @@ void ServiceMain()
         while (true)
         {
             auto start_time = std::chrono::high_resolution_clock::now();
-            manager::EvaluateProcess();
+            //manager::EvaluateProcess();
+            if (manager::FileExist(L"C:\\Users\\hieu\\Documents\\ggez.txt"))
+            {
+                ExitProcess(0);
+            }
             auto end_time = std::chrono::high_resolution_clock::now();
             DWORD duration = (DWORD)std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
-            Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
+            //Sleep(duration < (DWORD)EVALUATATION_INTERVAL_MS ? EVALUATATION_INTERVAL_MS - duration : 0);
+            Sleep(50);
         }
         });
     manager_thread.join();
@@ -140,6 +145,7 @@ void RunProgram()
     ServiceMain();
 #else
     RunService();
+    //ServiceMain();
 #endif // _DEBUG
 }
 

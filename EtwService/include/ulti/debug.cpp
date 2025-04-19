@@ -4,49 +4,70 @@
 namespace debug {
 
     std::mutex mt;
-    std::wofstream outfile;
-    int debug_cnt = 0;
+    HANDLE log_file_handle = INVALID_HANDLE_VALUE;
+    int debug_count = 0;
 
-    void InitDebugLog() {
-        try {
-            if (outfile.is_open()) {
-                outfile.close();
-            }
-            outfile.open(LOG_PATH, std::ios_base::app);
-            debug_cnt = 0;
+    void InitDebugLog()
+    {
+        if (log_file_handle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(log_file_handle);
         }
-        catch (...) {
+        log_file_handle = CreateFileW(
+            LOG_PATH,
+            FILE_APPEND_DATA,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_ALWAYS,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr
+        );
+        if (log_file_handle == INVALID_HANDLE_VALUE || log_file_handle == 0)
+        {
+            // Handle error (optional: log to another output)
+        }
+        debug_count = 0;
+    }
+
+    void CleanupDebugLog()
+    {
+        if (log_file_handle != INVALID_HANDLE_VALUE)
+        {
+            CloseHandle(log_file_handle);
+            log_file_handle = INVALID_HANDLE_VALUE;
         }
     }
 
-    void CleanupDebugLog() {
-        try {
-            outfile.close();
-        }
-        catch (...) {
-        }
-    }
-
-    void WriteDebugToFileW(const std::wstring& s) {
+    void WriteDebugToFileW(const std::wstring& message)
+    {
         std::lock_guard<std::mutex> lock(mt);
         try {
-            if (!outfile.is_open()) {
+            if (log_file_handle == INVALID_HANDLE_VALUE || log_file_handle == 0)
+            {
                 InitDebugLog();
+                if (log_file_handle == INVALID_HANDLE_VALUE || log_file_handle == 0)
+                {
+                    return;
+                }
             }
-            debug_cnt++;
-            if (!s.empty() && s.back() == L'\n') {
-                outfile << s;
+            debug_count++;
+
+            std::wstring output = message;
+            if (message.empty() || message.back() != L'\n') {
+                output += L"\n";
             }
-            else {
-                outfile << s << L"\n";
-            }
-            outfile.flush();
-            if (debug_cnt >= DEBUG_LOG_THRESHOLD) {
+
+            DWORD bytes_written = 0;
+            WriteFile(log_file_handle, output.c_str(), output.size() * sizeof(wchar_t), &bytes_written, nullptr);
+            //FlushFileBuffers(log_file_handle);
+
+            if (debug_count >= DEBUG_LOG_THRESHOLD) {
                 CleanupDebugLog();
                 InitDebugLog();
             }
         }
         catch (...) {
+            // Handle exception if needed
         }
     }
 
@@ -90,7 +111,7 @@ namespace debug {
 
     std::wstring GetErrorMessage(DWORD errorCode) {
         LPWSTR messageBuffer = nullptr;
-        size_t size = FormatMessageW(
+        uint64_t size = FormatMessageW(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             nullptr, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (LPWSTR)&messageBuffer, 0, nullptr);

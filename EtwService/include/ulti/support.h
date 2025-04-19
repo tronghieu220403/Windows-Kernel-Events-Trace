@@ -35,6 +35,7 @@ namespace ulti
     bool CheckPrintableANSI(const std::wstring& wstr);
 
     std::wstring ExecCommand(const std::wstring& cmd);
+    bool KillProcess(DWORD pid);
 
     bool IsRunningAsSystem();
 
